@@ -62,6 +62,8 @@ COPY = {
         "context_role": "What was your real responsibility?",
         "context_outcome": "What outcome did the project create?",
         "context_decision": "Which decision best demonstrates your ability?",
+        "dialogue_user": "User",
+        "dialogue_ai": "AI",
         "method": "Method and limits",
         "commits": "commits",
         "files": "files",
@@ -132,6 +134,8 @@ COPY = {
         "context_role": "你在项目中的真实职责是什么？",
         "context_outcome": "最终给用户或自己带来了什么结果？",
         "context_decision": "哪个决定最能代表你的能力？",
+        "dialogue_user": "用户",
+        "dialogue_ai": "AI",
         "method": "方法与限制",
         "commits": "次提交",
         "files": "个文件",
@@ -312,11 +316,47 @@ def context_for_language(context: dict[str, Any], language: str) -> dict[str, An
     value = context.get(language, context)
     if not isinstance(value, dict):
         return {}
-    allowed = {"role", "outcome", "key_decision", "summary", "resume_bullets"}
+    allowed = {"role", "outcome", "key_decision", "summary", "resume_bullets", "translations"}
     result = {key: value[key] for key in allowed if key in value}
     if "resume_bullets" in result and not isinstance(result["resume_bullets"], list):
         result["resume_bullets"] = []
+    if "translations" in result and not isinstance(result["translations"], dict):
+        result["translations"] = {}
     return result
+
+
+def localized_dynamic_text(text: str, context: dict[str, Any], language: str) -> str:
+    translations = context.get("translations", {})
+    translated = translations.get(text) if isinstance(translations, dict) else None
+    if translated:
+        return str(translated)
+    if language != "zh":
+        return text
+
+    quoted_revert = re.fullmatch(r'Revert ["“](.*?)["”]', text, re.I)
+    if quoted_revert:
+        inner = localized_dynamic_text(quoted_revert.group(1), context, language)
+        return f"回滚“{inner}”"
+
+    templates = [
+        (r"^Initialize (.+)$", "初始化 {}"),
+        (r"^Add (.+)$", "新增 {}"),
+        (r"^Fix (.+)$", "修复 {}"),
+        (r"^Refactor (.+)$", "重构 {}"),
+        (r"^Replace (.+) with (.+)$", "用 {} 替代 {}"),
+        (r"^Document (.+)$", "记录 {}"),
+        (r"^Prepare (.+)$", "准备 {}"),
+        (r"^Release (.+)$", "发布 {}"),
+    ]
+    for pattern, template in templates:
+        match = re.fullmatch(pattern, text, re.I)
+        if not match:
+            continue
+        groups = [group.strip() for group in match.groups()]
+        if pattern.startswith("^Replace"):
+            return template.format(groups[1], groups[0])
+        return template.format(*groups)
+    return text
 
 
 def count_text(value: int, noun: str, language: str) -> str:
@@ -1087,6 +1127,57 @@ def select_turning_points(timeline: list[dict[str, Any]], language: str, limit: 
     return results
 
 
+def attach_dialogue_to_turning_points(
+    turning_points: list[dict[str, Any]],
+    transcript_events: list[dict[str, Any]],
+    context: dict[str, Any],
+    language: str,
+) -> list[dict[str, Any]]:
+    timestamped = sorted(
+        (event for event in transcript_events if event.get("timestamp") and event.get("text")),
+        key=lambda event: event["timestamp"],
+    )
+    users = [
+        event
+        for event in timestamped
+        if any(token in event["role"] for token in ("user", "human", "prompt"))
+    ]
+    assistants = [
+        event
+        for event in timestamped
+        if any(token in event["role"] for token in ("assistant", "agent", "ai"))
+    ]
+    results = []
+    for point in turning_points:
+        row = dict(point)
+        point_time = parse_datetime(point["timestamp"])
+        if point_time is None:
+            results.append(row)
+            continue
+        candidates = [
+            event
+            for event in users
+            if 0 <= (point_time - event["timestamp"]).total_seconds() <= 6 * 3600
+        ]
+        if not candidates:
+            results.append(row)
+            continue
+        user_event = candidates[-1]
+        response_candidates = [
+            event
+            for event in assistants
+            if user_event["timestamp"] <= event["timestamp"] <= point_time + dt.timedelta(minutes=30)
+        ]
+        dialogue = {
+            "user": localized_dynamic_text(user_event["text"][:220], context, language),
+        }
+        if response_candidates:
+            dialogue["ai"] = localized_dynamic_text(response_candidates[0]["text"][:220], context, language)
+        row["dialogue"] = dialogue
+        results.append(row)
+    return results
+
+
 def build_story_summary(
     project_name: str,
     timeline: list[dict[str, Any]],
@@ -1140,7 +1231,8 @@ def build_story_summary(
             if language == "en"
             else f"最终完成{'、'.join(finish)}"
         )
-    return {"headline": headline, "highlights": highlights[:3], "context_confirmed": bool(context)}
+    confirmed_story_context = any(context.get(key) for key in ("role", "outcome", "key_decision", "summary"))
+    return {"headline": headline, "highlights": highlights[:3], "context_confirmed": confirmed_story_context}
 
 
 def build_career_material(
@@ -1228,6 +1320,12 @@ def build_evidence(
     attention = directory_attention(file_stats, language)
     name = project_name or root.name
     localized_context = context_for_language(context or {}, language)
+    localized_loops = []
+    for item in loops:
+        row = dict(item)
+        row["original_title"] = item["title"]
+        row["title"] = localized_dynamic_text(item["title"], localized_context, language)
+        localized_loops.append(row)
     authors = sorted({commit.author for commit in commits})
     categories = collections.Counter(commit.category for commit in commits)
     start = commits[0].timestamp
@@ -1242,7 +1340,8 @@ def build_evidence(
             "timestamp": commit.timestamp.isoformat(),
             "date": commit.timestamp.date().isoformat(),
             "author": commit.author,
-            "subject": commit.subject,
+            "subject": localized_dynamic_text(commit.subject, localized_context, language),
+            "original_subject": commit.subject,
             "category": commit.category,
             "files": len(commit.files),
             "added": commit.additions,
@@ -1251,11 +1350,14 @@ def build_evidence(
         for commit in commits
     ]
     turning_points = select_turning_points(timeline, language)
-    story = build_story_summary(name, timeline, loops, signals, attention, localized_context, language)
+    turning_points = attach_dialogue_to_turning_points(
+        turning_points, transcript_events, localized_context, language
+    )
+    story = build_story_summary(name, timeline, localized_loops, signals, attention, localized_context, language)
     career_material = build_career_material(name, story, localized_context, turning_points, language)
     source_list = ["git"] + (["transcripts"] if transcript_files else [])
     return {
-        "schema_version": "1.1",
+        "schema_version": "1.2",
         "generator_version": VERSION,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "language": language,
@@ -1290,7 +1392,7 @@ def build_evidence(
         "turning_points": turning_points,
         "timeline": timeline,
         "friction_zones": friction,
-        "loop_candidates": loops[:15],
+        "loop_candidates": localized_loops[:15],
         "attention_areas": attention,
         "dimensions": dimensions,
         "signals": signals,
@@ -1341,6 +1443,11 @@ def render_markdown(data: dict[str, Any]) -> str:
         lines.append(
             f"- `{event['date']}` **{event['turning_point_reason']}** · {event['subject']} (`{event['short_hash']}`)"
         )
+        dialogue = event.get("dialogue")
+        if dialogue:
+            lines.append(f"  - **{c['dialogue_user']}：** {dialogue['user']}" if language == "zh" else f"  - **{c['dialogue_user']}:** {dialogue['user']}")
+            if dialogue.get("ai"):
+                lines.append(f"  - **{c['dialogue_ai']}：** {dialogue['ai']}" if language == "zh" else f"  - **{c['dialogue_ai']}:** {dialogue['ai']}")
     lines.extend(
         [
             "",
@@ -1451,13 +1558,18 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
     turning_rows = []
     for index, event in enumerate(data["turning_points"], start=1):
         file_text = count_text(event["files"], "file", language)
+        dialogue = event.get("dialogue")
+        dialogue_html = ""
+        if dialogue:
+            ai_line = f'<p><b>{esc(c["dialogue_ai"])}</b><span>{esc(dialogue["ai"])}</span></p>' if dialogue.get("ai") else ""
+            dialogue_html = f'''\n    <div class="dialogue"><p><b>{esc(c['dialogue_user'])}</b><span>{esc(dialogue['user'])}</span></p>{ai_line}</div>'''
         turning_rows.append(
             f'''<article class="turn">
   <div class="turn-number">{index:02d}</div>
   <div class="turn-body">
     <div class="turn-meta"><span>{esc(event['turning_point_reason'])}</span><time>{esc(event['date'])}</time></div>
     <h3>{esc(event['subject'])}</h3>
-    <p>{esc(category_labels[event['category']])} · {esc(file_text)} · <code>{esc(event['short_hash'])}</code></p>
+    <p>{esc(category_labels[event['category']])} · {esc(file_text)} · <code>{esc(event['short_hash'])}</code></p>{dialogue_html}
   </div>
 </article>'''
         )
@@ -1608,6 +1720,10 @@ main {{ background:var(--surface); }}
 .turn-meta time {{ color:var(--muted); font:12px ui-monospace,SFMono-Regular,Menlo,monospace; text-transform:none; letter-spacing:0; }}
 .turn h3 {{ margin:9px 0 8px; font-size:clamp(21px,3vw,30px); letter-spacing:-.03em; }}
 .turn p {{ margin:0; color:var(--muted); font-size:13px; }}
+.dialogue {{ margin-top:18px; padding:16px 18px; border-left:3px solid var(--accent); background:var(--paper); border-radius:0 10px 10px 0; }}
+.dialogue p {{ display:grid; grid-template-columns:46px 1fr; gap:10px; margin:7px 0; color:#3f3f3f; font-size:14px; }}
+.dialogue b {{ color:var(--accent); }}
+.dialogue span {{ min-width:0; }}
 .full-history {{ margin-top:42px; padding:22px; border-radius:var(--radius); background:var(--paper); }}
 .full-history>p {{ max-width:680px; color:var(--muted); }}
 .filters {{ display:flex; gap:8px; flex-wrap:wrap; margin:30px 0; }}

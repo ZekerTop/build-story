@@ -55,7 +55,11 @@ When user-confirmed context is available, save it in the report output directory
     "outcome": "最终带来的真实结果",
     "key_decision": "最能代表能力的关键决定",
     "summary": "一句话项目故事",
-    "resume_bullets": ["经过确认的简历要点"]
+    "resume_bullets": ["经过确认的简历要点"],
+    "translations": {
+      "Initialize project": "初始化项目",
+      "Add the requested feature": "加入用户要求的功能"
+    }
   },
   "en": {
     "role": "your real responsibility",
@@ -94,6 +98,10 @@ Read `evidence.json` and verify:
 - the evidence and confidence behind every dimension score.
 
 If the data contradicts the user's description, show the discrepancy and ask rather than silently choosing one version.
+
+For a Chinese report, inspect the visible turning-point titles and conversation excerpts. If the source material is in another language, add exact source-to-Chinese entries under `zh.translations` and rerun. Keep the original text in evidence data, but do not make the user read an English development story inside a Chinese interface.
+
+When authorized transcripts exist, use the short user request and AI response attached to each turning point. Prefer this human-readable dialogue over presenting a commit subject as the whole story.
 
 ### 4. Ask only for missing human context
 

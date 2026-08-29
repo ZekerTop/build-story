@@ -29,6 +29,10 @@ These labels help navigation. They are not claims about the author's intent.
 
 The default report selects at most seven turning points. The first and final commits anchor the story; explicit reversals, the attempts they undo, new directions, validation, documentation, and delivery milestones receive priority. The complete timeline stays available in a collapsed evidence section.
 
+When authorized transcripts contain timestamped user and assistant messages, BuildStory attaches the nearest short request/response pair to a turning point when it falls within the same working window. It stores only short excerpts and does not reproduce the complete conversation.
+
+Localized reports may use exact source-to-display translations supplied in context. The translated subject or excerpt is shown to the reader while `original_subject` and the source transcript remain the underlying evidence.
+
 ## Rework and loop candidates
 
 BuildStory uses three signals:

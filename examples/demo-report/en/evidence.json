@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "generator_version": "0.2.0",
   "generated_at": "2026-08-29T00:00:00+00:00",
   "language": "en",
@@ -69,6 +69,7 @@
       "date": "2026-07-01",
       "author": "Alex Builder",
       "subject": "Initialize PocketTasks CLI",
+      "original_subject": "Initialize PocketTasks CLI",
       "category": "foundation",
       "files": 4,
       "added": 9,
@@ -82,11 +83,16 @@
       "date": "2026-07-03",
       "author": "Alex Builder",
       "subject": "Add experimental cloud sync queue",
+      "original_subject": "Add experimental cloud sync queue",
       "category": "feature",
       "files": 1,
       "added": 4,
       "deleted": 0,
-      "turning_point_reason": "Attempt later reversed"
+      "turning_point_reason": "Attempt later reversed",
+      "dialogue": {
+        "user": "Add automatic cloud sync but keep the task manager simple for beginners",
+        "ai": "I added a queue and background push."
+      }
     },
     {
       "hash": "9de0c2d9a698065db51844cadad31877e74c4bbd",
@@ -95,11 +101,16 @@
       "date": "2026-07-04",
       "author": "Alex Builder",
       "subject": "Refactor cloud sync retry ownership",
+      "original_subject": "Refactor cloud sync retry ownership",
       "category": "refactor",
       "files": 1,
       "added": 4,
       "deleted": 3,
-      "turning_point_reason": "Repeated refinement"
+      "turning_point_reason": "Repeated refinement",
+      "dialogue": {
+        "user": "Fix the automatic cloud sync queue again and make retries easier to understand",
+        "ai": "Retry state now lives with each queue item."
+      }
     },
     {
       "hash": "d678a8a28a840d4faf4ef637874c0499e55bb846",
@@ -108,11 +119,16 @@
       "date": "2026-07-05",
       "author": "Alex Builder",
       "subject": "Revert \"Add experimental cloud sync queue\"",
+      "original_subject": "Revert \"Add experimental cloud sync queue\"",
       "category": "fix",
       "files": 1,
       "added": 2,
       "deleted": 6,
-      "turning_point_reason": "Direction change"
+      "turning_point_reason": "Direction change",
+      "dialogue": {
+        "user": "The cloud sync is too complex. Remove it and keep all user data local",
+        "ai": "I removed the automatic sync path."
+      }
     },
     {
       "hash": "25929cfc1954decd69031420076a26d20b3bb6ee",
@@ -121,11 +137,16 @@
       "date": "2026-07-06",
       "author": "Alex Builder",
       "subject": "Replace cloud sync with local export",
+      "original_subject": "Replace cloud sync with local export",
       "category": "refactor",
       "files": 1,
       "added": 4,
       "deleted": 2,
-      "turning_point_reason": "New direction"
+      "turning_point_reason": "New direction",
+      "dialogue": {
+        "user": "Add an explicit JSON export so users control when data leaves the app",
+        "ai": "Export is implemented and remains local."
+      }
     },
     {
       "hash": "ea9798bf7a73e7b662d24cb18733a6a2e585aa6c",
@@ -134,11 +155,16 @@
       "date": "2026-07-08",
       "author": "Alex Builder",
       "subject": "Add tests for storage and export",
+      "original_subject": "Add tests for storage and export",
       "category": "validation",
       "files": 2,
       "added": 4,
       "deleted": 0,
-      "turning_point_reason": "Validation established"
+      "turning_point_reason": "Validation established",
+      "dialogue": {
+        "user": "Add tests for the local store and JSON export",
+        "ai": "The storage and export paths now have tests."
+      }
     },
     {
       "hash": "5e5bebe5519b18a077fb204edc0ae4a57c6e9b2f",
@@ -147,6 +173,7 @@
       "date": "2026-07-18",
       "author": "Alex Builder",
       "subject": "Release PocketTasks 1.0",
+      "original_subject": "Release PocketTasks 1.0",
       "category": "delivery",
       "files": 1,
       "added": 1,
@@ -162,6 +189,7 @@
       "date": "2026-07-01",
       "author": "Alex Builder",
       "subject": "Initialize PocketTasks CLI",
+      "original_subject": "Initialize PocketTasks CLI",
       "category": "foundation",
       "files": 4,
       "added": 9,
@@ -174,6 +202,7 @@
       "date": "2026-07-02",
       "author": "Alex Builder",
       "subject": "Add JSON task storage",
+      "original_subject": "Add JSON task storage",
       "category": "feature",
       "files": 1,
       "added": 4,
@@ -186,6 +215,7 @@
       "date": "2026-07-03",
       "author": "Alex Builder",
       "subject": "Add experimental cloud sync queue",
+      "original_subject": "Add experimental cloud sync queue",
       "category": "feature",
       "files": 1,
       "added": 4,
@@ -198,6 +228,7 @@
       "date": "2026-07-03",
       "author": "Alex Builder",
       "subject": "Fix cloud sync duplicate queue entries",
+      "original_subject": "Fix cloud sync duplicate queue entries",
       "category": "fix",
       "files": 1,
       "added": 2,
@@ -210,6 +241,7 @@
       "date": "2026-07-04",
       "author": "Alex Builder",
       "subject": "Refactor cloud sync retry ownership",
+      "original_subject": "Refactor cloud sync retry ownership",
       "category": "refactor",
       "files": 1,
       "added": 4,
@@ -222,6 +254,7 @@
       "date": "2026-07-05",
       "author": "Alex Builder",
       "subject": "Revert \"Add experimental cloud sync queue\"",
+      "original_subject": "Revert \"Add experimental cloud sync queue\"",
       "category": "fix",
       "files": 1,
       "added": 2,
@@ -234,6 +267,7 @@
       "date": "2026-07-06",
       "author": "Alex Builder",
       "subject": "Replace cloud sync with local export",
+      "original_subject": "Replace cloud sync with local export",
       "category": "refactor",
       "files": 1,
       "added": 4,
@@ -246,6 +280,7 @@
       "date": "2026-07-08",
       "author": "Alex Builder",
       "subject": "Add tests for storage and export",
+      "original_subject": "Add tests for storage and export",
       "category": "validation",
       "files": 2,
       "added": 4,
@@ -258,6 +293,7 @@
       "date": "2026-07-09",
       "author": "Alex Builder",
       "subject": "Add CI validation workflow",
+      "original_subject": "Add CI validation workflow",
       "category": "validation",
       "files": 1,
       "added": 7,
@@ -270,6 +306,7 @@
       "date": "2026-07-12",
       "author": "Alex Builder",
       "subject": "Document local-first architecture decision",
+      "original_subject": "Document local-first architecture decision",
       "category": "documentation",
       "files": 1,
       "added": 3,
@@ -282,6 +319,7 @@
       "date": "2026-07-15",
       "author": "Alex Builder",
       "subject": "Prepare v1 release documentation",
+      "original_subject": "Prepare v1 release documentation",
       "category": "delivery",
       "files": 1,
       "added": 5,
@@ -294,6 +332,7 @@
       "date": "2026-07-18",
       "author": "Alex Builder",
       "subject": "Release PocketTasks 1.0",
+      "original_subject": "Release PocketTasks 1.0",
       "category": "delivery",
       "files": 1,
       "added": 1,
@@ -323,13 +362,15 @@
       "type": "explicit-reversal",
       "title": "Revert \"Add experimental cloud sync queue\"",
       "detail": "2026-07-05 · d678a8a2",
-      "confidence": "high"
+      "confidence": "high",
+      "original_title": "Revert \"Add experimental cloud sync queue\""
     },
     {
       "type": "high-churn-file",
       "title": "src/sync.py",
       "detail": "Changed in 5 commits with 86% bidirectional churn.",
-      "confidence": "medium"
+      "confidence": "medium",
+      "original_title": "src/sync.py"
     }
   ],
   "attention_areas": [

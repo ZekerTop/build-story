@@ -18,29 +18,39 @@
 
 ## 真正改变项目的转折点
 
-- `2026-07-01` **项目起点** · Initialize PocketTasks CLI (`7205f097`)
-- `2026-07-03` **引入后续被撤销的方案** · Add experimental cloud sync queue (`a4ffcd52`)
-- `2026-07-04` **反复打磨** · Refactor cloud sync retry ownership (`9de0c2d9`)
-- `2026-07-05` **方向调整** · Revert "Add experimental cloud sync queue" (`d678a8a2`)
-- `2026-07-06` **确立新方向** · Replace cloud sync with local export (`25929cfc`)
-- `2026-07-08` **建立验证** · Add tests for storage and export (`ea9798bf`)
-- `2026-07-18` **完成交付** · Release PocketTasks 1.0 (`5e5bebe5`)
+- `2026-07-01` **项目起点** · 初始化 PocketTasks 命令行工具 (`7205f097`)
+- `2026-07-03` **引入后续被撤销的方案** · 尝试加入云同步队列 (`a4ffcd52`)
+  - **用户：** 加入自动云同步，但要让任务管理器对新手保持简单。
+  - **AI：** 已经加入同步队列和后台推送。
+- `2026-07-04` **反复打磨** · 重构云同步重试状态的归属 (`9de0c2d9`)
+  - **用户：** 再次修复自动云同步队列，并让重试逻辑更容易理解。
+  - **AI：** 重试状态现在由每个队列任务独立保存。
+- `2026-07-05` **方向调整** · 回滚“尝试加入云同步队列” (`d678a8a2`)
+  - **用户：** 云同步太复杂了。移除它，让所有用户数据保留在本地。
+  - **AI：** 已经移除自动同步路径。
+- `2026-07-06` **确立新方向** · 用本地导出替代云同步 (`25929cfc`)
+  - **用户：** 加入显式 JSON 导出，让用户决定数据何时离开应用。
+  - **AI：** 导出功能已经完成，并保持本地运行。
+- `2026-07-08` **建立验证** · 为任务存储与导出补充测试 (`ea9798bf`)
+  - **用户：** 为本地存储和 JSON 导出补充测试。
+  - **AI：** 存储与导出路径现在都有测试覆盖。
+- `2026-07-18` **完成交付** · 发布 PocketTasks 1.0 (`5e5bebe5`)
 
 <details>
 <summary>查看全部提交 · 12 次提交</summary>
 
-- `2026-07-01` **搭建** · Initialize PocketTasks CLI (`7205f097`)
-- `2026-07-02` **功能** · Add JSON task storage (`9acce59f`)
-- `2026-07-03` **功能** · Add experimental cloud sync queue (`a4ffcd52`)
-- `2026-07-03` **修复** · Fix cloud sync duplicate queue entries (`55eaaed9`)
-- `2026-07-04` **重构** · Refactor cloud sync retry ownership (`9de0c2d9`)
-- `2026-07-05` **修复** · Revert "Add experimental cloud sync queue" (`d678a8a2`)
-- `2026-07-06` **重构** · Replace cloud sync with local export (`25929cfc`)
-- `2026-07-08` **验证** · Add tests for storage and export (`ea9798bf`)
-- `2026-07-09` **验证** · Add CI validation workflow (`a3e930e6`)
-- `2026-07-12` **文档** · Document local-first architecture decision (`684b02c3`)
-- `2026-07-15` **交付** · Prepare v1 release documentation (`b621c977`)
-- `2026-07-18` **交付** · Release PocketTasks 1.0 (`5e5bebe5`)
+- `2026-07-01` **搭建** · 初始化 PocketTasks 命令行工具 (`7205f097`)
+- `2026-07-02` **功能** · 新增 JSON 任务存储 (`9acce59f`)
+- `2026-07-03` **功能** · 尝试加入云同步队列 (`a4ffcd52`)
+- `2026-07-03` **修复** · 修复云同步队列中的重复任务 (`55eaaed9`)
+- `2026-07-04` **重构** · 重构云同步重试状态的归属 (`9de0c2d9`)
+- `2026-07-05` **修复** · 回滚“尝试加入云同步队列” (`d678a8a2`)
+- `2026-07-06` **重构** · 用本地导出替代云同步 (`25929cfc`)
+- `2026-07-08` **验证** · 为任务存储与导出补充测试 (`ea9798bf`)
+- `2026-07-09` **验证** · 新增 CI 验证工作流 (`a3e930e6`)
+- `2026-07-12` **文档** · 记录本地优先架构决策 (`684b02c3`)
+- `2026-07-15` **交付** · 准备 v1 发布文档 (`b621c977`)
+- `2026-07-18` **交付** · 发布 PocketTasks 1.0 (`5e5bebe5`)
 
 </details>
 
@@ -50,7 +60,7 @@
 
 ### 循环候选
 
-- **Revert "Add experimental cloud sync queue"** · 2026-07-05 · d678a8a2 (置信度：高)
+- **回滚“尝试加入云同步队列”** · 2026-07-05 · d678a8a2 (置信度：高)
 - **src/sync.py** · 在 5 次提交中被修改，双向变更比例约为 86%。 (置信度：中)
 
 ## 注意力地图
@@ -166,7 +176,7 @@
 
 ### STAR 面试故事
 
-- **背景：** Initialize PocketTasks CLI
+- **背景：** 初始化 PocketTasks 命令行工具
 - **任务：** 产品方向判断、核心实现与发布验证
 - **行动：** 在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。
 - **结果：** 发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。

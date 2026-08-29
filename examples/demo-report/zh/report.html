@@ -52,6 +52,10 @@ main { background:var(--surface); }
 .turn-meta time { color:var(--muted); font:12px ui-monospace,SFMono-Regular,Menlo,monospace; text-transform:none; letter-spacing:0; }
 .turn h3 { margin:9px 0 8px; font-size:clamp(21px,3vw,30px); letter-spacing:-.03em; }
 .turn p { margin:0; color:var(--muted); font-size:13px; }
+.dialogue { margin-top:18px; padding:16px 18px; border-left:3px solid var(--accent); background:var(--paper); border-radius:0 10px 10px 0; }
+.dialogue p { display:grid; grid-template-columns:46px 1fr; gap:10px; margin:7px 0; color:#3f3f3f; font-size:14px; }
+.dialogue b { color:var(--accent); }
+.dialogue span { min-width:0; }
 .full-history { margin-top:42px; padding:22px; border-radius:var(--radius); background:var(--paper); }
 .full-history>p { max-width:680px; color:var(--muted); }
 .filters { display:flex; gap:8px; flex-wrap:wrap; margin:30px 0; }
@@ -166,49 +170,54 @@ footer span { color:#aaa; }
   <div class="turn-number">01</div>
   <div class="turn-body">
     <div class="turn-meta"><span>项目起点</span><time>2026-07-01</time></div>
-    <h3>Initialize PocketTasks CLI</h3>
+    <h3>初始化 PocketTasks 命令行工具</h3>
     <p>搭建 · 4 个文件 · <code>7205f097</code></p>
   </div>
 </article><article class="turn">
   <div class="turn-number">02</div>
   <div class="turn-body">
     <div class="turn-meta"><span>引入后续被撤销的方案</span><time>2026-07-03</time></div>
-    <h3>Add experimental cloud sync queue</h3>
+    <h3>尝试加入云同步队列</h3>
     <p>功能 · 1 个文件 · <code>a4ffcd52</code></p>
+    <div class="dialogue"><p><b>用户</b><span>加入自动云同步，但要让任务管理器对新手保持简单。</span></p><p><b>AI</b><span>已经加入同步队列和后台推送。</span></p></div>
   </div>
 </article><article class="turn">
   <div class="turn-number">03</div>
   <div class="turn-body">
     <div class="turn-meta"><span>反复打磨</span><time>2026-07-04</time></div>
-    <h3>Refactor cloud sync retry ownership</h3>
+    <h3>重构云同步重试状态的归属</h3>
     <p>重构 · 1 个文件 · <code>9de0c2d9</code></p>
+    <div class="dialogue"><p><b>用户</b><span>再次修复自动云同步队列，并让重试逻辑更容易理解。</span></p><p><b>AI</b><span>重试状态现在由每个队列任务独立保存。</span></p></div>
   </div>
 </article><article class="turn">
   <div class="turn-number">04</div>
   <div class="turn-body">
     <div class="turn-meta"><span>方向调整</span><time>2026-07-05</time></div>
-    <h3>Revert &quot;Add experimental cloud sync queue&quot;</h3>
+    <h3>回滚“尝试加入云同步队列”</h3>
     <p>修复 · 1 个文件 · <code>d678a8a2</code></p>
+    <div class="dialogue"><p><b>用户</b><span>云同步太复杂了。移除它，让所有用户数据保留在本地。</span></p><p><b>AI</b><span>已经移除自动同步路径。</span></p></div>
   </div>
 </article><article class="turn">
   <div class="turn-number">05</div>
   <div class="turn-body">
     <div class="turn-meta"><span>确立新方向</span><time>2026-07-06</time></div>
-    <h3>Replace cloud sync with local export</h3>
+    <h3>用本地导出替代云同步</h3>
     <p>重构 · 1 个文件 · <code>25929cfc</code></p>
+    <div class="dialogue"><p><b>用户</b><span>加入显式 JSON 导出，让用户决定数据何时离开应用。</span></p><p><b>AI</b><span>导出功能已经完成，并保持本地运行。</span></p></div>
   </div>
 </article><article class="turn">
   <div class="turn-number">06</div>
   <div class="turn-body">
     <div class="turn-meta"><span>建立验证</span><time>2026-07-08</time></div>
-    <h3>Add tests for storage and export</h3>
+    <h3>为任务存储与导出补充测试</h3>
     <p>验证 · 2 个文件 · <code>ea9798bf</code></p>
+    <div class="dialogue"><p><b>用户</b><span>为本地存储和 JSON 导出补充测试。</span></p><p><b>AI</b><span>存储与导出路径现在都有测试覆盖。</span></p></div>
   </div>
 </article><article class="turn">
   <div class="turn-number">07</div>
   <div class="turn-body">
     <div class="turn-meta"><span>完成交付</span><time>2026-07-18</time></div>
-    <h3>Release PocketTasks 1.0</h3>
+    <h3>发布 PocketTasks 1.0</h3>
     <p>交付 · 1 个文件 · <code>5e5bebe5</code></p>
   </div>
 </article></div><details class="full-history"><summary>查看全部提交 · 12 次提交</summary><p>完整 Git 历史仍然保留为证据，但它本身不是故事。</p><div class="filters"><button class="filter is-active" data-filter="all">全部</button><button class="filter" data-filter="delivery">交付 <span>2</span></button><button class="filter" data-filter="documentation">文档 <span>1</span></button><button class="filter" data-filter="feature">功能 <span>2</span></button><button class="filter" data-filter="fix">修复 <span>2</span></button><button class="filter" data-filter="foundation">搭建 <span>1</span></button><button class="filter" data-filter="refactor">重构 <span>2</span></button><button class="filter" data-filter="validation">验证 <span>2</span></button></div><div class="timeline"><article class="event" data-category="foundation">
@@ -216,7 +225,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>搭建</span><code>7205f097</code></div>
-    <h3>Initialize PocketTasks CLI</h3>
+    <h3>初始化 PocketTasks 命令行工具</h3>
     <p>4 个文件 · <strong>+9</strong> / -0</p>
   </div>
 </article><article class="event" data-category="feature">
@@ -224,7 +233,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>功能</span><code>9acce59f</code></div>
-    <h3>Add JSON task storage</h3>
+    <h3>新增 JSON 任务存储</h3>
     <p>1 个文件 · <strong>+4</strong> / -0</p>
   </div>
 </article><article class="event" data-category="feature">
@@ -232,7 +241,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>功能</span><code>a4ffcd52</code></div>
-    <h3>Add experimental cloud sync queue</h3>
+    <h3>尝试加入云同步队列</h3>
     <p>1 个文件 · <strong>+4</strong> / -0</p>
   </div>
 </article><article class="event" data-category="fix">
@@ -240,7 +249,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>修复</span><code>55eaaed9</code></div>
-    <h3>Fix cloud sync duplicate queue entries</h3>
+    <h3>修复云同步队列中的重复任务</h3>
     <p>1 个文件 · <strong>+2</strong> / -1</p>
   </div>
 </article><article class="event" data-category="refactor">
@@ -248,7 +257,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>重构</span><code>9de0c2d9</code></div>
-    <h3>Refactor cloud sync retry ownership</h3>
+    <h3>重构云同步重试状态的归属</h3>
     <p>1 个文件 · <strong>+4</strong> / -3</p>
   </div>
 </article><article class="event" data-category="fix">
@@ -256,7 +265,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>修复</span><code>d678a8a2</code></div>
-    <h3>Revert &quot;Add experimental cloud sync queue&quot;</h3>
+    <h3>回滚“尝试加入云同步队列”</h3>
     <p>1 个文件 · <strong>+2</strong> / -6</p>
   </div>
 </article><article class="event" data-category="refactor">
@@ -264,7 +273,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>重构</span><code>25929cfc</code></div>
-    <h3>Replace cloud sync with local export</h3>
+    <h3>用本地导出替代云同步</h3>
     <p>1 个文件 · <strong>+4</strong> / -2</p>
   </div>
 </article><article class="event" data-category="validation">
@@ -272,7 +281,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>验证</span><code>ea9798bf</code></div>
-    <h3>Add tests for storage and export</h3>
+    <h3>为任务存储与导出补充测试</h3>
     <p>2 个文件 · <strong>+4</strong> / -0</p>
   </div>
 </article><article class="event" data-category="validation">
@@ -280,7 +289,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>验证</span><code>a3e930e6</code></div>
-    <h3>Add CI validation workflow</h3>
+    <h3>新增 CI 验证工作流</h3>
     <p>1 个文件 · <strong>+7</strong> / -0</p>
   </div>
 </article><article class="event" data-category="documentation">
@@ -288,7 +297,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>文档</span><code>684b02c3</code></div>
-    <h3>Document local-first architecture decision</h3>
+    <h3>记录本地优先架构决策</h3>
     <p>1 个文件 · <strong>+3</strong> / -0</p>
   </div>
 </article><article class="event" data-category="delivery">
@@ -296,7 +305,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>交付</span><code>b621c977</code></div>
-    <h3>Prepare v1 release documentation</h3>
+    <h3>准备 v1 发布文档</h3>
     <p>1 个文件 · <strong>+5</strong> / -0</p>
   </div>
 </article><article class="event" data-category="delivery">
@@ -304,7 +313,7 @@ footer span { color:#aaa; }
   <div class="event-mark" aria-hidden="true"></div>
   <div class="event-body">
     <div class="event-meta"><span>交付</span><code>5e5bebe5</code></div>
-    <h3>Release PocketTasks 1.0</h3>
+    <h3>发布 PocketTasks 1.0</h3>
     <p>1 个文件 · <strong>+1</strong> / -1</p>
   </div>
 </article></div></details></div></section>
@@ -313,7 +322,7 @@ footer span { color:#aaa; }
   <div><code>src/sync.py</code><p>5 次提交 · 新增 16 / 删除 12</p></div>
   <div class="ratio"><strong>86%</strong><span>双向变更信号</span></div>
 </div></div><aside class="loops"><h3>循环候选</h3><details class="loop">
-  <summary><span class="confidence high">高</span><strong>Revert &quot;Add experimental cloud sync queue&quot;</strong></summary>
+  <summary><span class="confidence high">高</span><strong>回滚“尝试加入云同步队列”</strong></summary>
   <p>2026-07-05 · d678a8a2</p>
 </details><details class="loop">
   <summary><span class="confidence medium">中</span><strong>src/sync.py</strong></summary>
@@ -365,12 +374,12 @@ footer span { color:#aaa; }
   <section class="section"><div class="shell"><div class="section-head"><h2>把证据变成能讲述的故事</h2><p>由仓库证据与用户确认的真实语境共同生成。</p></div><div class="career-grid">
   <article><span class="eyebrow">作品集摘要</span><p>从复杂的自动云同步，回到用户可控的本地优先。 在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。 发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。</p></article>
   <article><span class="eyebrow">简历要点</span><ul><li>独立完成 PocketTasks 从方案试验到 1.0 发布，在发现自动云同步持续引入队列与重试复杂度后，主动回滚并改为显式 JSON 导出。</li><li>为本地存储与导出路径补充测试和 CI，把关键方向调整沉淀为架构决策记录。</li></ul></article>
-  <article><span class="eyebrow">STAR 面试故事</span><ol class="star-list"><li><b>背景</b><span>Initialize PocketTasks CLI</span></li><li><b>任务</b><span>产品方向判断、核心实现与发布验证</span></li><li><b>行动</b><span>在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。</span></li><li><b>结果</b><span>发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。</span></li></ol></article>
+  <article><span class="eyebrow">STAR 面试故事</span><ol class="star-list"><li><b>背景</b><span>初始化 PocketTasks 命令行工具</span></li><li><b>任务</b><span>产品方向判断、核心实现与发布验证</span></li><li><b>行动</b><span>在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。</span></li><li><b>结果</b><span>发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。</span></li></ol></article>
 </div></div></section>
   <section class="section"><div class="shell method"><div><div class="section-head"><h2>方法与限制</h2></div><p><strong>证据覆盖范围：Git 历史、已授权的会话记录</strong></p><ul><li>Git 只记录已保存的变更，无法覆盖全部思考、实验和未提交工作。</li><li>会话分析只保存用于解释重复提示候选的短摘录，不复制完整对话。</li></ul></div><div><h3>职业输出规则</h3><p>只使用用户确认的职责、决策与结果，不把提交次数写成影响指标。</p><h3>本地优先</h3><p>生成器不会上传源代码、语境文件或会话记录。</p></div></div></section>
 </main>
 <footer><div class="shell"><strong>BuildStory</strong><span>看见你是怎么做到的。</span></div></footer>
-<script type="application/json" id="buildstory-data">{"schema_version":"1.1","generator_version":"0.2.0","generated_at":"2026-08-29T00:00:00+00:00","language":"zh","project":{"name":"PocketTasks","path":"PocketTasks","branch":"main","start":"2026-07-01T09:00:00+00:00","end":"2026-07-18T09:00:00+00:00","calendar_days":18},"coverage":{"sources":["git","transcripts"],"commit_count":12,"tracked_files":11,"authors":["Alex Builder"],"transcript_files":["pockettasks-session.jsonl"],"limitations":["Git 只记录已保存的变更，无法覆盖全部思考、实验和未提交工作。","会话分析只保存用于解释重复提示候选的短摘录，不复制完整对话。"]},"metrics":{"commits":12,"files":11,"authors":1,"calendar_days":18,"lines_added":49,"lines_deleted":13,"category_counts":{"foundation":1,"feature":2,"fix":2,"refactor":2,"validation":2,"documentation":1,"delivery":2},"time_estimate":{"hours":3.4,"sessions":null,"source":"transcripts","confidence":"medium"}},"story":{"headline":"从复杂的自动云同步，回到用户可控的本地优先。","highlights":["1 次关键方向调整","2 个循环候选需要复盘","注意力最集中：核心代码"],"context_confirmed":true},"turning_points":[{"hash":"7205f0974e67d117962f3cd7b461c63cb852bcb5","short_hash":"7205f097","timestamp":"2026-07-01T09:00:00+00:00","date":"2026-07-01","author":"Alex Builder","subject":"Initialize PocketTasks CLI","category":"foundation","files":4,"added":9,"deleted":0,"turning_point_reason":"项目起点"},{"hash":"a4ffcd5214b19dcb253d38e1f3d8d66a5977c8d7","short_hash":"a4ffcd52","timestamp":"2026-07-03T10:15:00+00:00","date":"2026-07-03","author":"Alex Builder","subject":"Add experimental cloud sync queue","category":"feature","files":1,"added":4,"deleted":0,"turning_point_reason":"引入后续被撤销的方案"},{"hash":"9de0c2d9a698065db51844cadad31877e74c4bbd","short_hash":"9de0c2d9","timestamp":"2026-07-04T09:30:00+00:00","date":"2026-07-04","author":"Alex Builder","subject":"Refactor cloud sync retry ownership","category":"refactor","files":1,"added":4,"deleted":3,"turning_point_reason":"反复打磨"},{"hash":"d678a8a28a840d4faf4ef637874c0499e55bb846","short_hash":"d678a8a2","timestamp":"2026-07-05T09:10:00+00:00","date":"2026-07-05","author":"Alex Builder","subject":"Revert \"Add experimental cloud sync queue\"","category":"fix","files":1,"added":2,"deleted":6,"turning_point_reason":"方向调整"},{"hash":"25929cfc1954decd69031420076a26d20b3bb6ee","short_hash":"25929cfc","timestamp":"2026-07-06T10:00:00+00:00","date":"2026-07-06","author":"Alex Builder","subject":"Replace cloud sync with local export","category":"refactor","files":1,"added":4,"deleted":2,"turning_point_reason":"确立新方向"},{"hash":"ea9798bf7a73e7b662d24cb18733a6a2e585aa6c","short_hash":"ea9798bf","timestamp":"2026-07-08T09:00:00+00:00","date":"2026-07-08","author":"Alex Builder","subject":"Add tests for storage and export","category":"validation","files":2,"added":4,"deleted":0,"turning_point_reason":"建立验证"},{"hash":"5e5bebe5519b18a077fb204edc0ae4a57c6e9b2f","short_hash":"5e5bebe5","timestamp":"2026-07-18T09:00:00+00:00","date":"2026-07-18","author":"Alex Builder","subject":"Release PocketTasks 1.0","category":"delivery","files":1,"added":1,"deleted":1,"turning_point_reason":"完成交付"}],"timeline":[{"hash":"7205f0974e67d117962f3cd7b461c63cb852bcb5","short_hash":"7205f097","timestamp":"2026-07-01T09:00:00+00:00","date":"2026-07-01","author":"Alex Builder","subject":"Initialize PocketTasks CLI","category":"foundation","files":4,"added":9,"deleted":0},{"hash":"9acce59f877bfd953020df47e8013267cf1c1a38","short_hash":"9acce59f","timestamp":"2026-07-02T09:20:00+00:00","date":"2026-07-02","author":"Alex Builder","subject":"Add JSON task storage","category":"feature","files":1,"added":4,"deleted":0},{"hash":"a4ffcd5214b19dcb253d38e1f3d8d66a5977c8d7","short_hash":"a4ffcd52","timestamp":"2026-07-03T10:15:00+00:00","date":"2026-07-03","author":"Alex Builder","subject":"Add experimental cloud sync queue","category":"feature","files":1,"added":4,"deleted":0},{"hash":"55eaaed951095bc517c62894cdf286caeae83d51","short_hash":"55eaaed9","timestamp":"2026-07-03T11:40:00+00:00","date":"2026-07-03","author":"Alex Builder","subject":"Fix cloud sync duplicate queue entries","category":"fix","files":1,"added":2,"deleted":1},{"hash":"9de0c2d9a698065db51844cadad31877e74c4bbd","short_hash":"9de0c2d9","timestamp":"2026-07-04T09:30:00+00:00","date":"2026-07-04","author":"Alex Builder","subject":"Refactor cloud sync retry ownership","category":"refactor","files":1,"added":4,"deleted":3},{"hash":"d678a8a28a840d4faf4ef637874c0499e55bb846","short_hash":"d678a8a2","timestamp":"2026-07-05T09:10:00+00:00","date":"2026-07-05","author":"Alex Builder","subject":"Revert \"Add experimental cloud sync queue\"","category":"fix","files":1,"added":2,"deleted":6},{"hash":"25929cfc1954decd69031420076a26d20b3bb6ee","short_hash":"25929cfc","timestamp":"2026-07-06T10:00:00+00:00","date":"2026-07-06","author":"Alex Builder","subject":"Replace cloud sync with local export","category":"refactor","files":1,"added":4,"deleted":2},{"hash":"ea9798bf7a73e7b662d24cb18733a6a2e585aa6c","short_hash":"ea9798bf","timestamp":"2026-07-08T09:00:00+00:00","date":"2026-07-08","author":"Alex Builder","subject":"Add tests for storage and export","category":"validation","files":2,"added":4,"deleted":0},{"hash":"a3e930e6981449d0b9e66dea038f8e2a7aa402c8","short_hash":"a3e930e6","timestamp":"2026-07-09T09:00:00+00:00","date":"2026-07-09","author":"Alex Builder","subject":"Add CI validation workflow","category":"validation","files":1,"added":7,"deleted":0},{"hash":"684b02c3de6db621218192e6cdf5a248b920c1e2","short_hash":"684b02c3","timestamp":"2026-07-12T09:00:00+00:00","date":"2026-07-12","author":"Alex Builder","subject":"Document local-first architecture decision","category":"documentation","files":1,"added":3,"deleted":0},{"hash":"b621c97756c1e14dd8f99df87d70e12e67a850a8","short_hash":"b621c977","timestamp":"2026-07-15T09:00:00+00:00","date":"2026-07-15","author":"Alex Builder","subject":"Prepare v1 release documentation","category":"delivery","files":1,"added":5,"deleted":0},{"hash":"5e5bebe5519b18a077fb204edc0ae4a57c6e9b2f","short_hash":"5e5bebe5","timestamp":"2026-07-18T09:00:00+00:00","date":"2026-07-18","author":"Alex Builder","subject":"Release PocketTasks 1.0","category":"delivery","files":1,"added":1,"deleted":1}],"friction_zones":[{"path":"src/sync.py","commits":5,"added":16,"deleted":12,"hashes":["a4ffcd52","55eaaed9","9de0c2d9","d678a8a2","25929cfc"],"gross":28,"rework_ratio":0.857,"friction_score":4.329}],"loop_candidates":[{"type":"explicit-reversal","title":"Revert \"Add experimental cloud sync queue\"","detail":"2026-07-05 · d678a8a2","confidence":"high"},{"type":"high-churn-file","title":"src/sync.py","detail":"在 5 次提交中被修改，双向变更比例约为 86%。","confidence":"medium"}],"attention_areas":[{"area":"src","label":"核心代码","gross":34,"commits":7,"files":3,"attention_score":10.95},{"area":"(root)","label":"项目根目录","gross":14,"commits":5,"files":4,"attention_score":7.56},{"area":".github","label":"自动化工作流","gross":7,"commits":1,"files":1,"attention_score":3.52},{"area":"tests","label":"测试","gross":4,"commits":2,"files":2,"attention_score":3.38},{"area":"docs","label":"文档","gross":3,"commits":1,"files":1,"attention_score":2.35}],"dimensions":[{"key":"delivery","score":100,"confidence":"high","evidence":["README","许可证","项目清单","1 个 Git 标签","项目文档"],"level":"充分","reason":"README；许可证；项目清单；1 个 Git 标签；项目文档","recommendation":"继续把发布标签、变更说明和使用文档作为一次交付的收尾。"},{"key":"validation","score":78,"confidence":"high","evidence":["测试文件","CI 工作流","2 次验证相关提交"],"level":"较强","reason":"测试文件；CI 工作流；2 次验证相关提交","recommendation":"下次发布前，优先为返工最集中的路径补充回归测试。"},{"key":"traceability","score":100,"confidence":"high","evidence":["100% 的提交说明具有描述性","100% 的提交规模便于审查"],"level":"清晰","reason":"100% 的提交说明具有描述性；100% 的提交规模便于审查","recommendation":"保持提交规模可审查，并说明每次变更保留或替代了什么决定。"},{"key":"iteration","score":50,"confidence":"medium","evidence":["1 次明确回滚","1 个高频变更文件候选","高频变更可能是有效探索，仍需结合真实语境复盘"],"level":"需要复盘","reason":"1 次明确回滚；1 个高频变更文件候选；高频变更可能是有效探索，仍需结合真实语境复盘","recommendation":"实现跨边界状态前，先写清失败恢复与退出条件；同一方案连续修复两次后，暂停并重新判断方向。"},{"key":"learning","score":93,"confidence":"high","evidence":["README","文档目录或架构说明","变更记录","架构决策记录"],"level":"充分","reason":"README；文档目录或架构说明；变更记录；架构决策记录","recommendation":"继续把关键决策记录与它改变的发布结果或产品行为连接起来。"}],"signals":{"readme":true,"license":true,"manifest":true,"tests":true,"ci":true,"docs":true,"changelog":true,"adr":true,"lint":false,"tags":["v1.0.0"]},"transcripts":{"files":["pockettasks-session.jsonl"],"events":12,"timestamped_events":12,"estimated_active_hours":3.4,"confidence":"medium","repeated_prompts":[],"error_signals":0},"evidence_cards":[{"title":"持续交付","evidence":"在 18 个自然日内完成 12 次提交，涉及 11 个受版本控制的文件。","career":"独立完成 PocketTasks 从方案试验到 1.0 发布，在发现自动云同步持续引入队列与重试复杂度后，主动回滚并改为显式 JSON 导出。"},{"title":"核心实现区域","evidence":"主要变更活动集中在：核心代码, 项目根目录, 自动化工作流。","career":"为本地存储与导出路径补充测试和 CI，把关键方向调整沉淀为架构决策记录。"},{"title":"验证基础设施","evidence":"仓库中已包含 测试 和 CI。"}],"career_material":{"confirmed":true,"portfolio_summary":"从复杂的自动云同步，回到用户可控的本地优先。 在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。 发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。","resume_bullets":["独立完成 PocketTasks 从方案试验到 1.0 发布，在发现自动云同步持续引入队列与重试复杂度后，主动回滚并改为显式 JSON 导出。","为本地存储与导出路径补充测试和 CI，把关键方向调整沉淀为架构决策记录。"],"star":{"situation":"Initialize PocketTasks CLI","task":"产品方向判断、核心实现与发布验证","action":"在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。","result":"发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。"}}}</script>
+<script type="application/json" id="buildstory-data">{"schema_version":"1.2","generator_version":"0.2.0","generated_at":"2026-08-29T00:00:00+00:00","language":"zh","project":{"name":"PocketTasks","path":"PocketTasks","branch":"main","start":"2026-07-01T09:00:00+00:00","end":"2026-07-18T09:00:00+00:00","calendar_days":18},"coverage":{"sources":["git","transcripts"],"commit_count":12,"tracked_files":11,"authors":["Alex Builder"],"transcript_files":["pockettasks-session.jsonl"],"limitations":["Git 只记录已保存的变更，无法覆盖全部思考、实验和未提交工作。","会话分析只保存用于解释重复提示候选的短摘录，不复制完整对话。"]},"metrics":{"commits":12,"files":11,"authors":1,"calendar_days":18,"lines_added":49,"lines_deleted":13,"category_counts":{"foundation":1,"feature":2,"fix":2,"refactor":2,"validation":2,"documentation":1,"delivery":2},"time_estimate":{"hours":3.4,"sessions":null,"source":"transcripts","confidence":"medium"}},"story":{"headline":"从复杂的自动云同步，回到用户可控的本地优先。","highlights":["1 次关键方向调整","2 个循环候选需要复盘","注意力最集中：核心代码"],"context_confirmed":true},"turning_points":[{"hash":"7205f0974e67d117962f3cd7b461c63cb852bcb5","short_hash":"7205f097","timestamp":"2026-07-01T09:00:00+00:00","date":"2026-07-01","author":"Alex Builder","subject":"初始化 PocketTasks 命令行工具","original_subject":"Initialize PocketTasks CLI","category":"foundation","files":4,"added":9,"deleted":0,"turning_point_reason":"项目起点"},{"hash":"a4ffcd5214b19dcb253d38e1f3d8d66a5977c8d7","short_hash":"a4ffcd52","timestamp":"2026-07-03T10:15:00+00:00","date":"2026-07-03","author":"Alex Builder","subject":"尝试加入云同步队列","original_subject":"Add experimental cloud sync queue","category":"feature","files":1,"added":4,"deleted":0,"turning_point_reason":"引入后续被撤销的方案","dialogue":{"user":"加入自动云同步，但要让任务管理器对新手保持简单。","ai":"已经加入同步队列和后台推送。"}},{"hash":"9de0c2d9a698065db51844cadad31877e74c4bbd","short_hash":"9de0c2d9","timestamp":"2026-07-04T09:30:00+00:00","date":"2026-07-04","author":"Alex Builder","subject":"重构云同步重试状态的归属","original_subject":"Refactor cloud sync retry ownership","category":"refactor","files":1,"added":4,"deleted":3,"turning_point_reason":"反复打磨","dialogue":{"user":"再次修复自动云同步队列，并让重试逻辑更容易理解。","ai":"重试状态现在由每个队列任务独立保存。"}},{"hash":"d678a8a28a840d4faf4ef637874c0499e55bb846","short_hash":"d678a8a2","timestamp":"2026-07-05T09:10:00+00:00","date":"2026-07-05","author":"Alex Builder","subject":"回滚“尝试加入云同步队列”","original_subject":"Revert \"Add experimental cloud sync queue\"","category":"fix","files":1,"added":2,"deleted":6,"turning_point_reason":"方向调整","dialogue":{"user":"云同步太复杂了。移除它，让所有用户数据保留在本地。","ai":"已经移除自动同步路径。"}},{"hash":"25929cfc1954decd69031420076a26d20b3bb6ee","short_hash":"25929cfc","timestamp":"2026-07-06T10:00:00+00:00","date":"2026-07-06","author":"Alex Builder","subject":"用本地导出替代云同步","original_subject":"Replace cloud sync with local export","category":"refactor","files":1,"added":4,"deleted":2,"turning_point_reason":"确立新方向","dialogue":{"user":"加入显式 JSON 导出，让用户决定数据何时离开应用。","ai":"导出功能已经完成，并保持本地运行。"}},{"hash":"ea9798bf7a73e7b662d24cb18733a6a2e585aa6c","short_hash":"ea9798bf","timestamp":"2026-07-08T09:00:00+00:00","date":"2026-07-08","author":"Alex Builder","subject":"为任务存储与导出补充测试","original_subject":"Add tests for storage and export","category":"validation","files":2,"added":4,"deleted":0,"turning_point_reason":"建立验证","dialogue":{"user":"为本地存储和 JSON 导出补充测试。","ai":"存储与导出路径现在都有测试覆盖。"}},{"hash":"5e5bebe5519b18a077fb204edc0ae4a57c6e9b2f","short_hash":"5e5bebe5","timestamp":"2026-07-18T09:00:00+00:00","date":"2026-07-18","author":"Alex Builder","subject":"发布 PocketTasks 1.0","original_subject":"Release PocketTasks 1.0","category":"delivery","files":1,"added":1,"deleted":1,"turning_point_reason":"完成交付"}],"timeline":[{"hash":"7205f0974e67d117962f3cd7b461c63cb852bcb5","short_hash":"7205f097","timestamp":"2026-07-01T09:00:00+00:00","date":"2026-07-01","author":"Alex Builder","subject":"初始化 PocketTasks 命令行工具","original_subject":"Initialize PocketTasks CLI","category":"foundation","files":4,"added":9,"deleted":0},{"hash":"9acce59f877bfd953020df47e8013267cf1c1a38","short_hash":"9acce59f","timestamp":"2026-07-02T09:20:00+00:00","date":"2026-07-02","author":"Alex Builder","subject":"新增 JSON 任务存储","original_subject":"Add JSON task storage","category":"feature","files":1,"added":4,"deleted":0},{"hash":"a4ffcd5214b19dcb253d38e1f3d8d66a5977c8d7","short_hash":"a4ffcd52","timestamp":"2026-07-03T10:15:00+00:00","date":"2026-07-03","author":"Alex Builder","subject":"尝试加入云同步队列","original_subject":"Add experimental cloud sync queue","category":"feature","files":1,"added":4,"deleted":0},{"hash":"55eaaed951095bc517c62894cdf286caeae83d51","short_hash":"55eaaed9","timestamp":"2026-07-03T11:40:00+00:00","date":"2026-07-03","author":"Alex Builder","subject":"修复云同步队列中的重复任务","original_subject":"Fix cloud sync duplicate queue entries","category":"fix","files":1,"added":2,"deleted":1},{"hash":"9de0c2d9a698065db51844cadad31877e74c4bbd","short_hash":"9de0c2d9","timestamp":"2026-07-04T09:30:00+00:00","date":"2026-07-04","author":"Alex Builder","subject":"重构云同步重试状态的归属","original_subject":"Refactor cloud sync retry ownership","category":"refactor","files":1,"added":4,"deleted":3},{"hash":"d678a8a28a840d4faf4ef637874c0499e55bb846","short_hash":"d678a8a2","timestamp":"2026-07-05T09:10:00+00:00","date":"2026-07-05","author":"Alex Builder","subject":"回滚“尝试加入云同步队列”","original_subject":"Revert \"Add experimental cloud sync queue\"","category":"fix","files":1,"added":2,"deleted":6},{"hash":"25929cfc1954decd69031420076a26d20b3bb6ee","short_hash":"25929cfc","timestamp":"2026-07-06T10:00:00+00:00","date":"2026-07-06","author":"Alex Builder","subject":"用本地导出替代云同步","original_subject":"Replace cloud sync with local export","category":"refactor","files":1,"added":4,"deleted":2},{"hash":"ea9798bf7a73e7b662d24cb18733a6a2e585aa6c","short_hash":"ea9798bf","timestamp":"2026-07-08T09:00:00+00:00","date":"2026-07-08","author":"Alex Builder","subject":"为任务存储与导出补充测试","original_subject":"Add tests for storage and export","category":"validation","files":2,"added":4,"deleted":0},{"hash":"a3e930e6981449d0b9e66dea038f8e2a7aa402c8","short_hash":"a3e930e6","timestamp":"2026-07-09T09:00:00+00:00","date":"2026-07-09","author":"Alex Builder","subject":"新增 CI 验证工作流","original_subject":"Add CI validation workflow","category":"validation","files":1,"added":7,"deleted":0},{"hash":"684b02c3de6db621218192e6cdf5a248b920c1e2","short_hash":"684b02c3","timestamp":"2026-07-12T09:00:00+00:00","date":"2026-07-12","author":"Alex Builder","subject":"记录本地优先架构决策","original_subject":"Document local-first architecture decision","category":"documentation","files":1,"added":3,"deleted":0},{"hash":"b621c97756c1e14dd8f99df87d70e12e67a850a8","short_hash":"b621c977","timestamp":"2026-07-15T09:00:00+00:00","date":"2026-07-15","author":"Alex Builder","subject":"准备 v1 发布文档","original_subject":"Prepare v1 release documentation","category":"delivery","files":1,"added":5,"deleted":0},{"hash":"5e5bebe5519b18a077fb204edc0ae4a57c6e9b2f","short_hash":"5e5bebe5","timestamp":"2026-07-18T09:00:00+00:00","date":"2026-07-18","author":"Alex Builder","subject":"发布 PocketTasks 1.0","original_subject":"Release PocketTasks 1.0","category":"delivery","files":1,"added":1,"deleted":1}],"friction_zones":[{"path":"src/sync.py","commits":5,"added":16,"deleted":12,"hashes":["a4ffcd52","55eaaed9","9de0c2d9","d678a8a2","25929cfc"],"gross":28,"rework_ratio":0.857,"friction_score":4.329}],"loop_candidates":[{"type":"explicit-reversal","title":"回滚“尝试加入云同步队列”","detail":"2026-07-05 · d678a8a2","confidence":"high","original_title":"Revert \"Add experimental cloud sync queue\""},{"type":"high-churn-file","title":"src/sync.py","detail":"在 5 次提交中被修改，双向变更比例约为 86%。","confidence":"medium","original_title":"src/sync.py"}],"attention_areas":[{"area":"src","label":"核心代码","gross":34,"commits":7,"files":3,"attention_score":10.95},{"area":"(root)","label":"项目根目录","gross":14,"commits":5,"files":4,"attention_score":7.56},{"area":".github","label":"自动化工作流","gross":7,"commits":1,"files":1,"attention_score":3.52},{"area":"tests","label":"测试","gross":4,"commits":2,"files":2,"attention_score":3.38},{"area":"docs","label":"文档","gross":3,"commits":1,"files":1,"attention_score":2.35}],"dimensions":[{"key":"delivery","score":100,"confidence":"high","evidence":["README","许可证","项目清单","1 个 Git 标签","项目文档"],"level":"充分","reason":"README；许可证；项目清单；1 个 Git 标签；项目文档","recommendation":"继续把发布标签、变更说明和使用文档作为一次交付的收尾。"},{"key":"validation","score":78,"confidence":"high","evidence":["测试文件","CI 工作流","2 次验证相关提交"],"level":"较强","reason":"测试文件；CI 工作流；2 次验证相关提交","recommendation":"下次发布前，优先为返工最集中的路径补充回归测试。"},{"key":"traceability","score":100,"confidence":"high","evidence":["100% 的提交说明具有描述性","100% 的提交规模便于审查"],"level":"清晰","reason":"100% 的提交说明具有描述性；100% 的提交规模便于审查","recommendation":"保持提交规模可审查，并说明每次变更保留或替代了什么决定。"},{"key":"iteration","score":50,"confidence":"medium","evidence":["1 次明确回滚","1 个高频变更文件候选","高频变更可能是有效探索，仍需结合真实语境复盘"],"level":"需要复盘","reason":"1 次明确回滚；1 个高频变更文件候选；高频变更可能是有效探索，仍需结合真实语境复盘","recommendation":"实现跨边界状态前，先写清失败恢复与退出条件；同一方案连续修复两次后，暂停并重新判断方向。"},{"key":"learning","score":93,"confidence":"high","evidence":["README","文档目录或架构说明","变更记录","架构决策记录"],"level":"充分","reason":"README；文档目录或架构说明；变更记录；架构决策记录","recommendation":"继续把关键决策记录与它改变的发布结果或产品行为连接起来。"}],"signals":{"readme":true,"license":true,"manifest":true,"tests":true,"ci":true,"docs":true,"changelog":true,"adr":true,"lint":false,"tags":["v1.0.0"]},"transcripts":{"files":["pockettasks-session.jsonl"],"events":12,"timestamped_events":12,"estimated_active_hours":3.4,"confidence":"medium","repeated_prompts":[],"error_signals":0},"evidence_cards":[{"title":"持续交付","evidence":"在 18 个自然日内完成 12 次提交，涉及 11 个受版本控制的文件。","career":"独立完成 PocketTasks 从方案试验到 1.0 发布，在发现自动云同步持续引入队列与重试复杂度后，主动回滚并改为显式 JSON 导出。"},{"title":"核心实现区域","evidence":"主要变更活动集中在：核心代码, 项目根目录, 自动化工作流。","career":"为本地存储与导出路径补充测试和 CI，把关键方向调整沉淀为架构决策记录。"},{"title":"验证基础设施","evidence":"仓库中已包含 测试 和 CI。"}],"career_material":{"confirmed":true,"portfolio_summary":"从复杂的自动云同步，回到用户可控的本地优先。 在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。 发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。","resume_bullets":["独立完成 PocketTasks 从方案试验到 1.0 发布，在发现自动云同步持续引入队列与重试复杂度后，主动回滚并改为显式 JSON 导出。","为本地存储与导出路径补充测试和 CI，把关键方向调整沉淀为架构决策记录。"],"star":{"situation":"初始化 PocketTasks 命令行工具","task":"产品方向判断、核心实现与发布验证","action":"在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。","result":"发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。"}}}</script>
 <script>
 document.querySelectorAll('.filter').forEach(function(button) { button.addEventListener('click', function() { document.querySelectorAll('.filter').forEach(function(item) { item.classList.remove('is-active'); }); button.classList.add('is-active'); var selected = button.dataset.filter; document.querySelectorAll('.event').forEach(function(event) { event.hidden = selected !== 'all' && event.dataset.category !== selected; }); }); });
 </script>

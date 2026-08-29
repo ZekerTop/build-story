@@ -31,6 +31,8 @@ The experience must work with one command and no external account. Advanced tran
 - optional local transcript analysis;
 - human-readable dimension levels and action suggestions, with numeric calculations kept in details and no overall score;
 - optional bilingual user-confirmed context for role, outcome, key decision, project summary, and resume bullets;
+- exact localized display text for commit subjects and short conversation excerpts while retaining original evidence;
+- short user-request and AI-response excerpts attached to matching turning points when authorized timestamps support the link;
 - self-contained JSON, Markdown, and HTML reports;
 - English and Chinese report variants with a visible language switch;
 - guidance for retrospectives, portfolio cases, achievements, resume bullets, and STAR stories;

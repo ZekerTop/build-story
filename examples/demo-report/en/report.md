@@ -20,10 +20,20 @@
 
 - `2026-07-01` **Project start** · Initialize PocketTasks CLI (`7205f097`)
 - `2026-07-03` **Attempt later reversed** · Add experimental cloud sync queue (`a4ffcd52`)
+  - **User:** Add automatic cloud sync but keep the task manager simple for beginners
+  - **AI:** I added a queue and background push.
 - `2026-07-04` **Repeated refinement** · Refactor cloud sync retry ownership (`9de0c2d9`)
+  - **User:** Fix the automatic cloud sync queue again and make retries easier to understand
+  - **AI:** Retry state now lives with each queue item.
 - `2026-07-05` **Direction change** · Revert "Add experimental cloud sync queue" (`d678a8a2`)
+  - **User:** The cloud sync is too complex. Remove it and keep all user data local
+  - **AI:** I removed the automatic sync path.
 - `2026-07-06` **New direction** · Replace cloud sync with local export (`25929cfc`)
+  - **User:** Add an explicit JSON export so users control when data leaves the app
+  - **AI:** Export is implemented and remains local.
 - `2026-07-08` **Validation established** · Add tests for storage and export (`ea9798bf`)
+  - **User:** Add tests for the local store and JSON export
+  - **AI:** The storage and export paths now have tests.
 - `2026-07-18` **Delivery milestone** · Release PocketTasks 1.0 (`5e5bebe5`)
 
 <details>

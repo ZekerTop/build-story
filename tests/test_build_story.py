@@ -153,12 +153,28 @@ class BuildStoryTests(unittest.TestCase):
         self.make_history()
         transcript = Path(self.temp.name) / "session.jsonl"
         rows = [
-            {"timestamp": "2026-08-03T10:00:00Z", "role": "user", "content": "Please fix the cache invalidation when the same task runs twice"},
-            {"timestamp": "2026-08-03T10:05:00Z", "role": "assistant", "content": "I changed the cache ownership."},
-            {"timestamp": "2026-08-03T10:10:00Z", "role": "user", "content": "Please fix cache invalidation when the same task is executed twice"},
-            {"timestamp": "2026-08-03T10:14:00Z", "role": "assistant", "content": "Tests now pass."},
+            {"timestamp": "2026-08-03T08:30:00Z", "role": "user", "content": "Please fix the cache invalidation when the same task runs twice"},
+            {"timestamp": "2026-08-03T08:35:00Z", "role": "assistant", "content": "I changed the cache ownership."},
+            {"timestamp": "2026-08-03T08:45:00Z", "role": "user", "content": "Please fix cache invalidation when the same task is executed twice"},
+            {"timestamp": "2026-08-03T08:50:00Z", "role": "assistant", "content": "Tests now pass."},
         ]
         transcript.write_text("\n".join(json.dumps(row) for row in rows), encoding="utf-8")
+        context = Path(self.temp.name) / "context.zh.json"
+        context.write_text(
+            json.dumps(
+                {
+                    "zh": {
+                        "translations": {
+                            "Add tests for greeting behavior": "为问候行为补充测试",
+                            "Please fix cache invalidation when the same task is executed twice": "修复同一任务重复执行时的缓存失效问题。",
+                            "Tests now pass.": "测试现在已经通过。",
+                        }
+                    }
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
         output = Path(self.temp.name) / "report-with-session"
         run(
             [
@@ -167,6 +183,8 @@ class BuildStoryTests(unittest.TestCase):
                 str(self.repo),
                 "--session",
                 str(transcript),
+                "--context",
+                str(context),
                 "--output",
                 str(output),
                 "--language",
@@ -178,6 +196,11 @@ class BuildStoryTests(unittest.TestCase):
         self.assertIn("transcripts", data["coverage"]["sources"])
         self.assertEqual(data["coverage"]["transcript_files"], ["session.jsonl"])
         self.assertTrue(data["transcripts"]["repeated_prompts"])
+        validation_point = next(item for item in data["turning_points"] if item["category"] == "validation")
+        self.assertEqual(validation_point["subject"], "为问候行为补充测试")
+        self.assertEqual(validation_point["original_subject"], "Add tests for greeting behavior")
+        self.assertEqual(validation_point["dialogue"]["user"], "修复同一任务重复执行时的缓存失效问题。")
+        self.assertEqual(validation_point["dialogue"]["ai"], "测试现在已经通过。")
         self.assertNotIn(str(transcript.parent), (output / "report.html").read_text(encoding="utf-8"))
         report = (output / "report.html").read_text(encoding="utf-8")
         self.assertIn('href="report.en.html"', report)
@@ -188,6 +211,11 @@ class BuildStoryTests(unittest.TestCase):
         self.assertIn("核心代码", visible)
         self.assertIn("项目根目录", visible)
         self.assertIn("查看计算方法", visible)
+        self.assertIn("为问候行为补充测试", visible)
+        self.assertIn("用户", visible)
+        self.assertIn("AI", visible)
+        self.assertIn("修复同一任务重复执行时的缓存失效问题。", visible)
+        self.assertNotIn("Add tests for greeting behavior", visible)
         self.assertNotIn(" files ·", visible)
         self.assertNotIn(" commits ·", visible)
         self.assertNotIn(" touches", visible)

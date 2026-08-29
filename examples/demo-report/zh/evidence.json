@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "generator_version": "0.2.0",
   "generated_at": "2026-08-29T00:00:00+00:00",
   "language": "zh",
@@ -68,7 +68,8 @@
       "timestamp": "2026-07-01T09:00:00+00:00",
       "date": "2026-07-01",
       "author": "Alex Builder",
-      "subject": "Initialize PocketTasks CLI",
+      "subject": "初始化 PocketTasks 命令行工具",
+      "original_subject": "Initialize PocketTasks CLI",
       "category": "foundation",
       "files": 4,
       "added": 9,
@@ -81,12 +82,17 @@
       "timestamp": "2026-07-03T10:15:00+00:00",
       "date": "2026-07-03",
       "author": "Alex Builder",
-      "subject": "Add experimental cloud sync queue",
+      "subject": "尝试加入云同步队列",
+      "original_subject": "Add experimental cloud sync queue",
       "category": "feature",
       "files": 1,
       "added": 4,
       "deleted": 0,
-      "turning_point_reason": "引入后续被撤销的方案"
+      "turning_point_reason": "引入后续被撤销的方案",
+      "dialogue": {
+        "user": "加入自动云同步，但要让任务管理器对新手保持简单。",
+        "ai": "已经加入同步队列和后台推送。"
+      }
     },
     {
       "hash": "9de0c2d9a698065db51844cadad31877e74c4bbd",
@@ -94,12 +100,17 @@
       "timestamp": "2026-07-04T09:30:00+00:00",
       "date": "2026-07-04",
       "author": "Alex Builder",
-      "subject": "Refactor cloud sync retry ownership",
+      "subject": "重构云同步重试状态的归属",
+      "original_subject": "Refactor cloud sync retry ownership",
       "category": "refactor",
       "files": 1,
       "added": 4,
       "deleted": 3,
-      "turning_point_reason": "反复打磨"
+      "turning_point_reason": "反复打磨",
+      "dialogue": {
+        "user": "再次修复自动云同步队列，并让重试逻辑更容易理解。",
+        "ai": "重试状态现在由每个队列任务独立保存。"
+      }
     },
     {
       "hash": "d678a8a28a840d4faf4ef637874c0499e55bb846",
@@ -107,12 +118,17 @@
       "timestamp": "2026-07-05T09:10:00+00:00",
       "date": "2026-07-05",
       "author": "Alex Builder",
-      "subject": "Revert \"Add experimental cloud sync queue\"",
+      "subject": "回滚“尝试加入云同步队列”",
+      "original_subject": "Revert \"Add experimental cloud sync queue\"",
       "category": "fix",
       "files": 1,
       "added": 2,
       "deleted": 6,
-      "turning_point_reason": "方向调整"
+      "turning_point_reason": "方向调整",
+      "dialogue": {
+        "user": "云同步太复杂了。移除它，让所有用户数据保留在本地。",
+        "ai": "已经移除自动同步路径。"
+      }
     },
     {
       "hash": "25929cfc1954decd69031420076a26d20b3bb6ee",
@@ -120,12 +136,17 @@
       "timestamp": "2026-07-06T10:00:00+00:00",
       "date": "2026-07-06",
       "author": "Alex Builder",
-      "subject": "Replace cloud sync with local export",
+      "subject": "用本地导出替代云同步",
+      "original_subject": "Replace cloud sync with local export",
       "category": "refactor",
       "files": 1,
       "added": 4,
       "deleted": 2,
-      "turning_point_reason": "确立新方向"
+      "turning_point_reason": "确立新方向",
+      "dialogue": {
+        "user": "加入显式 JSON 导出，让用户决定数据何时离开应用。",
+        "ai": "导出功能已经完成，并保持本地运行。"
+      }
     },
     {
       "hash": "ea9798bf7a73e7b662d24cb18733a6a2e585aa6c",
@@ -133,12 +154,17 @@
       "timestamp": "2026-07-08T09:00:00+00:00",
       "date": "2026-07-08",
       "author": "Alex Builder",
-      "subject": "Add tests for storage and export",
+      "subject": "为任务存储与导出补充测试",
+      "original_subject": "Add tests for storage and export",
       "category": "validation",
       "files": 2,
       "added": 4,
       "deleted": 0,
-      "turning_point_reason": "建立验证"
+      "turning_point_reason": "建立验证",
+      "dialogue": {
+        "user": "为本地存储和 JSON 导出补充测试。",
+        "ai": "存储与导出路径现在都有测试覆盖。"
+      }
     },
     {
       "hash": "5e5bebe5519b18a077fb204edc0ae4a57c6e9b2f",
@@ -146,7 +172,8 @@
       "timestamp": "2026-07-18T09:00:00+00:00",
       "date": "2026-07-18",
       "author": "Alex Builder",
-      "subject": "Release PocketTasks 1.0",
+      "subject": "发布 PocketTasks 1.0",
+      "original_subject": "Release PocketTasks 1.0",
       "category": "delivery",
       "files": 1,
       "added": 1,
@@ -161,7 +188,8 @@
       "timestamp": "2026-07-01T09:00:00+00:00",
       "date": "2026-07-01",
       "author": "Alex Builder",
-      "subject": "Initialize PocketTasks CLI",
+      "subject": "初始化 PocketTasks 命令行工具",
+      "original_subject": "Initialize PocketTasks CLI",
       "category": "foundation",
       "files": 4,
       "added": 9,
@@ -173,7 +201,8 @@
       "timestamp": "2026-07-02T09:20:00+00:00",
       "date": "2026-07-02",
       "author": "Alex Builder",
-      "subject": "Add JSON task storage",
+      "subject": "新增 JSON 任务存储",
+      "original_subject": "Add JSON task storage",
       "category": "feature",
       "files": 1,
       "added": 4,
@@ -185,7 +214,8 @@
       "timestamp": "2026-07-03T10:15:00+00:00",
       "date": "2026-07-03",
       "author": "Alex Builder",
-      "subject": "Add experimental cloud sync queue",
+      "subject": "尝试加入云同步队列",
+      "original_subject": "Add experimental cloud sync queue",
       "category": "feature",
       "files": 1,
       "added": 4,
@@ -197,7 +227,8 @@
       "timestamp": "2026-07-03T11:40:00+00:00",
       "date": "2026-07-03",
       "author": "Alex Builder",
-      "subject": "Fix cloud sync duplicate queue entries",
+      "subject": "修复云同步队列中的重复任务",
+      "original_subject": "Fix cloud sync duplicate queue entries",
       "category": "fix",
       "files": 1,
       "added": 2,
@@ -209,7 +240,8 @@
       "timestamp": "2026-07-04T09:30:00+00:00",
       "date": "2026-07-04",
       "author": "Alex Builder",
-      "subject": "Refactor cloud sync retry ownership",
+      "subject": "重构云同步重试状态的归属",
+      "original_subject": "Refactor cloud sync retry ownership",
       "category": "refactor",
       "files": 1,
       "added": 4,
@@ -221,7 +253,8 @@
       "timestamp": "2026-07-05T09:10:00+00:00",
       "date": "2026-07-05",
       "author": "Alex Builder",
-      "subject": "Revert \"Add experimental cloud sync queue\"",
+      "subject": "回滚“尝试加入云同步队列”",
+      "original_subject": "Revert \"Add experimental cloud sync queue\"",
       "category": "fix",
       "files": 1,
       "added": 2,
@@ -233,7 +266,8 @@
       "timestamp": "2026-07-06T10:00:00+00:00",
       "date": "2026-07-06",
       "author": "Alex Builder",
-      "subject": "Replace cloud sync with local export",
+      "subject": "用本地导出替代云同步",
+      "original_subject": "Replace cloud sync with local export",
       "category": "refactor",
       "files": 1,
       "added": 4,
@@ -245,7 +279,8 @@
       "timestamp": "2026-07-08T09:00:00+00:00",
       "date": "2026-07-08",
       "author": "Alex Builder",
-      "subject": "Add tests for storage and export",
+      "subject": "为任务存储与导出补充测试",
+      "original_subject": "Add tests for storage and export",
       "category": "validation",
       "files": 2,
       "added": 4,
@@ -257,7 +292,8 @@
       "timestamp": "2026-07-09T09:00:00+00:00",
       "date": "2026-07-09",
       "author": "Alex Builder",
-      "subject": "Add CI validation workflow",
+      "subject": "新增 CI 验证工作流",
+      "original_subject": "Add CI validation workflow",
       "category": "validation",
       "files": 1,
       "added": 7,
@@ -269,7 +305,8 @@
       "timestamp": "2026-07-12T09:00:00+00:00",
       "date": "2026-07-12",
       "author": "Alex Builder",
-      "subject": "Document local-first architecture decision",
+      "subject": "记录本地优先架构决策",
+      "original_subject": "Document local-first architecture decision",
       "category": "documentation",
       "files": 1,
       "added": 3,
@@ -281,7 +318,8 @@
       "timestamp": "2026-07-15T09:00:00+00:00",
       "date": "2026-07-15",
       "author": "Alex Builder",
-      "subject": "Prepare v1 release documentation",
+      "subject": "准备 v1 发布文档",
+      "original_subject": "Prepare v1 release documentation",
       "category": "delivery",
       "files": 1,
       "added": 5,
@@ -293,7 +331,8 @@
       "timestamp": "2026-07-18T09:00:00+00:00",
       "date": "2026-07-18",
       "author": "Alex Builder",
-      "subject": "Release PocketTasks 1.0",
+      "subject": "发布 PocketTasks 1.0",
+      "original_subject": "Release PocketTasks 1.0",
       "category": "delivery",
       "files": 1,
       "added": 1,
@@ -321,15 +360,17 @@
   "loop_candidates": [
     {
       "type": "explicit-reversal",
-      "title": "Revert \"Add experimental cloud sync queue\"",
+      "title": "回滚“尝试加入云同步队列”",
       "detail": "2026-07-05 · d678a8a2",
-      "confidence": "high"
+      "confidence": "high",
+      "original_title": "Revert \"Add experimental cloud sync queue\""
     },
     {
       "type": "high-churn-file",
       "title": "src/sync.py",
       "detail": "在 5 次提交中被修改，双向变更比例约为 86%。",
-      "confidence": "medium"
+      "confidence": "medium",
+      "original_title": "src/sync.py"
     }
   ],
   "attention_areas": [
@@ -492,7 +533,7 @@
       "为本地存储与导出路径补充测试和 CI，把关键方向调整沉淀为架构决策记录。"
     ],
     "star": {
-      "situation": "Initialize PocketTasks CLI",
+      "situation": "初始化 PocketTasks 命令行工具",
       "task": "产品方向判断、核心实现与发布验证",
       "action": "在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。",
       "result": "发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。"

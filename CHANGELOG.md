@@ -10,6 +10,8 @@
 - Added portfolio, resume, and STAR material generated from confirmed context.
 - Replaced prominent numeric dimension scores with evidence levels, reasons, and next-run recommendations.
 - Completed visible Chinese localization for counts, evidence, attention areas, and report controls.
+- Added exact dynamic-text translations so Chinese reports can localize commit subjects and conversation excerpts.
+- Added short user-request and AI-response excerpts to evidence-backed turning points.
 
 ## 0.1.0 - 2026-08-29
 

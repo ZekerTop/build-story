@@ -126,6 +126,8 @@ python3 scripts/build_story.py /path/to/project \
 
 BuildStory then creates a portfolio summary, resume bullets, and a STAR story without treating commit volume as impact.
 
+If Git subjects or AI conversations use another language, add exact source-to-display mappings under `translations`. The localized report shows the translated development story while retaining the original text in structured evidence. When authorized transcripts exist, turning points can also show the corresponding user request and AI response excerpts.
+
 ## Install as an Agent Skill
 
 ### Codex
