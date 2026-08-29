@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>BuildStory · PocketTasks</title>
+<style>
+:root { --ink:#171717; --muted:#6f6f6f; --paper:#f4f2ed; --surface:#fff; --line:#d8d4cb; --accent:#f05a28; --radius:14px; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; color:var(--ink); background:var(--paper); font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.5; }
+button { font:inherit; }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; overflow-wrap:anywhere; }
+.shell { width:min(1180px,calc(100% - 40px)); margin:0 auto; }
+.masthead { min-height:78dvh; padding:28px 0 64px; display:grid; grid-template-rows:auto 1fr auto; border-bottom:1px solid var(--line); }
+.nav { display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.wordmark { font-weight:850; letter-spacing:-.04em; font-size:20px; }
+.wordmark i { color:var(--accent); font-style:normal; }
+.nav-meta { color:var(--muted); font-size:13px; }
+.hero { align-self:center; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(260px,.55fr); gap:8vw; align-items:end; padding:54px 0; }
+.kicker { color:var(--accent); font:700 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.14em; text-transform:uppercase; }
+h1 { margin:18px 0 20px; max-width:12ch; font-size:clamp(54px,9vw,132px); line-height:.88; letter-spacing:-.075em; }
+.tagline { margin:0; max-width:44ch; font-size:clamp(18px,2.1vw,28px); line-height:1.25; color:#3b3b3b; }
+.coverage { padding:18px 0 0 20px; border-left:3px solid var(--accent); }
+.coverage span { display:block; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.1em; }
+.coverage strong { display:block; margin-top:8px; font-size:18px; }
+.stats { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); }
+.stat { padding:24px 18px 0 0; }
+.stat strong { display:block; font-size:clamp(30px,4vw,56px); letter-spacing:-.06em; }
+.stat span { color:var(--muted); font-size:13px; }
+main { background:var(--surface); }
+.section { padding:96px 0; border-bottom:1px solid var(--line); }
+.section-head { max-width:700px; margin-bottom:48px; }
+.section-head h2 { margin:0 0 12px; font-size:clamp(38px,6vw,74px); line-height:.95; letter-spacing:-.055em; }
+.section-head p { margin:0; color:var(--muted); font-size:18px; }
+.filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:34px; }
+.filter { border:1px solid var(--line); background:transparent; color:var(--ink); padding:8px 12px; border-radius:9px; cursor:pointer; }
+.filter span { color:var(--muted); margin-left:4px; }
+.filter:hover,.filter.is-active { border-color:var(--ink); background:var(--ink); color:white; }
+.filter.is-active span { color:#c8c8c8; }
+.timeline { max-width:900px; }
+.event { display:grid; grid-template-columns:112px 18px 1fr; gap:18px; min-height:116px; transition:opacity .2s ease; }
+.event[hidden] { display:none; }
+.event-date { padding-top:2px; color:var(--muted); font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; }
+.event-mark { position:relative; border-left:1px solid var(--line); }
+.event-mark::before { content:""; position:absolute; top:3px; left:-5px; width:9px; height:9px; border-radius:50%; background:var(--surface); border:2px solid var(--accent); }
+.event-body { padding-bottom:30px; }
+.event-meta { display:flex; align-items:center; gap:10px; color:var(--accent); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+.event-meta code { color:var(--muted); text-transform:none; letter-spacing:0; }
+.event h3 { margin:8px 0 5px; font-size:20px; letter-spacing:-.02em; }
+.event p { margin:0; color:var(--muted); font-size:13px; }
+.event p strong { color:var(--ink); }
+.friction-layout { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr); gap:70px; align-items:start; }
+.friction-row { display:grid; grid-template-columns:44px minmax(0,1fr) auto; gap:16px; align-items:center; padding:18px 0; border-bottom:1px solid var(--line); }
+.rank { color:var(--muted); font:12px ui-monospace,SFMono-Regular,Menlo,monospace; }
+.friction-row p { margin:5px 0 0; color:var(--muted); font-size:13px; }
+.ratio { text-align:right; }
+.ratio strong,.ratio span { display:block; }
+.ratio strong { font-size:24px; color:var(--accent); }
+.ratio span { color:var(--muted); font-size:11px; }
+.loops h3 { margin:0 0 18px; font-size:15px; text-transform:uppercase; letter-spacing:.08em; }
+.loop { border-top:1px solid var(--line); padding:14px 0; }
+.loop summary { cursor:pointer; list-style:none; display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:start; }
+.loop summary::-webkit-details-marker { display:none; }
+.loop p { margin:10px 0 0; color:var(--muted); font-size:14px; }
+.confidence { display:inline-block; width:max-content; border:1px solid var(--line); border-radius:7px; padding:2px 6px; color:var(--muted); font:10px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; text-transform:uppercase; }
+.confidence.high { color:var(--ink); border-color:var(--ink); }
+.confidence.medium { color:var(--accent); border-color:var(--accent); }
+.attention-grid { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:70px; }
+.attention-row { display:grid; grid-template-columns:minmax(120px,.6fr) minmax(130px,1fr) auto; gap:18px; align-items:center; padding:16px 0; border-bottom:1px solid var(--line); }
+.attention-dots { display:flex; gap:5px; }
+.attention-dots i { width:8px; height:8px; border-radius:50%; background:var(--accent); }
+.attention-row span { color:var(--muted); font-size:12px; text-align:right; }
+.time-callout { align-self:start; padding:24px; background:var(--paper); border-radius:var(--radius); }
+.time-callout strong { display:block; font-size:54px; letter-spacing:-.06em; }
+.time-callout p { color:var(--muted); margin:8px 0 0; font-size:13px; }
+.dimensions { display:grid; grid-template-columns:1fr 1fr; gap:0 64px; }
+.dimension { padding:24px 0; border-top:1px solid var(--line); }
+.dimension-heading { display:flex; justify-content:space-between; align-items:baseline; gap:20px; }
+.dimension-heading h3 { margin:0; font-size:18px; }
+.dimension-heading strong { font-size:34px; letter-spacing:-.05em; }
+.score-axis { position:relative; height:18px; margin:16px 5px 10px; border-top:1px solid var(--line); }
+.score-axis::before,.score-axis::after { content:""; position:absolute; top:-4px; height:7px; border-left:1px solid var(--line); }
+.score-axis::before { left:0; } .score-axis::after { right:0; }
+.score-axis span { position:absolute; top:-7px; width:13px; height:13px; border:3px solid var(--surface); outline:2px solid var(--accent); border-radius:50%; background:var(--accent); transform:translateX(-50%); }
+.dimension-foot { display:flex; justify-content:space-between; align-items:start; gap:18px; }
+.dimension-foot details { color:var(--muted); font-size:12px; text-align:right; }
+.dimension-foot summary { cursor:pointer; }
+.dimension-foot ul { max-width:300px; text-align:left; padding-left:18px; }
+.proof-list { display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }
+.proof-card { padding-top:20px; border-top:3px solid var(--accent); }
+.proof-card h3 { margin:0 0 14px; font-size:24px; letter-spacing:-.03em; }
+.proof-card p { color:var(--muted); }
+.proof-card blockquote { margin:24px 0 0; padding:16px 0 0; border-top:1px solid var(--line); font-size:15px; }
+.method { display:grid; grid-template-columns:1fr 1fr; gap:80px; }
+.method h3 { margin-top:0; }
+.method li { margin:10px 0; color:var(--muted); }
+.empty { color:var(--muted); }
+footer { padding:36px 0; background:var(--ink); color:white; }
+footer .shell { display:flex; justify-content:space-between; gap:30px; }
+footer span { color:#aaa; }
+@media (max-width:800px) {
+  .shell { width:min(100% - 28px,1180px); }
+  .masthead { min-height:auto; padding-bottom:36px; }
+  .hero,.friction-layout,.attention-grid,.method { grid-template-columns:1fr; gap:34px; }
+  .hero { padding:70px 0 54px; }
+  h1 { font-size:clamp(52px,17vw,86px); }
+  .coverage { max-width:420px; }
+  .stats { grid-template-columns:1fr 1fr; gap:24px 0; }
+  .section { padding:68px 0; }
+  .event { grid-template-columns:84px 14px 1fr; gap:12px; }
+  .friction-row { grid-template-columns:34px 1fr; }
+  .ratio { grid-column:2; text-align:left; display:flex; align-items:baseline; gap:8px; }
+  .dimensions,.proof-list { grid-template-columns:1fr; }
+  .attention-row { grid-template-columns:100px 1fr; }
+  .attention-row span { grid-column:2; text-align:left; }
+}
+@media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; transition:none!important; animation:none!important; } }
+@media print {
+  body,.section,main { background:white; } .masthead { min-height:auto; } .filters { display:none; }
+  .section { padding:36px 0; break-inside:avoid; } .event { min-height:80px; } footer { background:white; color:var(--ink); border-top:1px solid var(--line); }
+}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <nav class="shell nav"><div class="wordmark">Build<i>Story</i></div><div class="nav-meta">基于本地项目证据生成 · 2026-08-29</div></nav>
+  <div class="shell hero">
+    <div><div class="kicker">Project retrospective</div><h1>PocketTasks</h1><p class="tagline">不只看你做出了什么，更看你是怎么做到的。</p></div>
+    <div class="coverage"><span>证据覆盖范围</span><strong>Git 历史, 已授权的会话记录</strong><p>main · 2026-07-01 to 2026-07-18</p></div>
+  </div>
+  <div class="shell stats">
+    <div class="stat"><strong>12</strong><span>次提交</span></div>
+    <div class="stat"><strong>11</strong><span>个文件</span></div>
+    <div class="stat"><strong>18</strong><span>个自然日</span></div>
+    <div class="stat"><strong>3.4</strong><span>小时估算活跃时间 · 中</span></div>
+  </div>
+</header>
+<main>
+  <section class="section"><div class="shell">
+    <div class="section-head"><h2>项目生命线</h2><p>按照可观察到的变更信号，重建可浏览的开发历程。</p></div>
+    <div class="filters"><button class="filter is-active" data-filter="all">全部</button><button class="filter" data-filter="delivery">交付 <span>2</span></button><button class="filter" data-filter="documentation">文档 <span>2</span></button><button class="filter" data-filter="feature">功能 <span>2</span></button><button class="filter" data-filter="fix">修复 <span>2</span></button><button class="filter" data-filter="other">其他 <span>1</span></button><button class="filter" data-filter="refactor">重构 <span>1</span></button><button class="filter" data-filter="validation">验证 <span>2</span></button></div>
+    <div class="timeline"><article class="event" data-category="documentation">
+  <div class="event-date">2026-07-01</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>文档</span><code>7205f097</code></div>
+    <h3>Initialize PocketTasks CLI</h3>
+    <p>4 files · <strong>+9</strong> / -0</p>
+  </div>
+</article><article class="event" data-category="feature">
+  <div class="event-date">2026-07-02</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>功能</span><code>9acce59f</code></div>
+    <h3>Add JSON task storage</h3>
+    <p>1 files · <strong>+4</strong> / -0</p>
+  </div>
+</article><article class="event" data-category="feature">
+  <div class="event-date">2026-07-03</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>功能</span><code>a4ffcd52</code></div>
+    <h3>Add experimental cloud sync queue</h3>
+    <p>1 files · <strong>+4</strong> / -0</p>
+  </div>
+</article><article class="event" data-category="fix">
+  <div class="event-date">2026-07-03</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>修复</span><code>55eaaed9</code></div>
+    <h3>Fix cloud sync duplicate queue entries</h3>
+    <p>1 files · <strong>+2</strong> / -1</p>
+  </div>
+</article><article class="event" data-category="refactor">
+  <div class="event-date">2026-07-04</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>重构</span><code>9de0c2d9</code></div>
+    <h3>Refactor cloud sync retry ownership</h3>
+    <p>1 files · <strong>+4</strong> / -3</p>
+  </div>
+</article><article class="event" data-category="fix">
+  <div class="event-date">2026-07-05</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>修复</span><code>d678a8a2</code></div>
+    <h3>Revert &quot;Add experimental cloud sync queue&quot;</h3>
+    <p>1 files · <strong>+2</strong> / -6</p>
+  </div>
+</article><article class="event" data-category="other">
+  <div class="event-date">2026-07-06</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>其他</span><code>25929cfc</code></div>
+    <h3>Replace cloud sync with local export</h3>
+    <p>1 files · <strong>+4</strong> / -2</p>
+  </div>
+</article><article class="event" data-category="validation">
+  <div class="event-date">2026-07-08</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>验证</span><code>ea9798bf</code></div>
+    <h3>Add tests for storage and export</h3>
+    <p>2 files · <strong>+4</strong> / -0</p>
+  </div>
+</article><article class="event" data-category="validation">
+  <div class="event-date">2026-07-09</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>验证</span><code>a3e930e6</code></div>
+    <h3>Add CI validation workflow</h3>
+    <p>1 files · <strong>+7</strong> / -0</p>
+  </div>
+</article><article class="event" data-category="documentation">
+  <div class="event-date">2026-07-12</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>文档</span><code>684b02c3</code></div>
+    <h3>Document local-first architecture decision</h3>
+    <p>1 files · <strong>+3</strong> / -0</p>
+  </div>
+</article><article class="event" data-category="delivery">
+  <div class="event-date">2026-07-15</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>交付</span><code>b621c977</code></div>
+    <h3>Prepare v1 release documentation</h3>
+    <p>1 files · <strong>+5</strong> / -0</p>
+  </div>
+</article><article class="event" data-category="delivery">
+  <div class="event-date">2026-07-18</div>
+  <div class="event-mark" aria-hidden="true"></div>
+  <div class="event-body">
+    <div class="event-meta"><span>交付</span><code>5e5bebe5</code></div>
+    <h3>Release PocketTasks 1.0</h3>
+    <p>1 files · <strong>+1</strong> / -1</p>
+  </div>
+</article></div>
+  </div></section>
+  <section class="section"><div class="shell">
+    <div class="section-head"><h2>项目在哪里卡住了</h2><p>高频变更区域与循环候选。它们用于复盘，不是对人的判决。</p></div>
+    <div class="friction-layout"><div><div class="friction-row">
+  <div class="rank">01</div>
+  <div><code>src/sync.py</code><p>5 commits · +16 / -12</p></div>
+  <div class="ratio"><strong>86%</strong><span>双向变更信号</span></div>
+</div></div><aside class="loops"><h3>循环候选</h3><details class="loop">
+  <summary><span class="confidence high">高</span><strong>Revert &quot;Add experimental cloud sync queue&quot;</strong></summary>
+  <p>2026-07-05 · d678a8a2</p>
+</details><details class="loop">
+  <summary><span class="confidence medium">中</span><strong>src/sync.py</strong></summary>
+  <p>在 5 次提交中被修改，双向变更比例约为 86%。</p>
+</details></aside></div>
+  </div></section>
+  <section class="section"><div class="shell">
+    <div class="section-head"><h2>注意力地图</h2><p>根据变更密度和活动时间估算，无法覆盖离线思考时间。</p></div>
+    <div class="attention-grid"><div><div class="attention-row">
+  <strong>src</strong>
+  <div class="attention-dots" aria-label="relative attention 100%"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <span>34 Δ · 7 touches</span>
+</div><div class="attention-row">
+  <strong>(root)</strong>
+  <div class="attention-dots" aria-label="relative attention 69%"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <span>14 Δ · 5 touches</span>
+</div><div class="attention-row">
+  <strong>.github</strong>
+  <div class="attention-dots" aria-label="relative attention 32%"><i></i><i></i><i></i></div>
+  <span>7 Δ · 1 touches</span>
+</div><div class="attention-row">
+  <strong>tests</strong>
+  <div class="attention-dots" aria-label="relative attention 31%"><i></i><i></i><i></i></div>
+  <span>4 Δ · 2 touches</span>
+</div><div class="attention-row">
+  <strong>docs</strong>
+  <div class="attention-dots" aria-label="relative attention 21%"><i></i><i></i></div>
+  <span>3 Δ · 1 touches</span>
+</div></div><aside class="time-callout"><span class="confidence medium">置信度: 中</span><strong>3.4h</strong><p>估算来源：transcripts. 会话分析只保存用于解释重复提示候选的短摘录，不复制完整对话。</p></aside></div>
+  </div></section>
+  <section class="section"><div class="shell">
+    <div class="section-head"><h2>基于证据的能力画像</h2><p>只看分维度画像，不给一个虚假的总分。分数描述仓库证据，不评价人的价值。</p></div>
+    <div class="dimensions"><div class="dimension">
+  <div class="dimension-heading"><h3>交付证据</h3><strong>100</strong></div>
+  <div class="score-axis" aria-label="100 out of 100"><span style="left:100%"></span></div>
+  <div class="dimension-foot"><span class="confidence high">置信度: 高</span><details><summary>查看证据</summary><ul><li>README</li><li>license</li><li>package manifest</li><li>1 Git tag(s)</li><li>project documentation</li></ul></details></div>
+</div><div class="dimension">
+  <div class="dimension-heading"><h3>验证纪律</h3><strong>78</strong></div>
+  <div class="score-axis" aria-label="78 out of 100"><span style="left:78%"></span></div>
+  <div class="dimension-foot"><span class="confidence high">置信度: 高</span><details><summary>查看证据</summary><ul><li>test files</li><li>CI workflow</li><li>2 validation-related commit(s)</li></ul></details></div>
+</div><div class="dimension">
+  <div class="dimension-heading"><h3>变更可追溯性</h3><strong>100</strong></div>
+  <div class="score-axis" aria-label="100 out of 100"><span style="left:100%"></span></div>
+  <div class="dimension-foot"><span class="confidence high">置信度: 高</span><details><summary>查看证据</summary><ul><li>100% descriptive commit subjects</li><li>100% reviewable-size commits</li></ul></details></div>
+</div><div class="dimension">
+  <div class="dimension-heading"><h3>迭代控制</h3><strong>50</strong></div>
+  <div class="score-axis" aria-label="50 out of 100"><span style="left:50%"></span></div>
+  <div class="dimension-foot"><span class="confidence medium">置信度: 中</span><details><summary>查看证据</summary><ul><li>1 explicit reversal(s)</li><li>1 high-change file candidate(s)</li><li>High churn may represent productive iteration and requires review</li></ul></details></div>
+</div><div class="dimension">
+  <div class="dimension-heading"><h3>经验沉淀</h3><strong>93</strong></div>
+  <div class="score-axis" aria-label="93 out of 100"><span style="left:93%"></span></div>
+  <div class="dimension-foot"><span class="confidence high">置信度: 高</span><details><summary>查看证据</summary><ul><li>README</li><li>docs directory or architecture guide</li><li>changelog</li><li>architecture decision records</li></ul></details></div>
+</div></div>
+  </div></section>
+  <section class="section"><div class="shell">
+    <div class="section-head"><h2>这个项目证明了什么</h2><p>可用于项目复盘、作品集、简历和面试故事的证据卡片。</p></div>
+    <div class="proof-list"><article class="proof-card">
+  <h3>持续交付</h3>
+  <p>在 18 个自然日内完成 12 次提交，涉及 11 个受版本控制的文件。</p>
+  <blockquote>在 18 个自然日内持续构建并迭代 PocketTasks，覆盖 11 个受版本控制的文件；请补充经过验证的用户或业务结果。</blockquote>
+</article><article class="proof-card">
+  <h3>核心实现区域</h3>
+  <p>主要变更活动集中在：src, (root), .github。</p>
+  <blockquote>实现并持续完善项目核心区域 src, (root), .github；请补充关键技术决策和最终结果。</blockquote>
+</article><article class="proof-card">
+  <h3>验证基础设施</h3>
+  <p>仓库中已包含 tests 和 CI。</p>
+  <blockquote>通过 tests 和 CI 让变更可验证；请补充经过确认的稳定性或发布结果。</blockquote>
+</article></div>
+  </div></section>
+  <section class="section"><div class="shell method">
+    <div><div class="section-head"><h2>方法与限制</h2></div><p><strong>证据覆盖范围:</strong> Git 历史, 已授权的会话记录</p><ul><li>Git 只记录已保存的变更，无法覆盖全部思考、实验和未提交工作。</li><li>会话分析只保存用于解释重复提示候选的短摘录，不复制完整对话。</li></ul></div>
+    <div><h3>职业输出规则</h3><p>用于简历前，请补充经过验证的用户结果或业务结果。</p><h3>本地优先</h3><p>生成器不会上传源代码或会话记录。</p></div>
+  </div></section>
+</main>
+<footer><div class="shell"><strong>BuildStory</strong><span>See how you built it.</span></div></footer>
+<script type="application/json" id="buildstory-data">{"schema_version":"1.0","generator_version":"0.1.0","generated_at":"2026-08-29T00:00:00+00:00","language":"zh","project":{"name":"PocketTasks","path":"PocketTasks","branch":"main","start":"2026-07-01T09:00:00+00:00","end":"2026-07-18T09:00:00+00:00","calendar_days":18},"coverage":{"sources":["git","transcripts"],"commit_count":12,"tracked_files":11,"authors":["Alex Builder"],"transcript_files":["pockettasks-session.jsonl"],"limitations":["Git 只记录已保存的变更，无法覆盖全部思考、实验和未提交工作。","会话分析只保存用于解释重复提示候选的短摘录，不复制完整对话。"]},"metrics":{"commits":12,"files":11,"authors":1,"calendar_days":18,"lines_added":49,"lines_deleted":13,"category_counts":{"documentation":2,"feature":2,"fix":2,"refactor":1,"other":1,"validation":2,"delivery":2},"time_estimate":{"hours":3.4,"sessions":null,"source":"transcripts","confidence":"medium"}},"timeline":[{"hash":"7205f0974e67d117962f3cd7b461c63cb852bcb5","short_hash":"7205f097","timestamp":"2026-07-01T09:00:00+00:00","date":"2026-07-01","author":"Alex Builder","subject":"Initialize PocketTasks CLI","category":"documentation","files":4,"added":9,"deleted":0},{"hash":"9acce59f877bfd953020df47e8013267cf1c1a38","short_hash":"9acce59f","timestamp":"2026-07-02T09:20:00+00:00","date":"2026-07-02","author":"Alex Builder","subject":"Add JSON task storage","category":"feature","files":1,"added":4,"deleted":0},{"hash":"a4ffcd5214b19dcb253d38e1f3d8d66a5977c8d7","short_hash":"a4ffcd52","timestamp":"2026-07-03T10:15:00+00:00","date":"2026-07-03","author":"Alex Builder","subject":"Add experimental cloud sync queue","category":"feature","files":1,"added":4,"deleted":0},{"hash":"55eaaed951095bc517c62894cdf286caeae83d51","short_hash":"55eaaed9","timestamp":"2026-07-03T11:40:00+00:00","date":"2026-07-03","author":"Alex Builder","subject":"Fix cloud sync duplicate queue entries","category":"fix","files":1,"added":2,"deleted":1},{"hash":"9de0c2d9a698065db51844cadad31877e74c4bbd","short_hash":"9de0c2d9","timestamp":"2026-07-04T09:30:00+00:00","date":"2026-07-04","author":"Alex Builder","subject":"Refactor cloud sync retry ownership","category":"refactor","files":1,"added":4,"deleted":3},{"hash":"d678a8a28a840d4faf4ef637874c0499e55bb846","short_hash":"d678a8a2","timestamp":"2026-07-05T09:10:00+00:00","date":"2026-07-05","author":"Alex Builder","subject":"Revert \"Add experimental cloud sync queue\"","category":"fix","files":1,"added":2,"deleted":6},{"hash":"25929cfc1954decd69031420076a26d20b3bb6ee","short_hash":"25929cfc","timestamp":"2026-07-06T10:00:00+00:00","date":"2026-07-06","author":"Alex Builder","subject":"Replace cloud sync with local export","category":"other","files":1,"added":4,"deleted":2},{"hash":"ea9798bf7a73e7b662d24cb18733a6a2e585aa6c","short_hash":"ea9798bf","timestamp":"2026-07-08T09:00:00+00:00","date":"2026-07-08","author":"Alex Builder","subject":"Add tests for storage and export","category":"validation","files":2,"added":4,"deleted":0},{"hash":"a3e930e6981449d0b9e66dea038f8e2a7aa402c8","short_hash":"a3e930e6","timestamp":"2026-07-09T09:00:00+00:00","date":"2026-07-09","author":"Alex Builder","subject":"Add CI validation workflow","category":"validation","files":1,"added":7,"deleted":0},{"hash":"684b02c3de6db621218192e6cdf5a248b920c1e2","short_hash":"684b02c3","timestamp":"2026-07-12T09:00:00+00:00","date":"2026-07-12","author":"Alex Builder","subject":"Document local-first architecture decision","category":"documentation","files":1,"added":3,"deleted":0},{"hash":"b621c97756c1e14dd8f99df87d70e12e67a850a8","short_hash":"b621c977","timestamp":"2026-07-15T09:00:00+00:00","date":"2026-07-15","author":"Alex Builder","subject":"Prepare v1 release documentation","category":"delivery","files":1,"added":5,"deleted":0},{"hash":"5e5bebe5519b18a077fb204edc0ae4a57c6e9b2f","short_hash":"5e5bebe5","timestamp":"2026-07-18T09:00:00+00:00","date":"2026-07-18","author":"Alex Builder","subject":"Release PocketTasks 1.0","category":"delivery","files":1,"added":1,"deleted":1}],"friction_zones":[{"path":"src/sync.py","commits":5,"added":16,"deleted":12,"hashes":["a4ffcd52","55eaaed9","9de0c2d9","d678a8a2","25929cfc"],"gross":28,"rework_ratio":0.857,"friction_score":4.329}],"loop_candidates":[{"type":"explicit-reversal","title":"Revert \"Add experimental cloud sync queue\"","detail":"2026-07-05 · d678a8a2","confidence":"high"},{"type":"high-churn-file","title":"src/sync.py","detail":"在 5 次提交中被修改，双向变更比例约为 86%。","confidence":"medium"}],"attention_areas":[{"area":"src","gross":34,"commits":7,"files":3,"attention_score":10.95},{"area":"(root)","gross":14,"commits":5,"files":4,"attention_score":7.56},{"area":".github","gross":7,"commits":1,"files":1,"attention_score":3.52},{"area":"tests","gross":4,"commits":2,"files":2,"attention_score":3.38},{"area":"docs","gross":3,"commits":1,"files":1,"attention_score":2.35}],"dimensions":[{"key":"delivery","score":100,"confidence":"high","evidence":["README","license","package manifest","1 Git tag(s)","project documentation"]},{"key":"validation","score":78,"confidence":"high","evidence":["test files","CI workflow","2 validation-related commit(s)"]},{"key":"traceability","score":100,"confidence":"high","evidence":["100% descriptive commit subjects","100% reviewable-size commits"]},{"key":"iteration","score":50,"confidence":"medium","evidence":["1 explicit reversal(s)","1 high-change file candidate(s)","High churn may represent productive iteration and requires review"]},{"key":"learning","score":93,"confidence":"high","evidence":["README","docs directory or architecture guide","changelog","architecture decision records"]}],"signals":{"readme":true,"license":true,"manifest":true,"tests":true,"ci":true,"docs":true,"changelog":true,"adr":true,"lint":false,"tags":["v1.0.0"]},"transcripts":{"files":["pockettasks-session.jsonl"],"events":12,"timestamped_events":12,"estimated_active_hours":3.4,"confidence":"medium","repeated_prompts":[],"error_signals":0},"evidence_cards":[{"title":"持续交付","evidence":"在 18 个自然日内完成 12 次提交，涉及 11 个受版本控制的文件。","career":"在 18 个自然日内持续构建并迭代 PocketTasks，覆盖 11 个受版本控制的文件；请补充经过验证的用户或业务结果。"},{"title":"核心实现区域","evidence":"主要变更活动集中在：src, (root), .github。","career":"实现并持续完善项目核心区域 src, (root), .github；请补充关键技术决策和最终结果。"},{"title":"验证基础设施","evidence":"仓库中已包含 tests 和 CI。","career":"通过 tests 和 CI 让变更可验证；请补充经过确认的稳定性或发布结果。"}]}</script>
+<script>
+document.querySelectorAll('.filter').forEach(function(button) {
+  button.addEventListener('click', function() {
+    document.querySelectorAll('.filter').forEach(function(item) { item.classList.remove('is-active'); });
+    button.classList.add('is-active');
+    var selected = button.dataset.filter;
+    document.querySelectorAll('.event').forEach(function(event) {
+      event.hidden = selected !== 'all' && event.dataset.category !== selected;
+    });
+  });
+});
+</script>
+</body>
+</html>

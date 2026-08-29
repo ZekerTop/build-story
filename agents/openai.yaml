@@ -1,0 +1,5 @@
+interface:
+  display_name: "BuildStory"
+  short_description: "Turn a project's history into insight and proof"
+  brand_color: "#F05A28"
+  default_prompt: "Use $build-story to review this project, show its timeline and friction, and turn the evidence into lessons and achievements."

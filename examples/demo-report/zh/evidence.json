@@ -1,0 +1,366 @@
+{
+  "schema_version": "1.0",
+  "generator_version": "0.1.0",
+  "generated_at": "2026-08-29T00:00:00+00:00",
+  "language": "zh",
+  "project": {
+    "name": "PocketTasks",
+    "path": "PocketTasks",
+    "branch": "main",
+    "start": "2026-07-01T09:00:00+00:00",
+    "end": "2026-07-18T09:00:00+00:00",
+    "calendar_days": 18
+  },
+  "coverage": {
+    "sources": [
+      "git",
+      "transcripts"
+    ],
+    "commit_count": 12,
+    "tracked_files": 11,
+    "authors": [
+      "Alex Builder"
+    ],
+    "transcript_files": [
+      "pockettasks-session.jsonl"
+    ],
+    "limitations": [
+      "Git 只记录已保存的变更，无法覆盖全部思考、实验和未提交工作。",
+      "会话分析只保存用于解释重复提示候选的短摘录，不复制完整对话。"
+    ]
+  },
+  "metrics": {
+    "commits": 12,
+    "files": 11,
+    "authors": 1,
+    "calendar_days": 18,
+    "lines_added": 49,
+    "lines_deleted": 13,
+    "category_counts": {
+      "documentation": 2,
+      "feature": 2,
+      "fix": 2,
+      "refactor": 1,
+      "other": 1,
+      "validation": 2,
+      "delivery": 2
+    },
+    "time_estimate": {
+      "hours": 3.4,
+      "sessions": null,
+      "source": "transcripts",
+      "confidence": "medium"
+    }
+  },
+  "timeline": [
+    {
+      "hash": "7205f0974e67d117962f3cd7b461c63cb852bcb5",
+      "short_hash": "7205f097",
+      "timestamp": "2026-07-01T09:00:00+00:00",
+      "date": "2026-07-01",
+      "author": "Alex Builder",
+      "subject": "Initialize PocketTasks CLI",
+      "category": "documentation",
+      "files": 4,
+      "added": 9,
+      "deleted": 0
+    },
+    {
+      "hash": "9acce59f877bfd953020df47e8013267cf1c1a38",
+      "short_hash": "9acce59f",
+      "timestamp": "2026-07-02T09:20:00+00:00",
+      "date": "2026-07-02",
+      "author": "Alex Builder",
+      "subject": "Add JSON task storage",
+      "category": "feature",
+      "files": 1,
+      "added": 4,
+      "deleted": 0
+    },
+    {
+      "hash": "a4ffcd5214b19dcb253d38e1f3d8d66a5977c8d7",
+      "short_hash": "a4ffcd52",
+      "timestamp": "2026-07-03T10:15:00+00:00",
+      "date": "2026-07-03",
+      "author": "Alex Builder",
+      "subject": "Add experimental cloud sync queue",
+      "category": "feature",
+      "files": 1,
+      "added": 4,
+      "deleted": 0
+    },
+    {
+      "hash": "55eaaed951095bc517c62894cdf286caeae83d51",
+      "short_hash": "55eaaed9",
+      "timestamp": "2026-07-03T11:40:00+00:00",
+      "date": "2026-07-03",
+      "author": "Alex Builder",
+      "subject": "Fix cloud sync duplicate queue entries",
+      "category": "fix",
+      "files": 1,
+      "added": 2,
+      "deleted": 1
+    },
+    {
+      "hash": "9de0c2d9a698065db51844cadad31877e74c4bbd",
+      "short_hash": "9de0c2d9",
+      "timestamp": "2026-07-04T09:30:00+00:00",
+      "date": "2026-07-04",
+      "author": "Alex Builder",
+      "subject": "Refactor cloud sync retry ownership",
+      "category": "refactor",
+      "files": 1,
+      "added": 4,
+      "deleted": 3
+    },
+    {
+      "hash": "d678a8a28a840d4faf4ef637874c0499e55bb846",
+      "short_hash": "d678a8a2",
+      "timestamp": "2026-07-05T09:10:00+00:00",
+      "date": "2026-07-05",
+      "author": "Alex Builder",
+      "subject": "Revert \"Add experimental cloud sync queue\"",
+      "category": "fix",
+      "files": 1,
+      "added": 2,
+      "deleted": 6
+    },
+    {
+      "hash": "25929cfc1954decd69031420076a26d20b3bb6ee",
+      "short_hash": "25929cfc",
+      "timestamp": "2026-07-06T10:00:00+00:00",
+      "date": "2026-07-06",
+      "author": "Alex Builder",
+      "subject": "Replace cloud sync with local export",
+      "category": "other",
+      "files": 1,
+      "added": 4,
+      "deleted": 2
+    },
+    {
+      "hash": "ea9798bf7a73e7b662d24cb18733a6a2e585aa6c",
+      "short_hash": "ea9798bf",
+      "timestamp": "2026-07-08T09:00:00+00:00",
+      "date": "2026-07-08",
+      "author": "Alex Builder",
+      "subject": "Add tests for storage and export",
+      "category": "validation",
+      "files": 2,
+      "added": 4,
+      "deleted": 0
+    },
+    {
+      "hash": "a3e930e6981449d0b9e66dea038f8e2a7aa402c8",
+      "short_hash": "a3e930e6",
+      "timestamp": "2026-07-09T09:00:00+00:00",
+      "date": "2026-07-09",
+      "author": "Alex Builder",
+      "subject": "Add CI validation workflow",
+      "category": "validation",
+      "files": 1,
+      "added": 7,
+      "deleted": 0
+    },
+    {
+      "hash": "684b02c3de6db621218192e6cdf5a248b920c1e2",
+      "short_hash": "684b02c3",
+      "timestamp": "2026-07-12T09:00:00+00:00",
+      "date": "2026-07-12",
+      "author": "Alex Builder",
+      "subject": "Document local-first architecture decision",
+      "category": "documentation",
+      "files": 1,
+      "added": 3,
+      "deleted": 0
+    },
+    {
+      "hash": "b621c97756c1e14dd8f99df87d70e12e67a850a8",
+      "short_hash": "b621c977",
+      "timestamp": "2026-07-15T09:00:00+00:00",
+      "date": "2026-07-15",
+      "author": "Alex Builder",
+      "subject": "Prepare v1 release documentation",
+      "category": "delivery",
+      "files": 1,
+      "added": 5,
+      "deleted": 0
+    },
+    {
+      "hash": "5e5bebe5519b18a077fb204edc0ae4a57c6e9b2f",
+      "short_hash": "5e5bebe5",
+      "timestamp": "2026-07-18T09:00:00+00:00",
+      "date": "2026-07-18",
+      "author": "Alex Builder",
+      "subject": "Release PocketTasks 1.0",
+      "category": "delivery",
+      "files": 1,
+      "added": 1,
+      "deleted": 1
+    }
+  ],
+  "friction_zones": [
+    {
+      "path": "src/sync.py",
+      "commits": 5,
+      "added": 16,
+      "deleted": 12,
+      "hashes": [
+        "a4ffcd52",
+        "55eaaed9",
+        "9de0c2d9",
+        "d678a8a2",
+        "25929cfc"
+      ],
+      "gross": 28,
+      "rework_ratio": 0.857,
+      "friction_score": 4.329
+    }
+  ],
+  "loop_candidates": [
+    {
+      "type": "explicit-reversal",
+      "title": "Revert \"Add experimental cloud sync queue\"",
+      "detail": "2026-07-05 · d678a8a2",
+      "confidence": "high"
+    },
+    {
+      "type": "high-churn-file",
+      "title": "src/sync.py",
+      "detail": "在 5 次提交中被修改，双向变更比例约为 86%。",
+      "confidence": "medium"
+    }
+  ],
+  "attention_areas": [
+    {
+      "area": "src",
+      "gross": 34,
+      "commits": 7,
+      "files": 3,
+      "attention_score": 10.95
+    },
+    {
+      "area": "(root)",
+      "gross": 14,
+      "commits": 5,
+      "files": 4,
+      "attention_score": 7.56
+    },
+    {
+      "area": ".github",
+      "gross": 7,
+      "commits": 1,
+      "files": 1,
+      "attention_score": 3.52
+    },
+    {
+      "area": "tests",
+      "gross": 4,
+      "commits": 2,
+      "files": 2,
+      "attention_score": 3.38
+    },
+    {
+      "area": "docs",
+      "gross": 3,
+      "commits": 1,
+      "files": 1,
+      "attention_score": 2.35
+    }
+  ],
+  "dimensions": [
+    {
+      "key": "delivery",
+      "score": 100,
+      "confidence": "high",
+      "evidence": [
+        "README",
+        "license",
+        "package manifest",
+        "1 Git tag(s)",
+        "project documentation"
+      ]
+    },
+    {
+      "key": "validation",
+      "score": 78,
+      "confidence": "high",
+      "evidence": [
+        "test files",
+        "CI workflow",
+        "2 validation-related commit(s)"
+      ]
+    },
+    {
+      "key": "traceability",
+      "score": 100,
+      "confidence": "high",
+      "evidence": [
+        "100% descriptive commit subjects",
+        "100% reviewable-size commits"
+      ]
+    },
+    {
+      "key": "iteration",
+      "score": 50,
+      "confidence": "medium",
+      "evidence": [
+        "1 explicit reversal(s)",
+        "1 high-change file candidate(s)",
+        "High churn may represent productive iteration and requires review"
+      ]
+    },
+    {
+      "key": "learning",
+      "score": 93,
+      "confidence": "high",
+      "evidence": [
+        "README",
+        "docs directory or architecture guide",
+        "changelog",
+        "architecture decision records"
+      ]
+    }
+  ],
+  "signals": {
+    "readme": true,
+    "license": true,
+    "manifest": true,
+    "tests": true,
+    "ci": true,
+    "docs": true,
+    "changelog": true,
+    "adr": true,
+    "lint": false,
+    "tags": [
+      "v1.0.0"
+    ]
+  },
+  "transcripts": {
+    "files": [
+      "pockettasks-session.jsonl"
+    ],
+    "events": 12,
+    "timestamped_events": 12,
+    "estimated_active_hours": 3.4,
+    "confidence": "medium",
+    "repeated_prompts": [],
+    "error_signals": 0
+  },
+  "evidence_cards": [
+    {
+      "title": "持续交付",
+      "evidence": "在 18 个自然日内完成 12 次提交，涉及 11 个受版本控制的文件。",
+      "career": "在 18 个自然日内持续构建并迭代 PocketTasks，覆盖 11 个受版本控制的文件；请补充经过验证的用户或业务结果。"
+    },
+    {
+      "title": "核心实现区域",
+      "evidence": "主要变更活动集中在：src, (root), .github。",
+      "career": "实现并持续完善项目核心区域 src, (root), .github；请补充关键技术决策和最终结果。"
+    },
+    {
+      "title": "验证基础设施",
+      "evidence": "仓库中已包含 tests 和 CI。",
+      "career": "通过 tests 和 CI 让变更可验证；请补充经过确认的稳定性或发布结果。"
+    }
+  ]
+}
