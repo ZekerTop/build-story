@@ -94,8 +94,33 @@ class BuildStoryTests(unittest.TestCase):
     def test_generates_evidence_markdown_and_html(self):
         self.make_history()
         output = Path(self.temp.name) / "report"
+        context = Path(self.temp.name) / "context.json"
+        context.write_text(
+            json.dumps(
+                {
+                    "en": {
+                        "role": "the product direction and implementation",
+                        "outcome": "shipped a tagged release with a tested local workflow.",
+                        "key_decision": "removed the persistent cache after repeated invalidation work.",
+                        "summary": "From a fragile persistent cache back to a simpler local workflow.",
+                        "resume_bullets": ["Shipped a tested local workflow after reversing a fragile cache design."],
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
         run(
-            [sys.executable, str(SCRIPT), str(self.repo), "--output", str(output), "--language", "en"],
+            [
+                sys.executable,
+                str(SCRIPT),
+                str(self.repo),
+                "--output",
+                str(output),
+                "--language",
+                "en",
+                "--context",
+                str(context),
+            ],
             self.repo,
         )
         self.assertTrue((output / "evidence.json").exists())
@@ -109,11 +134,17 @@ class BuildStoryTests(unittest.TestCase):
         self.assertEqual(data["metrics"]["commits"], 7)
         self.assertEqual(data["project"]["path"], "sample-project")
         self.assertEqual(len(data["dimensions"]), 5)
+        self.assertLessEqual(len(data["turning_points"]), 7)
+        self.assertEqual(data["story"]["headline"], "From a fragile persistent cache back to a simpler local workflow.")
+        self.assertTrue(data["career_material"]["confirmed"])
+        self.assertTrue(all(item["level"] and item["recommendation"] for item in data["dimensions"]))
         self.assertTrue(any(item["type"] == "explicit-reversal" for item in data["loop_candidates"]))
         self.assertTrue(any(item["path"] == "src/app.py" for item in data["friction_zones"]))
         report = (output / "report.html").read_text(encoding="utf-8")
-        self.assertIn("See how you built it", report)
-        self.assertIn("Project life line", report)
+        self.assertIn("From a fragile persistent cache", report)
+        self.assertIn("The turns that changed the project", report)
+        self.assertIn("View every commit", report)
+        self.assertIn("Turn evidence into a story", report)
         self.assertIn('class="lang-switch"', report)
         self.assertIn('href="report.zh.html"', report)
         self.assertNotIn(str(self.repo.parent), report)
@@ -151,6 +182,18 @@ class BuildStoryTests(unittest.TestCase):
         report = (output / "report.html").read_text(encoding="utf-8")
         self.assertIn('href="report.en.html"', report)
         self.assertIn('class="is-current" lang="zh-CN"', report)
+        visible = report.split('<script type="application/json"', 1)[0]
+        self.assertIn("真正改变项目的转折点", visible)
+        self.assertIn("查看全部提交", visible)
+        self.assertIn("核心代码", visible)
+        self.assertIn("项目根目录", visible)
+        self.assertIn("查看计算方法", visible)
+        self.assertNotIn(" files ·", visible)
+        self.assertNotIn(" commits ·", visible)
+        self.assertNotIn(" touches", visible)
+        self.assertNotIn("explicit reversal", visible)
+        self.assertNotIn("test files", visible)
+        self.assertNotIn("CI workflow", visible)
 
 
 if __name__ == "__main__":

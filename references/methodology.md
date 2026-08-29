@@ -27,6 +27,8 @@ The deterministic analyzer reads commits reachable from the current `HEAD`, in c
 
 These labels help navigation. They are not claims about the author's intent.
 
+The default report selects at most seven turning points. The first and final commits anchor the story; explicit reversals, the attempts they undo, new directions, validation, documentation, and delivery milestones receive priority. The complete timeline stays available in a collapsed evidence section.
+
 ## Rework and loop candidates
 
 BuildStory uses three signals:
@@ -55,9 +57,20 @@ There is no overall score. The analyzer reports separate dimensions:
 - **Iteration control:** explicit reversals and concentrated rework signals.
 - **Learning capture:** README, changelog, ADR, docs, or retrospective artifacts.
 
-Scores summarize observable repository evidence, not a person's intrinsic ability. Each score includes evidence and confidence.
+The report converts each score into a human-readable evidence level, explains the reason, and provides a concrete next-run recommendation. The raw score remains available only inside the calculation details.
+
+Scores summarize observable repository evidence, not a person's intrinsic ability. Each score includes evidence and confidence, and there is no overall score.
+
+## User-confirmed context
+
+Git and transcripts cannot prove personal responsibility, final impact, or the meaning of a trade-off. Career output therefore requires three confirmed facts:
+
+1. the user's real responsibility;
+2. the final outcome;
+3. the decision that best demonstrates the user's ability.
+
+Optional `summary` and `resume_bullets` fields let the user preserve exact wording. Context may contain separate `zh` and `en` objects and is included only in the locally generated report.
 
 ## Privacy
 
 Transcript parsing is local. The analyzer stores only short excerpts needed to explain repeated-prompt candidates. It does not intentionally copy complete conversations into the report.
-

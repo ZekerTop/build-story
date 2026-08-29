@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.0",
-  "generator_version": "0.1.0",
+  "schema_version": "1.1",
+  "generator_version": "0.2.0",
   "generated_at": "2026-08-29T00:00:00+00:00",
   "language": "en",
   "project": {
@@ -37,12 +37,12 @@
     "lines_added": 49,
     "lines_deleted": 13,
     "category_counts": {
-      "documentation": 2,
+      "foundation": 1,
       "feature": 2,
       "fix": 2,
-      "refactor": 1,
-      "other": 1,
+      "refactor": 2,
       "validation": 2,
+      "documentation": 1,
       "delivery": 2
     },
     "time_estimate": {
@@ -52,6 +52,108 @@
       "confidence": "medium"
     }
   },
+  "story": {
+    "headline": "From complex automatic cloud sync back to a user-controlled local-first product.",
+    "highlights": [
+      "1 explicit direction change",
+      "2 loop candidates worth reviewing",
+      "Most visible attention: Core code"
+    ],
+    "context_confirmed": true
+  },
+  "turning_points": [
+    {
+      "hash": "7205f0974e67d117962f3cd7b461c63cb852bcb5",
+      "short_hash": "7205f097",
+      "timestamp": "2026-07-01T09:00:00+00:00",
+      "date": "2026-07-01",
+      "author": "Alex Builder",
+      "subject": "Initialize PocketTasks CLI",
+      "category": "foundation",
+      "files": 4,
+      "added": 9,
+      "deleted": 0,
+      "turning_point_reason": "Project start"
+    },
+    {
+      "hash": "a4ffcd5214b19dcb253d38e1f3d8d66a5977c8d7",
+      "short_hash": "a4ffcd52",
+      "timestamp": "2026-07-03T10:15:00+00:00",
+      "date": "2026-07-03",
+      "author": "Alex Builder",
+      "subject": "Add experimental cloud sync queue",
+      "category": "feature",
+      "files": 1,
+      "added": 4,
+      "deleted": 0,
+      "turning_point_reason": "Attempt later reversed"
+    },
+    {
+      "hash": "9de0c2d9a698065db51844cadad31877e74c4bbd",
+      "short_hash": "9de0c2d9",
+      "timestamp": "2026-07-04T09:30:00+00:00",
+      "date": "2026-07-04",
+      "author": "Alex Builder",
+      "subject": "Refactor cloud sync retry ownership",
+      "category": "refactor",
+      "files": 1,
+      "added": 4,
+      "deleted": 3,
+      "turning_point_reason": "Repeated refinement"
+    },
+    {
+      "hash": "d678a8a28a840d4faf4ef637874c0499e55bb846",
+      "short_hash": "d678a8a2",
+      "timestamp": "2026-07-05T09:10:00+00:00",
+      "date": "2026-07-05",
+      "author": "Alex Builder",
+      "subject": "Revert \"Add experimental cloud sync queue\"",
+      "category": "fix",
+      "files": 1,
+      "added": 2,
+      "deleted": 6,
+      "turning_point_reason": "Direction change"
+    },
+    {
+      "hash": "25929cfc1954decd69031420076a26d20b3bb6ee",
+      "short_hash": "25929cfc",
+      "timestamp": "2026-07-06T10:00:00+00:00",
+      "date": "2026-07-06",
+      "author": "Alex Builder",
+      "subject": "Replace cloud sync with local export",
+      "category": "refactor",
+      "files": 1,
+      "added": 4,
+      "deleted": 2,
+      "turning_point_reason": "New direction"
+    },
+    {
+      "hash": "ea9798bf7a73e7b662d24cb18733a6a2e585aa6c",
+      "short_hash": "ea9798bf",
+      "timestamp": "2026-07-08T09:00:00+00:00",
+      "date": "2026-07-08",
+      "author": "Alex Builder",
+      "subject": "Add tests for storage and export",
+      "category": "validation",
+      "files": 2,
+      "added": 4,
+      "deleted": 0,
+      "turning_point_reason": "Validation established"
+    },
+    {
+      "hash": "5e5bebe5519b18a077fb204edc0ae4a57c6e9b2f",
+      "short_hash": "5e5bebe5",
+      "timestamp": "2026-07-18T09:00:00+00:00",
+      "date": "2026-07-18",
+      "author": "Alex Builder",
+      "subject": "Release PocketTasks 1.0",
+      "category": "delivery",
+      "files": 1,
+      "added": 1,
+      "deleted": 1,
+      "turning_point_reason": "Delivery milestone"
+    }
+  ],
   "timeline": [
     {
       "hash": "7205f0974e67d117962f3cd7b461c63cb852bcb5",
@@ -60,7 +162,7 @@
       "date": "2026-07-01",
       "author": "Alex Builder",
       "subject": "Initialize PocketTasks CLI",
-      "category": "documentation",
+      "category": "foundation",
       "files": 4,
       "added": 9,
       "deleted": 0
@@ -132,7 +234,7 @@
       "date": "2026-07-06",
       "author": "Alex Builder",
       "subject": "Replace cloud sync with local export",
-      "category": "other",
+      "category": "refactor",
       "files": 1,
       "added": 4,
       "deleted": 2
@@ -233,6 +335,7 @@
   "attention_areas": [
     {
       "area": "src",
+      "label": "Core code",
       "gross": 34,
       "commits": 7,
       "files": 3,
@@ -240,6 +343,7 @@
     },
     {
       "area": "(root)",
+      "label": "Project root",
       "gross": 14,
       "commits": 5,
       "files": 4,
@@ -247,6 +351,7 @@
     },
     {
       "area": ".github",
+      "label": "Automation workflows",
       "gross": 7,
       "commits": 1,
       "files": 1,
@@ -254,6 +359,7 @@
     },
     {
       "area": "tests",
+      "label": "Tests",
       "gross": 4,
       "commits": 2,
       "files": 2,
@@ -261,6 +367,7 @@
     },
     {
       "area": "docs",
+      "label": "Documentation",
       "gross": 3,
       "commits": 1,
       "files": 1,
@@ -276,9 +383,12 @@
         "README",
         "license",
         "package manifest",
-        "1 Git tag(s)",
+        "1 Git tag",
         "project documentation"
-      ]
+      ],
+      "level": "Strong",
+      "reason": "README; license; package manifest; 1 Git tag; project documentation",
+      "recommendation": "Keep release tags, change notes, and usage documentation as the definition of done."
     },
     {
       "key": "validation",
@@ -287,8 +397,11 @@
       "evidence": [
         "test files",
         "CI workflow",
-        "2 validation-related commit(s)"
-      ]
+        "2 validation-related commits"
+      ],
+      "level": "Healthy",
+      "reason": "test files; CI workflow; 2 validation-related commits",
+      "recommendation": "Add regression tests around the paths that absorbed the most rework before the next release."
     },
     {
       "key": "traceability",
@@ -297,17 +410,23 @@
       "evidence": [
         "100% descriptive commit subjects",
         "100% reviewable-size commits"
-      ]
+      ],
+      "level": "Clear",
+      "reason": "100% descriptive commit subjects; 100% reviewable-size commits",
+      "recommendation": "Keep commits small and describe the decision each change preserves or replaces."
     },
     {
       "key": "iteration",
       "score": 50,
       "confidence": "medium",
       "evidence": [
-        "1 explicit reversal(s)",
-        "1 high-change file candidate(s)",
-        "High churn may represent productive iteration and requires review"
-      ]
+        "1 explicit reversal",
+        "1 high-change file candidate",
+        "High churn may represent productive iteration and still requires context"
+      ],
+      "level": "Needs review",
+      "reason": "1 explicit reversal; 1 high-change file candidate; High churn may represent productive iteration and still requires context",
+      "recommendation": "Before implementing cross-boundary state, write down failure recovery and an exit condition. After two repeated fixes, pause and reconsider the direction."
     },
     {
       "key": "learning",
@@ -318,7 +437,10 @@
         "docs directory or architecture guide",
         "changelog",
         "architecture decision records"
-      ]
+      ],
+      "level": "Strong",
+      "reason": "README; docs directory or architecture guide; changelog; architecture decision records",
+      "recommendation": "Keep the decision record connected to the release or behavior it changed."
     }
   ],
   "signals": {
@@ -350,17 +472,30 @@
     {
       "title": "Sustained delivery",
       "evidence": "12 commits across 18 calendar days and 11 tracked files.",
-      "career": "Built and iterated on PocketTasks across 11 tracked files over 18 calendar days; add the verified user or business outcome."
+      "career": "Took PocketTasks from early experiments to a 1.0 release; reversed automatic cloud sync when queue and retry complexity grew, replacing it with explicit JSON export."
     },
     {
       "title": "Core implementation areas",
-      "evidence": "Most change activity concentrated in: src, (root), .github.",
-      "career": "Implemented and refined the project's core areas across src, (root), .github; add the concrete technical decision and outcome."
+      "evidence": "Most change activity concentrated in: Core code, Project root, Automation workflows.",
+      "career": "Added tests and CI for local storage and export, then captured the direction change in an architecture decision record."
     },
     {
       "title": "Validation infrastructure",
-      "evidence": "The repository contains tests and CI.",
-      "career": "Added tests and CI to make changes verifiable; add the confirmed reliability or release outcome."
+      "evidence": "The repository contains tests and CI."
     }
-  ]
+  ],
+  "career_material": {
+    "confirmed": true,
+    "portfolio_summary": "From complex automatic cloud sync back to a user-controlled local-first product. removed automatic cloud sync after queue and retry complexity kept growing, replacing it with user-initiated export. shipped PocketTasks 1.0 with local task storage and explicit JSON export, leaving users in control of when data leaves the device.",
+    "resume_bullets": [
+      "Took PocketTasks from early experiments to a 1.0 release; reversed automatic cloud sync when queue and retry complexity grew, replacing it with explicit JSON export.",
+      "Added tests and CI for local storage and export, then captured the direction change in an architecture decision record."
+    ],
+    "star": {
+      "situation": "Initialize PocketTasks CLI",
+      "task": "product direction, core implementation, and release validation",
+      "action": "removed automatic cloud sync after queue and retry complexity kept growing, replacing it with user-initiated export.",
+      "result": "shipped PocketTasks 1.0 with local task storage and explicit JSON export, leaving users in control of when data leaves the device."
+    }
+  }
 }

@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 MAX_TRANSCRIPT_BYTES = 20 * 1024 * 1024
 MAX_TRANSCRIPT_EVENTS = 20_000
 SESSION_GAP_HOURS = 2.0
@@ -34,16 +34,34 @@ COPY = {
         "tagline": "See how you built it, not just what you built.",
         "generated": "Generated locally from project evidence",
         "coverage": "Evidence coverage",
-        "timeline": "Project life line",
-        "timeline_intro": "A navigable history of changes, grouped by observable intent signals.",
+        "story_kicker": "The build story",
+        "story_fallback": "A project moved from its first implementation through visible friction to a reviewable delivery.",
+        "story_evidence": "View supporting evidence",
+        "turning_points": "The turns that changed the project",
+        "turning_points_intro": "Only the moments that changed direction, risk, understanding, or delivery state.",
+        "full_timeline": "View every commit",
+        "full_timeline_intro": "The complete Git history remains available as evidence, but it is not the story itself.",
         "friction": "Where the project fought back",
         "friction_intro": "High-change areas and loop candidates. These are prompts for review, not verdicts.",
         "attention": "Attention map",
         "attention_intro": "Estimated from change density and activity timestamps. Invisible thinking time is not captured.",
         "profile": "Evidence-backed profile",
-        "profile_intro": "Separate dimensions, never one total score. Each score describes repository evidence, not personal worth.",
+        "profile_intro": "Human-readable evidence levels first. The numeric method stays available for inspection, never as a judgment of personal worth.",
         "proof": "What this project proves",
         "proof_intro": "Evidence cards that can support a retrospective, portfolio, resume, or interview story.",
+        "career_material": "Turn evidence into a story",
+        "career_confirmed": "Built from repository evidence and user-confirmed context.",
+        "career_missing": "Confirm three facts before turning repository activity into career material.",
+        "portfolio_summary": "Portfolio summary",
+        "resume_bullets": "Resume bullets",
+        "star_story": "STAR interview story",
+        "situation": "Situation",
+        "task": "Task",
+        "action": "Action",
+        "result": "Result",
+        "context_role": "What was your real responsibility?",
+        "context_outcome": "What outcome did the project create?",
+        "context_decision": "Which decision best demonstrates your ability?",
         "method": "Method and limits",
         "commits": "commits",
         "files": "files",
@@ -63,21 +81,57 @@ COPY = {
         "git_limit": "Git records saved changes, not all thinking, experiments, or uncommitted work.",
         "session_limit": "Transcript analysis stores only short excerpts used to explain repeated-prompt candidates.",
         "resume_prompt": "Add the verified user or business outcome before using this as a resume bullet.",
+        "evidence": "Evidence",
+        "calculation": "View calculation",
+        "recommendation": "Next time",
+        "reason": "Why",
+        "loop_candidates": "Loop candidates",
+        "change_volume": "lines changed",
+        "touches": "commit touches",
+        "project_root": "Project root",
+        "source_code": "Core code",
+        "automation": "Automation workflows",
+        "tests_area": "Tests",
+        "docs_area": "Documentation",
+        "scripts_area": "Tooling scripts",
+        "career_output_rule": "Career-output rule",
+        "career_confirmed_rule": "Use only confirmed responsibility, decisions, and outcomes. Never present commit volume as impact.",
+        "local_first": "Local-first",
+        "local_first_detail": "No source code, context file, or transcript is uploaded by this generator.",
+        "footer": "See how you built it.",
     },
     "zh": {
         "tagline": "不只看你做出了什么，更看你是怎么做到的。",
         "generated": "基于本地项目证据生成",
         "coverage": "证据覆盖范围",
-        "timeline": "项目生命线",
-        "timeline_intro": "按照可观察到的变更信号，重建可浏览的开发历程。",
+        "story_kicker": "项目故事",
+        "story_fallback": "这个项目从第一次实现出发，穿过可见的阻力，最终形成了一次可以复盘的交付。",
+        "story_evidence": "查看支撑证据",
+        "turning_points": "真正改变项目的转折点",
+        "turning_points_intro": "只保留改变方向、风险、理解或交付状态的关键时刻。",
+        "full_timeline": "查看全部提交",
+        "full_timeline_intro": "完整 Git 历史仍然保留为证据，但它本身不是故事。",
         "friction": "项目在哪里卡住了",
         "friction_intro": "高频变更区域与循环候选。它们用于复盘，不是对人的判决。",
         "attention": "注意力地图",
         "attention_intro": "根据变更密度和活动时间估算，无法覆盖离线思考时间。",
         "profile": "基于证据的能力画像",
-        "profile_intro": "只看分维度画像，不给一个虚假的总分。分数描述仓库证据，不评价人的价值。",
+        "profile_intro": "先展示人能理解的证据等级，数字计算方法只放在详情中，不评价人的价值。",
         "proof": "这个项目证明了什么",
         "proof_intro": "可用于项目复盘、作品集、简历和面试故事的证据卡片。",
+        "career_material": "把证据变成能讲述的故事",
+        "career_confirmed": "由仓库证据与用户确认的真实语境共同生成。",
+        "career_missing": "把仓库活动写成职业材料前，只需要确认三件事。",
+        "portfolio_summary": "作品集摘要",
+        "resume_bullets": "简历要点",
+        "star_story": "STAR 面试故事",
+        "situation": "背景",
+        "task": "任务",
+        "action": "行动",
+        "result": "结果",
+        "context_role": "你在项目中的真实职责是什么？",
+        "context_outcome": "最终给用户或自己带来了什么结果？",
+        "context_decision": "哪个决定最能代表你的能力？",
         "method": "方法与限制",
         "commits": "次提交",
         "files": "个文件",
@@ -97,6 +151,24 @@ COPY = {
         "git_limit": "Git 只记录已保存的变更，无法覆盖全部思考、实验和未提交工作。",
         "session_limit": "会话分析只保存用于解释重复提示候选的短摘录，不复制完整对话。",
         "resume_prompt": "用于简历前，请补充经过验证的用户结果或业务结果。",
+        "evidence": "证据",
+        "calculation": "查看计算方法",
+        "recommendation": "下次建议",
+        "reason": "原因",
+        "loop_candidates": "循环候选",
+        "change_volume": "行变更",
+        "touches": "次提交触达",
+        "project_root": "项目根目录",
+        "source_code": "核心代码",
+        "automation": "自动化工作流",
+        "tests_area": "测试",
+        "docs_area": "文档",
+        "scripts_area": "工具脚本",
+        "career_output_rule": "职业输出规则",
+        "career_confirmed_rule": "只使用用户确认的职责、决策与结果，不把提交次数写成影响指标。",
+        "local_first": "本地优先",
+        "local_first_detail": "生成器不会上传源代码、语境文件或会话记录。",
+        "footer": "看见你是怎么做到的。",
     },
 }
 
@@ -224,6 +296,37 @@ def git(repo: Path, *args: str, check: bool = True) -> str:
     return run(["git", *args], repo, check=check)
 
 
+def load_context(path: Path | None) -> dict[str, Any]:
+    if path is None:
+        return {}
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise RuntimeError(f"Invalid context JSON: {error}") from error
+    if not isinstance(value, dict):
+        raise RuntimeError("Context JSON must contain an object.")
+    return value
+
+
+def context_for_language(context: dict[str, Any], language: str) -> dict[str, Any]:
+    value = context.get(language, context)
+    if not isinstance(value, dict):
+        return {}
+    allowed = {"role", "outcome", "key_decision", "summary", "resume_bullets"}
+    result = {key: value[key] for key in allowed if key in value}
+    if "resume_bullets" in result and not isinstance(result["resume_bullets"], list):
+        result["resume_bullets"] = []
+    return result
+
+
+def count_text(value: int, noun: str, language: str) -> str:
+    if language == "zh":
+        units = {"commit": "次提交", "file": "个文件", "day": "个自然日", "loop": "个循环候选"}
+        return f"{value} {units[noun]}"
+    singular = {"commit": "commit", "file": "file", "day": "calendar day", "loop": "loop candidate"}[noun]
+    return f"{value} {singular if value == 1 else singular + 's'}"
+
+
 def parse_datetime(value: Any) -> dt.datetime | None:
     if value is None:
         return None
@@ -258,9 +361,9 @@ def category_for(subject: str, paths: Iterable[str]) -> str:
         ("delivery", r"\b(release|publish|deploy|version|ship)\b|发布|部署|上线"),
         ("validation", r"\b(test|tests|testing|ci|lint|verify|benchmark)\b|测试|验证|校验"),
         ("documentation", r"\b(doc|docs|readme|guide|documentation)\b|文档|说明|指南"),
-        ("refactor", r"\b(refactor|cleanup|simplify|rename|restructure)\b|重构|清理|简化"),
+        ("refactor", r"\b(refactor|cleanup|simplify|rename|restructure|replace|migrate|switch)\b|重构|清理|简化|替换|迁移"),
         ("fix", r"\b(fix|bug|repair|resolve|patch|hotfix)\b|修复|修正|解决"),
-        ("foundation", r"\b(init|initial|bootstrap|scaffold|setup|configure|config)\b|初始化|搭建|配置"),
+        ("foundation", r"\b(init|initialize|initial|bootstrap|scaffold|setup|configure|config)\b|初始化|搭建|配置"),
         ("feature", r"\b(feat|feature|add|implement|create|support|introduce)\b|新增|实现|增加|支持"),
     ]
     for name, pattern in groups:
@@ -601,8 +704,55 @@ def project_signals(repo: Path, files: list[str]) -> dict[str, Any]:
     }
 
 
+def dimension_level(key: str, score: int, language: str) -> str:
+    if key == "traceability":
+        thresholds = [(85, "Clear", "清晰"), (70, "Mostly clear", "较清晰"), (50, "Needs review", "需要复盘")]
+    elif key == "iteration":
+        thresholds = [(80, "Stable", "稳定"), (65, "Mostly stable", "基本稳定"), (45, "Needs review", "需要复盘")]
+    else:
+        thresholds = [(85, "Strong", "充分"), (70, "Healthy", "较强"), (50, "Needs review", "需要复盘")]
+    for minimum, english, chinese in thresholds:
+        if score >= minimum:
+            return english if language == "en" else chinese
+    return "Limited evidence" if language == "en" else "证据不足"
+
+
+def dimension_recommendation(
+    key: str,
+    language: str,
+    signals: dict[str, Any],
+    explicit_reverts: int,
+    friction: list[dict[str, Any]],
+    meaningful_ratio: float,
+) -> str:
+    if key == "delivery":
+        if not signals["tags"]:
+            return "Add a release tag and changelog entry when the project reaches a usable milestone." if language == "en" else "项目达到可用里程碑时，用发布标签和变更说明明确收尾。"
+        return "Keep release tags, change notes, and usage documentation as the definition of done." if language == "en" else "继续把发布标签、变更说明和使用文档作为一次交付的收尾。"
+    if key == "validation":
+        if not signals["tests"] or not signals["ci"]:
+            return "Turn the most frequently changed path into a regression test, then run it in CI." if language == "en" else "把修改最频繁的核心路径写成回归测试，并放进 CI 自动验证。"
+        return "Add regression tests around the paths that absorbed the most rework before the next release." if language == "en" else "下次发布前，优先为返工最集中的路径补充回归测试。"
+    if key == "traceability":
+        if meaningful_ratio < 0.8:
+            return "Write commit subjects around decisions and user-visible change, not generic activity." if language == "en" else "提交说明围绕决策和用户可见变化来写，避免只写“更新”或“修复”。"
+        return "Keep commits small and describe the decision each change preserves or replaces." if language == "en" else "保持提交规模可审查，并说明每次变更保留或替代了什么决定。"
+    if key == "iteration":
+        if explicit_reverts or friction:
+            return "Before implementing cross-boundary state, write down failure recovery and an exit condition. After two repeated fixes, pause and reconsider the direction." if language == "en" else "实现跨边界状态前，先写清失败恢复与退出条件；同一方案连续修复两次后，暂停并重新判断方向。"
+        return "Keep marking experiments explicitly so productive exploration stays distinguishable from blocked loops." if language == "en" else "继续明确标记实验，让有效探索与受阻循环始终可以区分。"
+    if not signals["adr"]:
+        return "Record the most important trade-off as a short decision note: context, options, decision, and consequence." if language == "en" else "把最重要的取舍写成一条简短决策记录：背景、选项、决定与后果。"
+    return "Keep the decision record connected to the release or behavior it changed." if language == "en" else "继续把关键决策记录与它改变的发布结果或产品行为连接起来。"
+
+
 def score_dimensions(
-    commits: list[Commit], files: list[str], signals: dict[str, Any], friction: list[dict[str, Any]], loops: list[dict[str, Any]]
+    commits: list[Commit],
+    files: list[str],
+    signals: dict[str, Any],
+    friction: list[dict[str, Any]],
+    loops: list[dict[str, Any]],
+    language: str,
 ) -> list[dict[str, Any]]:
     delivery_score = min(
         100,
@@ -617,13 +767,18 @@ def score_dimensions(
         label
         for present, label in [
             (signals["readme"], "README"),
-            (signals["license"], "license"),
-            (signals["manifest"], "package manifest"),
-            (bool(signals["tags"]), f"{len(signals['tags'])} Git tag(s)"),
-            (signals["docs"], "project documentation"),
+            (signals["license"], "license" if language == "en" else "许可证"),
+            (signals["manifest"], "package manifest" if language == "en" else "项目清单"),
+            (
+                bool(signals["tags"]),
+                f"{len(signals['tags'])} Git {'tag' if len(signals['tags']) == 1 else 'tags'}"
+                if language == "en"
+                else f"{len(signals['tags'])} 个 Git 标签",
+            ),
+            (signals["docs"], "project documentation" if language == "en" else "项目文档"),
         ]
         if present
-    ] or ["No strong delivery artifact detected"]
+    ] or ["No strong delivery artifact detected" if language == "en" else "未发现明确的交付产物"]
 
     validation_commits = sum(commit.category == "validation" for commit in commits)
     validation_score = min(
@@ -636,12 +791,16 @@ def score_dimensions(
     )
     validation_evidence = []
     if signals["tests"]:
-        validation_evidence.append("test files")
+        validation_evidence.append("test files" if language == "en" else "测试文件")
     if signals["ci"]:
-        validation_evidence.append("CI workflow")
+        validation_evidence.append("CI workflow" if language == "en" else "CI 工作流")
     if signals["lint"]:
-        validation_evidence.append("lint configuration")
-    validation_evidence.append(f"{validation_commits} validation-related commit(s)")
+        validation_evidence.append("lint configuration" if language == "en" else "代码检查配置")
+    validation_evidence.append(
+        f"{validation_commits} validation-related {'commit' if validation_commits == 1 else 'commits'}"
+        if language == "en"
+        else f"{validation_commits} 次验证相关提交"
+    )
 
     meaningful = 0
     reviewable = 0
@@ -656,17 +815,27 @@ def score_dimensions(
     reviewable_ratio = reviewable / divisor
     traceability_score = round(min(100, meaningful_ratio * 65 + reviewable_ratio * 35))
     traceability_evidence = [
-        f"{meaningful_ratio:.0%} descriptive commit subjects",
-        f"{reviewable_ratio:.0%} reviewable-size commits",
+        f"{meaningful_ratio:.0%} descriptive commit subjects"
+        if language == "en"
+        else f"{meaningful_ratio:.0%} 的提交说明具有描述性",
+        f"{reviewable_ratio:.0%} reviewable-size commits"
+        if language == "en"
+        else f"{reviewable_ratio:.0%} 的提交规模便于审查",
     ]
 
     explicit_reverts = sum(loop["type"] == "explicit-reversal" for loop in loops)
     top_rework = sum(row["rework_ratio"] for row in friction[:3]) / max(1, len(friction[:3]))
     iteration_score = round(max(0, min(100, 92 - explicit_reverts * 13 - top_rework * 34)))
     iteration_evidence = [
-        f"{explicit_reverts} explicit reversal(s)",
-        f"{len(friction)} high-change file candidate(s)",
-        "High churn may represent productive iteration and requires review",
+        f"{explicit_reverts} explicit {'reversal' if explicit_reverts == 1 else 'reversals'}"
+        if language == "en"
+        else f"{explicit_reverts} 次明确回滚",
+        f"{len(friction)} high-change file {'candidate' if len(friction) == 1 else 'candidates'}"
+        if language == "en"
+        else f"{len(friction)} 个高频变更文件候选",
+        "High churn may represent productive iteration and still requires context"
+        if language == "en"
+        else "高频变更可能是有效探索，仍需结合真实语境复盘",
     ]
 
     learning_score = min(
@@ -682,14 +851,14 @@ def score_dimensions(
         label
         for present, label in [
             (signals["readme"], "README"),
-            (signals["docs"], "docs directory or architecture guide"),
-            (signals["changelog"], "changelog"),
-            (signals["adr"], "architecture decision records"),
+            (signals["docs"], "docs directory or architecture guide" if language == "en" else "文档目录或架构说明"),
+            (signals["changelog"], "changelog" if language == "en" else "变更记录"),
+            (signals["adr"], "architecture decision records" if language == "en" else "架构决策记录"),
         ]
         if present
-    ] or ["No durable learning artifact detected"]
+    ] or ["No durable learning artifact detected" if language == "en" else "未发现可长期复用的经验记录"]
 
-    return [
+    rows = [
         {"key": "delivery", "score": int(delivery_score), "confidence": "high", "evidence": delivery_evidence},
         {
             "key": "validation",
@@ -711,9 +880,33 @@ def score_dimensions(
         },
         {"key": "learning", "score": int(learning_score), "confidence": "high", "evidence": learning_evidence},
     ]
+    for row in rows:
+        row["level"] = dimension_level(row["key"], row["score"], language)
+        row["reason"] = "；".join(row["evidence"]) if language == "zh" else "; ".join(row["evidence"])
+        row["recommendation"] = dimension_recommendation(
+            row["key"], language, signals, explicit_reverts, friction, meaningful_ratio
+        )
+    return rows
 
 
-def directory_attention(file_stats: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+def humanize_area_name(area: str, language: str) -> str:
+    lower = area.lower()
+    if lower == "(root)":
+        return COPY[language]["project_root"]
+    if lower in {"src", "source", "app", "lib"}:
+        return COPY[language]["source_code"]
+    if lower == ".github":
+        return COPY[language]["automation"]
+    if lower in {"test", "tests", "spec", "specs", "__tests__"}:
+        return COPY[language]["tests_area"]
+    if lower in {"doc", "docs"}:
+        return COPY[language]["docs_area"]
+    if lower in {"script", "scripts", "tools"}:
+        return COPY[language]["scripts_area"]
+    return area
+
+
+def directory_attention(file_stats: dict[str, dict[str, Any]], language: str) -> list[dict[str, Any]]:
     groups: dict[str, dict[str, float]] = collections.defaultdict(lambda: {"gross": 0, "commits": 0, "files": 0})
     for path, row in file_stats.items():
         if likely_generated(path):
@@ -725,7 +918,7 @@ def directory_attention(file_stats: dict[str, dict[str, Any]]) -> list[dict[str,
     results = []
     for name, row in groups.items():
         score = math.log1p(row["gross"]) * (1 + math.log1p(row["commits"]))
-        results.append({"area": name, **row, "attention_score": round(score, 2)})
+        results.append({"area": name, "label": humanize_area_name(name, language), **row, "attention_score": round(score, 2)})
     results.sort(key=lambda item: item["attention_score"], reverse=True)
     return results[:8]
 
@@ -737,6 +930,7 @@ def evidence_cards(
     signals: dict[str, Any],
     attention: list[dict[str, Any]],
     language: str,
+    context: dict[str, Any],
 ) -> list[dict[str, Any]]:
     if not commits:
         return []
@@ -749,7 +943,6 @@ def evidence_cards(
             {
                 "title": "Sustained delivery",
                 "evidence": f"{len(commits)} commits across {span} calendar days and {len(files)} tracked files.",
-                "career": f"Built and iterated on {project_name} across {len(files)} tracked files over {span} calendar days; add the verified user or business outcome.",
             }
         )
     else:
@@ -757,11 +950,10 @@ def evidence_cards(
             {
                 "title": "持续交付",
                 "evidence": f"在 {span} 个自然日内完成 {len(commits)} 次提交，涉及 {len(files)} 个受版本控制的文件。",
-                "career": f"在 {span} 个自然日内持续构建并迭代 {project_name}，覆盖 {len(files)} 个受版本控制的文件；请补充经过验证的用户或业务结果。",
             }
         )
     if attention:
-        top = ", ".join(row["area"] for row in attention[:3])
+        top = ", ".join(row["label"] for row in attention[:3])
         cards.append(
             {
                 "title": "Core implementation areas" if language == "en" else "核心实现区域",
@@ -770,39 +962,236 @@ def evidence_cards(
                     if language == "en"
                     else f"主要变更活动集中在：{top}。"
                 ),
-                "career": (
-                    f"Implemented and refined the project's core areas across {top}; add the concrete technical decision and outcome."
-                    if language == "en"
-                    else f"实现并持续完善项目核心区域 {top}；请补充关键技术决策和最终结果。"
-                ),
             }
         )
     if signals["tests"] or signals["ci"]:
         pieces = []
         if signals["tests"]:
-            pieces.append("tests")
+            pieces.append("tests" if language == "en" else "测试")
         if signals["ci"]:
             pieces.append("CI")
-        joined = " and ".join(pieces)
+        joined = " and ".join(pieces) if language == "en" else " 和 ".join(pieces)
         cards.append(
             {
                 "title": "Validation infrastructure" if language == "en" else "验证基础设施",
                 "evidence": (
                     f"The repository contains {joined}."
                     if language == "en"
-                    else f"仓库中已包含 {' 和 '.join(pieces)}。"
-                ),
-                "career": (
-                    f"Added {joined} to make changes verifiable; add the confirmed reliability or release outcome."
-                    if language == "en"
-                    else f"通过 {' 和 '.join(pieces)} 让变更可验证；请补充经过确认的稳定性或发布结果。"
+                    else f"仓库中已包含 {joined}。"
                 ),
             }
         )
+    bullets = [str(item) for item in context.get("resume_bullets", []) if str(item).strip()]
+    for index, card in enumerate(cards):
+        if index < len(bullets):
+            card["career"] = bullets[index]
     return cards
 
 
-def build_evidence(repo: Path, session_paths: list[Path], language: str, project_name: str | None) -> dict[str, Any]:
+def turning_point_reason(event: dict[str, Any], language: str, role: str | None = None) -> str:
+    labels = {
+        "en": {
+            "start": "Project start",
+            "reversed_attempt": "Attempt later reversed",
+            "friction": "Repeated refinement",
+            "reversal": "Direction change",
+            "new_direction": "New direction",
+            "validation": "Validation established",
+            "documentation": "Decision captured",
+            "delivery": "Delivery milestone",
+            "default": "Key implementation",
+        },
+        "zh": {
+            "start": "项目起点",
+            "reversed_attempt": "引入后续被撤销的方案",
+            "friction": "反复打磨",
+            "reversal": "方向调整",
+            "new_direction": "确立新方向",
+            "validation": "建立验证",
+            "documentation": "沉淀决策",
+            "delivery": "完成交付",
+            "default": "关键实现",
+        },
+    }[language]
+    if role:
+        return labels[role]
+    if event["category"] in {"validation", "documentation", "delivery"}:
+        return labels[event["category"]]
+    return labels["default"]
+
+
+def select_turning_points(timeline: list[dict[str, Any]], language: str, limit: int = 7) -> list[dict[str, Any]]:
+    if not timeline:
+        return []
+    candidates: dict[int, tuple[int, str]] = {}
+
+    def add(index: int, priority: int, role: str) -> None:
+        if index < 0 or index >= len(timeline):
+            return
+        current = candidates.get(index)
+        if current is None or priority > current[0]:
+            candidates[index] = (priority, role)
+
+    add(0, 100, "start")
+    add(len(timeline) - 1, 99, "delivery" if timeline[-1]["category"] == "delivery" else "default")
+
+    for index, event in enumerate(timeline):
+        if re.search(r"\b(revert|rollback|back out|backout)\b|回滚|撤销", event["subject"].lower()):
+            add(index, 98, "reversal")
+            quoted = re.search(r'["“](.*?)["”]', event["subject"])
+            if quoted:
+                target = quoted.group(1).strip().lower()
+                for previous in range(index - 1, -1, -1):
+                    if timeline[previous]["subject"].strip().lower() == target:
+                        add(previous, 96, "reversed_attempt")
+                        break
+            add(index - 1, 90, "friction")
+            add(index + 1, 95, "new_direction")
+
+    category_priority = {
+        "validation": 88,
+        "documentation": 78,
+        "delivery": 86,
+        "feature": 70,
+        "refactor": 68,
+        "fix": 66,
+        "foundation": 60,
+        "other": 40,
+    }
+    seen_categories: set[str] = set()
+    for index, event in enumerate(timeline):
+        category = event["category"]
+        if category not in seen_categories:
+            add(index, category_priority[category], category if category in {"validation", "documentation", "delivery"} else "default")
+            seen_categories.add(category)
+        if index and category != timeline[index - 1]["category"]:
+            add(index, category_priority[category] - 4, category if category in {"validation", "documentation", "delivery"} else "default")
+
+    if len(candidates) < limit:
+        volumes = sorted(
+            range(len(timeline)),
+            key=lambda index: timeline[index]["added"] + timeline[index]["deleted"],
+            reverse=True,
+        )
+        for index in volumes:
+            add(index, 50, "default")
+            if len(candidates) >= limit:
+                break
+
+    chosen = sorted(candidates.items(), key=lambda item: (-item[1][0], item[0]))[:limit]
+    results = []
+    for index, (_, role) in sorted(chosen):
+        event = dict(timeline[index])
+        event["turning_point_reason"] = turning_point_reason(event, language, role)
+        results.append(event)
+    return results
+
+
+def build_story_summary(
+    project_name: str,
+    timeline: list[dict[str, Any]],
+    loops: list[dict[str, Any]],
+    signals: dict[str, Any],
+    attention: list[dict[str, Any]],
+    context: dict[str, Any],
+    language: str,
+) -> dict[str, Any]:
+    explicit_reverts = sum(item["type"] == "explicit-reversal" for item in loops)
+    headline = str(context.get("summary") or "").strip()
+    if not headline:
+        if explicit_reverts:
+            headline = (
+                "After a visible change in direction, the project moved from repeated refinement to a reviewable delivery."
+                if language == "en"
+                else "经历一次明确的方向调整后，项目从反复打磨走向了可以验证的交付。"
+            )
+        else:
+            headline = COPY[language]["story_fallback"]
+
+    highlights = []
+    if explicit_reverts:
+        highlights.append(
+            f"{explicit_reverts} explicit direction {'change' if explicit_reverts == 1 else 'changes'}"
+            if language == "en"
+            else f"{explicit_reverts} 次关键方向调整"
+        )
+    review_loops = len([item for item in loops if item["confidence"] in {"high", "medium"}])
+    highlights.append(
+        f"{count_text(review_loops, 'loop', language)} worth reviewing"
+        if language == "en"
+        else f"{count_text(review_loops, 'loop', language)}需要复盘"
+    )
+    if attention:
+        highlights.append(
+            f"Most visible attention: {attention[0]['label']}"
+            if language == "en"
+            else f"注意力最集中：{attention[0]['label']}"
+        )
+    finish = []
+    if signals["tests"]:
+        finish.append("tests" if language == "en" else "测试")
+    if signals["ci"]:
+        finish.append("CI")
+    if signals["tags"]:
+        finish.append("a tagged release" if language == "en" else "版本发布")
+    if finish:
+        highlights.append(
+            f"Finished with {', '.join(finish)}"
+            if language == "en"
+            else f"最终完成{'、'.join(finish)}"
+        )
+    return {"headline": headline, "highlights": highlights[:3], "context_confirmed": bool(context)}
+
+
+def build_career_material(
+    project_name: str,
+    story: dict[str, Any],
+    context: dict[str, Any],
+    turning_points: list[dict[str, Any]],
+    language: str,
+) -> dict[str, Any]:
+    role = str(context.get("role") or "").strip()
+    outcome = str(context.get("outcome") or "").strip()
+    decision = str(context.get("key_decision") or "").strip()
+    bullets = [str(item).strip() for item in context.get("resume_bullets", []) if str(item).strip()]
+    confirmed = bool(role and outcome and decision)
+    if not confirmed:
+        return {
+            "confirmed": False,
+            "questions": [
+                COPY[language]["context_role"],
+                COPY[language]["context_outcome"],
+                COPY[language]["context_decision"],
+            ],
+        }
+    portfolio = " ".join(part for part in [story["headline"], decision, outcome] if part)
+    if not bullets:
+        bullets = [
+            f"Led {role.rstrip('.')} for {project_name}; made the decision to {decision.rstrip('.')}, resulting in {outcome.rstrip('.')}."
+            if language == "en"
+            else f"负责{role.rstrip('。')}；通过{decision.rstrip('。')}，最终{outcome.rstrip('。')}。"
+        ]
+    first = turning_points[0]["subject"] if turning_points else project_name
+    return {
+        "confirmed": True,
+        "portfolio_summary": portfolio,
+        "resume_bullets": bullets,
+        "star": {
+            "situation": first,
+            "task": role,
+            "action": decision,
+            "result": outcome,
+        },
+    }
+
+
+def build_evidence(
+    repo: Path,
+    session_paths: list[Path],
+    language: str,
+    project_name: str | None,
+    context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     inside = git(repo, "rev-parse", "--is-inside-work-tree", check=False).strip()
     if inside != "true":
         raise RuntimeError(f"Not a Git repository: {repo}")
@@ -835,9 +1224,10 @@ def build_evidence(repo: Path, session_paths: list[Path], language: str, project
                 }
             )
     signals = project_signals(root, files)
-    dimensions = score_dimensions(commits, files, signals, friction, loops)
-    attention = directory_attention(file_stats)
+    dimensions = score_dimensions(commits, files, signals, friction, loops, language)
+    attention = directory_attention(file_stats, language)
     name = project_name or root.name
+    localized_context = context_for_language(context or {}, language)
     authors = sorted({commit.author for commit in commits})
     categories = collections.Counter(commit.category for commit in commits)
     start = commits[0].timestamp
@@ -860,9 +1250,12 @@ def build_evidence(repo: Path, session_paths: list[Path], language: str, project
         }
         for commit in commits
     ]
+    turning_points = select_turning_points(timeline, language)
+    story = build_story_summary(name, timeline, loops, signals, attention, localized_context, language)
+    career_material = build_career_material(name, story, localized_context, turning_points, language)
     source_list = ["git"] + (["transcripts"] if transcript_files else [])
     return {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "generator_version": VERSION,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "language": language,
@@ -893,6 +1286,8 @@ def build_evidence(repo: Path, session_paths: list[Path], language: str, project
             "category_counts": dict(categories),
             "time_estimate": time_estimate,
         },
+        "story": story,
+        "turning_points": turning_points,
         "timeline": timeline,
         "friction_zones": friction,
         "loop_candidates": loops[:15],
@@ -900,12 +1295,17 @@ def build_evidence(repo: Path, session_paths: list[Path], language: str, project
         "dimensions": dimensions,
         "signals": signals,
         "transcripts": transcript_analysis,
-        "evidence_cards": evidence_cards(name, commits, files, signals, attention, language),
+        "evidence_cards": evidence_cards(name, commits, files, signals, attention, language, localized_context),
+        "career_material": career_material,
     }
 
 
 def confidence_label(value: str, language: str) -> str:
     return COPY[language].get(value, value)
+
+
+def label_value(label: str, value: str, language: str) -> str:
+    return f"{label}：{value}" if language == "zh" else f"{label}: {value}"
 
 
 def render_markdown(data: dict[str, Any]) -> str:
@@ -916,46 +1316,102 @@ def render_markdown(data: dict[str, Any]) -> str:
     lines = [
         f"# BuildStory: {p['name']}",
         "",
-        f"> {c['tagline']}",
-        "",
-        f"- {m['commits']} {c['commits']}",
-        f"- {m['files']} {c['files']}",
-        f"- {m['calendar_days']} {c['days']}",
-        f"- {m['time_estimate']['hours']} {c['hours']} ({c['confidence']}: {confidence_label(m['time_estimate']['confidence'], language)})",
-        "",
-        f"## {c['timeline']}",
+        f"> **{data['story']['headline']}**",
         "",
     ]
+    lines.extend(f"- {item}" for item in data["story"]["highlights"])
+    lines.extend(
+        [
+            "",
+            "<details>",
+            f"<summary>{c['story_evidence']}</summary>",
+            "",
+            f"- {m['commits']} {c['commits']}",
+            f"- {m['files']} {c['files']}",
+            f"- {m['calendar_days']} {c['days']}",
+            f"- {m['time_estimate']['hours']} {c['hours']} ({label_value(c['confidence'], confidence_label(m['time_estimate']['confidence'], language), language)})",
+            "",
+            "</details>",
+            "",
+            f"## {c['turning_points']}",
+            "",
+        ]
+    )
+    for event in data["turning_points"]:
+        lines.append(
+            f"- `{event['date']}` **{event['turning_point_reason']}** · {event['subject']} (`{event['short_hash']}`)"
+        )
+    lines.extend(
+        [
+            "",
+            "<details>",
+            f"<summary>{c['full_timeline']} · {count_text(len(data['timeline']), 'commit', language)}</summary>",
+            "",
+        ]
+    )
     for event in data["timeline"]:
         label = CATEGORY_LABELS[language][event["category"]]
         lines.append(f"- `{event['date']}` **{label}** · {event['subject']} (`{event['short_hash']}`)")
-    lines.extend(["", f"## {c['friction']}", ""])
+    lines.extend(["", "</details>", "", f"## {c['friction']}", ""])
     if data["friction_zones"]:
         for item in data["friction_zones"]:
-            lines.append(
-                f"- `{item['path']}` · {item['commits']} commits · {item['added']}+ / {item['deleted']}- · rework signal {item['rework_ratio']:.0%}"
-            )
+            if language == "en":
+                detail = f"{count_text(item['commits'], 'commit', language)} · +{item['added']} / -{item['deleted']} · {item['rework_ratio']:.0%} bidirectional churn"
+            else:
+                detail = f"{count_text(item['commits'], 'commit', language)} · 新增 {item['added']} / 删除 {item['deleted']} · 双向变更信号 {item['rework_ratio']:.0%}"
+            lines.append(f"- `{item['path']}` · {detail}")
     else:
         lines.append(f"- {c['none']}")
-    lines.extend(["", "### Loop candidates", ""])
+    lines.extend(["", f"### {c['loop_candidates']}", ""])
     if data["loop_candidates"]:
         for item in data["loop_candidates"]:
             lines.append(
-                f"- **{item['title']}** · {item['detail']} ({c['confidence']}: {confidence_label(item['confidence'], language)})"
+                f"- **{item['title']}** · {item['detail']} ({label_value(c['confidence'], confidence_label(item['confidence'], language), language)})"
             )
     else:
         lines.append(f"- {c['none']}")
+    lines.extend(["", f"## {c['attention']}", ""])
+    for item in data["attention_areas"]:
+        if language == "en":
+            lines.append(f"- **{item['label']}** · {int(item['gross'])} lines changed · {int(item['commits'])} commit touches")
+        else:
+            lines.append(f"- **{item['label']}** · {int(item['gross'])} 行变更 · {int(item['commits'])} 次提交触达")
     lines.extend(["", f"## {c['profile']}", ""])
     for item in data["dimensions"]:
-        lines.append(
-            f"- **{DIMENSION_LABELS[language][item['key']]}: {item['score']}/100** ({c['confidence']}: {confidence_label(item['confidence'], language)})"
+        lines.extend(
+            [
+                f"### {DIMENSION_LABELS[language][item['key']]} · {item['level']}",
+                "",
+                f"- **{c['reason']}：** {item['reason']}" if language == "zh" else f"- **{c['reason']}:** {item['reason']}",
+                f"- **{c['recommendation']}：** {item['recommendation']}" if language == "zh" else f"- **{c['recommendation']}:** {item['recommendation']}",
+                "",
+                "<details>",
+                f"<summary>{c['calculation']} · {item['score']}/100</summary>",
+                "",
+            ]
         )
         for evidence in item["evidence"]:
-            lines.append(f"  - {evidence}")
-    lines.extend(["", f"## {c['proof']}", ""])
+            lines.append(f"- {evidence}")
+        lines.extend(["", "</details>", ""])
+    lines.extend([f"## {c['proof']}", ""])
     for card in data["evidence_cards"]:
-        lines.extend([f"### {card['title']}", "", card["evidence"], "", f"> {card['career']}", ""])
-    lines.extend([f"## {c['method']}", ""])
+        lines.extend([f"### {card['title']}", "", card["evidence"], ""])
+        if card.get("career"):
+            lines.extend([f"> {card['career']}", ""])
+
+    career = data["career_material"]
+    lines.extend([f"## {c['career_material']}", ""])
+    if career["confirmed"]:
+        lines.extend([f"### {c['portfolio_summary']}", "", career["portfolio_summary"], "", f"### {c['resume_bullets']}", ""])
+        lines.extend(f"- {item}" for item in career["resume_bullets"])
+        lines.extend(["", f"### {c['star_story']}", ""])
+        for key in ("situation", "task", "action", "result"):
+            lines.append(f"- **{c[key]}：** {career['star'][key]}" if language == "zh" else f"- **{c[key]}:** {career['star'][key]}")
+    else:
+        lines.append(c["career_missing"])
+        lines.append("")
+        lines.extend(f"- {item}" for item in career["questions"])
+    lines.extend(["", f"## {c['method']}", ""])
     for limitation in data["coverage"]["limitations"]:
         lines.append(f"- {limitation}")
     return "\n".join(lines).rstrip() + "\n"
@@ -972,14 +1428,14 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
     m = data["metrics"]
     category_labels = CATEGORY_LABELS[language]
 
-    filters = [
-        f'<button class="filter is-active" data-filter="all">{esc(c["all"])}</button>'
-    ] + [
+    filters = [f'<button class="filter is-active" data-filter="all">{esc(c["all"])}</button>'] + [
         f'<button class="filter" data-filter="{key}">{esc(category_labels[key])} <span>{count}</span></button>'
         for key, count in sorted(m["category_counts"].items())
     ]
+
     timeline_rows = []
     for event in data["timeline"][-160:]:
+        file_text = count_text(event["files"], "file", language)
         timeline_rows.append(
             f'''<article class="event" data-category="{esc(event['category'])}">
   <div class="event-date">{esc(event['date'])}</div>
@@ -987,17 +1443,33 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
   <div class="event-body">
     <div class="event-meta"><span>{esc(category_labels[event['category']])}</span><code>{esc(event['short_hash'])}</code></div>
     <h3>{esc(event['subject'])}</h3>
-    <p>{event['files']} files · <strong>+{event['added']}</strong> / -{event['deleted']}</p>
+    <p>{esc(file_text)} · <strong>+{event['added']}</strong> / -{event['deleted']}</p>
+  </div>
+</article>'''
+        )
+
+    turning_rows = []
+    for index, event in enumerate(data["turning_points"], start=1):
+        file_text = count_text(event["files"], "file", language)
+        turning_rows.append(
+            f'''<article class="turn">
+  <div class="turn-number">{index:02d}</div>
+  <div class="turn-body">
+    <div class="turn-meta"><span>{esc(event['turning_point_reason'])}</span><time>{esc(event['date'])}</time></div>
+    <h3>{esc(event['subject'])}</h3>
+    <p>{esc(category_labels[event['category']])} · {esc(file_text)} · <code>{esc(event['short_hash'])}</code></p>
   </div>
 </article>'''
         )
 
     friction_rows = []
     for index, item in enumerate(data["friction_zones"][:8], start=1):
+        commit_text = count_text(item["commits"], "commit", language)
+        delta_text = f"+{item['added']} / -{item['deleted']}" if language == "en" else f"新增 {item['added']} / 删除 {item['deleted']}"
         friction_rows.append(
             f'''<div class="friction-row">
   <div class="rank">{index:02d}</div>
-  <div><code>{esc(item['path'])}</code><p>{item['commits']} commits · +{item['added']} / -{item['deleted']}</p></div>
+  <div><code>{esc(item['path'])}</code><p>{esc(commit_text)} · {esc(delta_text)}</p></div>
   <div class="ratio"><strong>{item['rework_ratio']:.0%}</strong><span>{'bidirectional churn' if language == 'en' else '双向变更信号'}</span></div>
 </div>'''
         )
@@ -1019,39 +1491,55 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
     maximum = max((item["attention_score"] for item in data["attention_areas"]), default=1)
     for item in data["attention_areas"]:
         relative = item["attention_score"] / maximum
+        metric = f"{int(item['gross'])} lines changed · {int(item['commits'])} commit touches" if language == "en" else f"{int(item['gross'])} 行变更 · {int(item['commits'])} 次提交触达"
         attention_rows.append(
             f'''<div class="attention-row">
-  <strong>{esc(item['area'])}</strong>
-  <div class="attention-dots" aria-label="relative attention {relative:.0%}">{''.join('<i></i>' for _ in range(max(1, round(relative * 10))))}</div>
-  <span>{int(item['gross'])} Δ · {int(item['commits'])} touches</span>
+  <strong>{esc(item['label'])}</strong>
+  <div class="attention-dots" aria-label="{'relative attention' if language == 'en' else '相对注意力'} {relative:.0%}">{''.join('<i></i>' for _ in range(max(1, round(relative * 10))))}</div>
+  <span>{esc(metric)}</span>
 </div>'''
         )
 
     dimension_rows = []
     for item in data["dimensions"]:
         evidence = "".join(f"<li>{esc(line)}</li>" for line in item["evidence"])
+        calculation_label = f"{c['calculation']} · {item['score']}/100"
         dimension_rows.append(
-            f'''<div class="dimension">
-  <div class="dimension-heading"><h3>{esc(DIMENSION_LABELS[language][item['key']])}</h3><strong>{item['score']}</strong></div>
-  <div class="score-axis" aria-label="{item['score']} out of 100"><span style="left:{item['score']}%"></span></div>
-  <div class="dimension-foot"><span class="confidence {esc(item['confidence'])}">{esc(c['confidence'])}: {esc(confidence_label(item['confidence'], language))}</span><details><summary>{'Evidence' if language == 'en' else '查看证据'}</summary><ul>{evidence}</ul></details></div>
-</div>'''
+            f'''<article class="dimension">
+  <div class="dimension-heading"><h3>{esc(DIMENSION_LABELS[language][item['key']])}</h3><strong>{esc(item['level'])}</strong></div>
+  <div class="dimension-copy"><p><b>{esc(c['reason'])}</b>{'：' if language == 'zh' else ': '}{esc(item['reason'])}</p><p><b>{esc(c['recommendation'])}</b>{'：' if language == 'zh' else ': '}{esc(item['recommendation'])}</p></div>
+  <details class="calculation"><summary>{esc(calculation_label)}</summary><div class="score-axis" aria-label="{item['score']} / 100"><span style="left:{item['score']}%"></span></div><span class="confidence {esc(item['confidence'])}">{esc(label_value(c['confidence'], confidence_label(item['confidence'], language), language))}</span><ul>{evidence}</ul></details>
+</article>'''
         )
 
     card_rows = []
     for card in data["evidence_cards"]:
-        card_rows.append(
-            f'''<article class="proof-card">
-  <h3>{esc(card['title'])}</h3>
-  <p>{esc(card['evidence'])}</p>
-  <blockquote>{esc(card['career'])}</blockquote>
-</article>'''
-        )
+        career = f'<blockquote>{esc(card["career"])}</blockquote>' if card.get("career") else ""
+        card_rows.append(f'''<article class="proof-card"><h3>{esc(card['title'])}</h3><p>{esc(card['evidence'])}</p>{career}</article>''')
 
-    sources = ", ".join(
-        c["source_git"] if source == "git" else c["source_sessions"] for source in data["coverage"]["sources"]
-    )
+    career = data["career_material"]
+    if career["confirmed"]:
+        resume_items = "".join(f"<li>{esc(item)}</li>" for item in career["resume_bullets"])
+        star_items = "".join(
+            f'<li><b>{esc(c[key])}</b><span>{esc(career["star"][key])}</span></li>'
+            for key in ("situation", "task", "action", "result")
+        )
+        career_html = f'''<div class="career-grid">
+  <article><span class="eyebrow">{esc(c['portfolio_summary'])}</span><p>{esc(career['portfolio_summary'])}</p></article>
+  <article><span class="eyebrow">{esc(c['resume_bullets'])}</span><ul>{resume_items}</ul></article>
+  <article><span class="eyebrow">{esc(c['star_story'])}</span><ol class="star-list">{star_items}</ol></article>
+</div>'''
+        career_intro = c["career_confirmed"]
+    else:
+        questions = "".join(f"<li>{esc(item)}</li>" for item in career["questions"])
+        context_example = '{\n  "zh": {\n    "role": "...",\n    "outcome": "...",\n    "key_decision": "..."\n  }\n}' if language == "zh" else '{\n  "en": {\n    "role": "...",\n    "outcome": "...",\n    "key_decision": "..."\n  }\n}'
+        career_html = f'''<div class="context-callout"><ol>{questions}</ol><div><code>--context context.json</code><pre>{esc(context_example)}</pre></div></div>'''
+        career_intro = c["career_missing"]
+
+    source_joiner = ", " if language == "en" else "、"
+    sources = source_joiner.join(c["source_git"] if source == "git" else c["source_sessions"] for source in data["coverage"]["sources"])
     limitations = "".join(f"<li>{esc(item)}</li>" for item in data["coverage"]["limitations"])
+    highlights = "".join(f"<li>{esc(item)}</li>" for item in data["story"]["highlights"])
     generated_date = data["generated_at"][:10]
     source_data = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     language_switch = ""
@@ -1061,8 +1549,13 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
   <a href="{esc(language_links['zh'])}" class="{'is-current' if language == 'zh' else ''}" lang="zh-CN">中文</a>
 </div>'''
 
+    source_label = c["source_git"] if m["time_estimate"]["source"] == "git" else c["source_sessions"]
+    date_connector = "to" if language == "en" else "至"
+    html_lang = "en" if language == "en" else "zh-CN"
+    kicker = "PROJECT RETROSPECTIVE" if language == "en" else "项目复盘"
+
     return f'''<!doctype html>
-<html lang="{language}">
+<html lang="{html_lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1074,9 +1567,9 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
 html {{ scroll-behavior:smooth; }}
 body {{ margin:0; color:var(--ink); background:var(--paper); font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.5; }}
 button {{ font:inherit; }}
-code {{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; overflow-wrap:anywhere; }}
+code,pre {{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; overflow-wrap:anywhere; }}
 .shell {{ width:min(1180px,calc(100% - 40px)); margin:0 auto; }}
-.masthead {{ min-height:78dvh; padding:28px 0 64px; display:grid; grid-template-rows:auto 1fr auto; border-bottom:1px solid var(--line); }}
+.masthead {{ min-height:88dvh; padding:28px 0 44px; display:grid; grid-template-rows:auto 1fr; border-bottom:1px solid var(--line); }}
 .nav {{ display:flex; align-items:center; justify-content:space-between; gap:20px; }}
 .wordmark {{ font-weight:850; letter-spacing:-.04em; font-size:20px; }}
 .wordmark i {{ color:var(--accent); font-style:normal; }}
@@ -1086,33 +1579,48 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; overflow-wrap:a
 .lang-switch a {{ min-width:42px; padding:5px 8px; border-radius:6px; color:var(--muted); font:700 11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace; text-align:center; text-decoration:none; }}
 .lang-switch a:hover {{ color:var(--ink); }}
 .lang-switch a.is-current {{ color:white; background:var(--ink); }}
-.hero {{ align-self:center; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(260px,.55fr); gap:8vw; align-items:end; padding:54px 0; }}
-.kicker {{ color:var(--accent); font:700 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.14em; text-transform:uppercase; }}
-h1 {{ margin:18px 0 20px; max-width:12ch; font-size:clamp(54px,9vw,132px); line-height:.88; letter-spacing:-.075em; }}
-.tagline {{ margin:0; max-width:44ch; font-size:clamp(18px,2.1vw,28px); line-height:1.25; color:#3b3b3b; }}
-.coverage {{ padding:18px 0 0 20px; border-left:3px solid var(--accent); }}
+.hero {{ align-self:center; display:grid; grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr); gap:8vw; align-items:end; padding:68px 0 36px; }}
+.kicker,.eyebrow {{ color:var(--accent); font:700 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.14em; text-transform:uppercase; }}
+h1 {{ margin:18px 0 28px; max-width:12ch; font-size:clamp(54px,9vw,126px); line-height:.88; letter-spacing:-.075em; }}
+.story-statement {{ margin:0; max-width:25ch; font-size:clamp(25px,3.2vw,45px); line-height:1.12; letter-spacing:-.035em; }}
+.story-highlights {{ margin:30px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:10px; list-style:none; }}
+.story-highlights li {{ padding:8px 11px; border:1px solid var(--line); border-radius:999px; color:#444; font-size:13px; background:rgb(255 255 255 / .36); }}
+.coverage {{ padding:20px 0 0 22px; border-left:3px solid var(--accent); }}
 .coverage span {{ display:block; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.1em; }}
 .coverage strong {{ display:block; margin-top:8px; font-size:18px; }}
-.stats {{ display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); }}
-.stat {{ padding:24px 18px 0 0; }}
-.stat strong {{ display:block; font-size:clamp(30px,4vw,56px); letter-spacing:-.06em; }}
-.stat span {{ color:var(--muted); font-size:13px; }}
+.coverage p {{ color:var(--muted); font-size:13px; }}
+.hero-evidence {{ margin-top:24px; }}
+.hero-evidence summary,.full-history>summary {{ cursor:pointer; width:max-content; list-style:none; padding-bottom:3px; border-bottom:1px solid var(--ink); font-size:13px; }}
+.hero-evidence summary::-webkit-details-marker,.full-history>summary::-webkit-details-marker {{ display:none; }}
+.stats {{ display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:22px; }}
+.stat {{ padding-top:14px; border-top:1px solid var(--line); }}
+.stat strong {{ display:block; font-size:32px; letter-spacing:-.05em; }}
+.stat span {{ color:var(--muted); font-size:12px; }}
 main {{ background:var(--surface); }}
 .section {{ padding:96px 0; border-bottom:1px solid var(--line); }}
-.section-head {{ max-width:700px; margin-bottom:48px; }}
-.section-head h2 {{ margin:0 0 12px; font-size:clamp(38px,6vw,74px); line-height:.95; letter-spacing:-.055em; }}
+.section-head {{ max-width:760px; margin-bottom:48px; }}
+.section-head h2 {{ margin:0 0 12px; font-size:clamp(38px,6vw,72px); line-height:.95; letter-spacing:-.055em; }}
 .section-head p {{ margin:0; color:var(--muted); font-size:18px; }}
-.filters {{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:34px; }}
+.turns {{ max-width:960px; border-top:1px solid var(--line); }}
+.turn {{ display:grid; grid-template-columns:84px 1fr; gap:24px; padding:30px 0; border-bottom:1px solid var(--line); }}
+.turn-number {{ color:var(--accent); font:700 13px ui-monospace,SFMono-Regular,Menlo,monospace; }}
+.turn-meta {{ display:flex; align-items:center; justify-content:space-between; gap:20px; color:var(--accent); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }}
+.turn-meta time {{ color:var(--muted); font:12px ui-monospace,SFMono-Regular,Menlo,monospace; text-transform:none; letter-spacing:0; }}
+.turn h3 {{ margin:9px 0 8px; font-size:clamp(21px,3vw,30px); letter-spacing:-.03em; }}
+.turn p {{ margin:0; color:var(--muted); font-size:13px; }}
+.full-history {{ margin-top:42px; padding:22px; border-radius:var(--radius); background:var(--paper); }}
+.full-history>p {{ max-width:680px; color:var(--muted); }}
+.filters {{ display:flex; gap:8px; flex-wrap:wrap; margin:30px 0; }}
 .filter {{ border:1px solid var(--line); background:transparent; color:var(--ink); padding:8px 12px; border-radius:9px; cursor:pointer; }}
 .filter span {{ color:var(--muted); margin-left:4px; }}
 .filter:hover,.filter.is-active {{ border-color:var(--ink); background:var(--ink); color:white; }}
 .filter.is-active span {{ color:#c8c8c8; }}
 .timeline {{ max-width:900px; }}
-.event {{ display:grid; grid-template-columns:112px 18px 1fr; gap:18px; min-height:116px; transition:opacity .2s ease; }}
+.event {{ display:grid; grid-template-columns:112px 18px 1fr; gap:18px; min-height:116px; }}
 .event[hidden] {{ display:none; }}
 .event-date {{ padding-top:2px; color:var(--muted); font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; }}
 .event-mark {{ position:relative; border-left:1px solid var(--line); }}
-.event-mark::before {{ content:""; position:absolute; top:3px; left:-5px; width:9px; height:9px; border-radius:50%; background:var(--surface); border:2px solid var(--accent); }}
+.event-mark::before {{ content:""; position:absolute; top:3px; left:-5px; width:9px; height:9px; border-radius:50%; background:var(--paper); border:2px solid var(--accent); }}
 .event-body {{ padding-bottom:30px; }}
 .event-meta {{ display:flex; align-items:center; gap:10px; color:var(--accent); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }}
 .event-meta code {{ color:var(--muted); text-transform:none; letter-spacing:0; }}
@@ -1144,23 +1652,36 @@ main {{ background:var(--surface); }}
 .time-callout strong {{ display:block; font-size:54px; letter-spacing:-.06em; }}
 .time-callout p {{ color:var(--muted); margin:8px 0 0; font-size:13px; }}
 .dimensions {{ display:grid; grid-template-columns:1fr 1fr; gap:0 64px; }}
-.dimension {{ padding:24px 0; border-top:1px solid var(--line); }}
+.dimension {{ padding:28px 0; border-top:1px solid var(--line); }}
 .dimension-heading {{ display:flex; justify-content:space-between; align-items:baseline; gap:20px; }}
 .dimension-heading h3 {{ margin:0; font-size:18px; }}
-.dimension-heading strong {{ font-size:34px; letter-spacing:-.05em; }}
-.score-axis {{ position:relative; height:18px; margin:16px 5px 10px; border-top:1px solid var(--line); }}
+.dimension-heading strong {{ color:var(--accent); font-size:24px; letter-spacing:-.03em; }}
+.dimension-copy {{ margin-top:18px; }}
+.dimension-copy p {{ margin:10px 0; color:var(--muted); }}
+.dimension-copy b {{ color:var(--ink); }}
+.calculation {{ margin-top:18px; color:var(--muted); font-size:12px; }}
+.calculation summary {{ cursor:pointer; width:max-content; }}
+.calculation ul {{ max-width:520px; padding-left:18px; }}
+.score-axis {{ position:relative; height:18px; margin:24px 5px 10px; border-top:1px solid var(--line); }}
 .score-axis::before,.score-axis::after {{ content:""; position:absolute; top:-4px; height:7px; border-left:1px solid var(--line); }}
 .score-axis::before {{ left:0; }} .score-axis::after {{ right:0; }}
 .score-axis span {{ position:absolute; top:-7px; width:13px; height:13px; border:3px solid var(--surface); outline:2px solid var(--accent); border-radius:50%; background:var(--accent); transform:translateX(-50%); }}
-.dimension-foot {{ display:flex; justify-content:space-between; align-items:start; gap:18px; }}
-.dimension-foot details {{ color:var(--muted); font-size:12px; text-align:right; }}
-.dimension-foot summary {{ cursor:pointer; }}
-.dimension-foot ul {{ max-width:300px; text-align:left; padding-left:18px; }}
 .proof-list {{ display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }}
 .proof-card {{ padding-top:20px; border-top:3px solid var(--accent); }}
 .proof-card h3 {{ margin:0 0 14px; font-size:24px; letter-spacing:-.03em; }}
 .proof-card p {{ color:var(--muted); }}
 .proof-card blockquote {{ margin:24px 0 0; padding:16px 0 0; border-top:1px solid var(--line); font-size:15px; }}
+.career-grid {{ display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }}
+.career-grid article {{ padding:24px; background:var(--paper); border-radius:var(--radius); }}
+.career-grid p,.career-grid li {{ color:#3f3f3f; }}
+.career-grid ul {{ padding-left:20px; }}
+.star-list {{ padding:0; list-style:none; }}
+.star-list li {{ padding:12px 0; border-bottom:1px solid var(--line); }}
+.star-list b,.star-list span {{ display:block; }}
+.star-list b {{ margin-bottom:4px; color:var(--accent); font-size:12px; text-transform:uppercase; }}
+.context-callout {{ display:grid; grid-template-columns:1fr 1fr; gap:50px; padding:30px; background:var(--paper); border-radius:var(--radius); }}
+.context-callout li {{ margin:16px 0; font-size:18px; }}
+.context-callout pre {{ margin:14px 0 0; padding:16px; overflow:auto; background:var(--ink); color:white; border-radius:10px; }}
 .method {{ display:grid; grid-template-columns:1fr 1fr; gap:80px; }}
 .method h3 {{ margin-top:0; }}
 .method li {{ margin:10px 0; color:var(--muted); }}
@@ -1169,90 +1690,47 @@ footer {{ padding:36px 0; background:var(--ink); color:white; }}
 footer .shell {{ display:flex; justify-content:space-between; gap:30px; }}
 footer span {{ color:#aaa; }}
 @media (max-width:800px) {{
-  .shell {{ width:min(100% - 28px,1180px); }}
-  .nav {{ align-items:flex-start; }}
-  .nav-right {{ flex-direction:column-reverse; align-items:flex-end; gap:8px; }}
-  .nav-meta {{ max-width:230px; text-align:right; }}
-  .masthead {{ min-height:auto; padding-bottom:36px; }}
-  .hero,.friction-layout,.attention-grid,.method {{ grid-template-columns:1fr; gap:34px; }}
-  .hero {{ padding:70px 0 54px; }}
-  h1 {{ font-size:clamp(52px,17vw,86px); }}
-  .coverage {{ max-width:420px; }}
-  .stats {{ grid-template-columns:1fr 1fr; gap:24px 0; }}
-  .section {{ padding:68px 0; }}
-  .event {{ grid-template-columns:84px 14px 1fr; gap:12px; }}
-  .friction-row {{ grid-template-columns:34px 1fr; }}
-  .ratio {{ grid-column:2; text-align:left; display:flex; align-items:baseline; gap:8px; }}
-  .dimensions,.proof-list {{ grid-template-columns:1fr; }}
-  .attention-row {{ grid-template-columns:100px 1fr; }}
-  .attention-row span {{ grid-column:2; text-align:left; }}
+  .shell {{ width:min(100% - 28px,1180px); }} .nav {{ align-items:flex-start; }} .nav-right {{ flex-direction:column-reverse; align-items:flex-end; gap:8px; }} .nav-meta {{ max-width:230px; text-align:right; }}
+  .masthead {{ min-height:auto; padding-bottom:32px; }} .hero,.friction-layout,.attention-grid,.method,.context-callout {{ grid-template-columns:1fr; gap:34px; }} .hero {{ padding:70px 0 34px; }} h1 {{ font-size:clamp(52px,17vw,86px); }} .coverage {{ max-width:440px; }} .section {{ padding:68px 0; }}
+  .turn {{ grid-template-columns:44px 1fr; gap:14px; }} .turn-meta {{ align-items:flex-start; flex-direction:column; gap:5px; }} .event {{ grid-template-columns:84px 14px 1fr; gap:12px; }} .friction-row {{ grid-template-columns:34px 1fr; }} .ratio {{ grid-column:2; text-align:left; display:flex; align-items:baseline; gap:8px; }}
+  .dimensions,.proof-list,.career-grid {{ grid-template-columns:1fr; }} .attention-row {{ grid-template-columns:100px 1fr; }} .attention-row span {{ grid-column:2; text-align:left; }}
+}}
+@media (max-width:420px) {{
+  .shell {{ width:min(100% - 22px,1180px); }} .nav-meta {{ display:none; }} .story-statement {{ font-size:25px; }} .story-highlights {{ display:grid; }} .full-history {{ padding:16px; }}
+  .event {{ grid-template-columns:1fr; min-height:auto; padding:16px 0; border-bottom:1px solid var(--line); }} .event-mark {{ display:none; }} .event-body {{ padding:0; }}
+  .attention-row {{ grid-template-columns:1fr; gap:8px; }} .attention-row span {{ grid-column:1; }}
 }}
 @media (prefers-reduced-motion:reduce) {{ * {{ scroll-behavior:auto!important; transition:none!important; animation:none!important; }} }}
-@media print {{
-  body,.section,main {{ background:white; }} .masthead {{ min-height:auto; }} .filters {{ display:none; }}
-  .section {{ padding:36px 0; break-inside:avoid; }} .event {{ min-height:80px; }} footer {{ background:white; color:var(--ink); border-top:1px solid var(--line); }}
-}}
+@media print {{ body,.section,main {{ background:white; }} .masthead {{ min-height:auto; }} .filters {{ display:none; }} .section {{ padding:36px 0; break-inside:avoid; }} .event {{ min-height:80px; }} footer {{ background:white; color:var(--ink); border-top:1px solid var(--line); }} details {{ display:block; }} details>summary {{ display:none; }} }}
 </style>
 </head>
 <body>
 <header class="masthead">
   <nav class="shell nav"><div class="wordmark">Build<i>Story</i></div><div class="nav-right"><div class="nav-meta">{esc(c['generated'])} · {generated_date}</div>{language_switch}</div></nav>
   <div class="shell hero">
-    <div><div class="kicker">Project retrospective</div><h1>{esc(p['name'])}</h1><p class="tagline">{esc(c['tagline'])}</p></div>
-    <div class="coverage"><span>{esc(c['coverage'])}</span><strong>{esc(sources)}</strong><p>{esc(p['branch'])} · {esc(p['start'][:10])} to {esc(p['end'][:10])}</p></div>
-  </div>
-  <div class="shell stats">
-    <div class="stat"><strong>{m['commits']}</strong><span>{esc(c['commits'])}</span></div>
-    <div class="stat"><strong>{m['files']}</strong><span>{esc(c['files'])}</span></div>
-    <div class="stat"><strong>{m['calendar_days']}</strong><span>{esc(c['days'])}</span></div>
-    <div class="stat"><strong>{m['time_estimate']['hours']}</strong><span>{esc(c['hours'])} · {esc(confidence_label(m['time_estimate']['confidence'], language))}</span></div>
+    <div><div class="kicker">{esc(kicker)}</div><h1>{esc(p['name'])}</h1><p class="story-statement">{esc(data['story']['headline'])}</p><ul class="story-highlights">{highlights}</ul></div>
+    <div><div class="coverage"><span>{esc(c['coverage'])}</span><strong>{esc(sources)}</strong><p>{esc(p['branch'])} · {esc(p['start'][:10])} {esc(date_connector)} {esc(p['end'][:10])}</p></div>
+      <details class="hero-evidence"><summary>{esc(c['story_evidence'])}</summary><div class="stats"><div class="stat"><strong>{m['commits']}</strong><span>{esc(c['commits'])}</span></div><div class="stat"><strong>{m['files']}</strong><span>{esc(c['files'])}</span></div><div class="stat"><strong>{m['calendar_days']}</strong><span>{esc(c['days'])}</span></div><div class="stat"><strong>{m['time_estimate']['hours']}</strong><span>{esc(c['hours'])} · {esc(confidence_label(m['time_estimate']['confidence'], language))}</span></div></div></details>
+    </div>
   </div>
 </header>
 <main>
-  <section class="section"><div class="shell">
-    <div class="section-head"><h2>{esc(c['timeline'])}</h2><p>{esc(c['timeline_intro'])}</p></div>
-    <div class="filters">{''.join(filters)}</div>
-    <div class="timeline">{''.join(timeline_rows)}</div>
-  </div></section>
-  <section class="section"><div class="shell">
-    <div class="section-head"><h2>{esc(c['friction'])}</h2><p>{esc(c['friction_intro'])}</p></div>
-    <div class="friction-layout"><div>{''.join(friction_rows)}</div><aside class="loops"><h3>{'Loop candidates' if language == 'en' else '循环候选'}</h3>{''.join(loop_rows)}</aside></div>
-  </div></section>
-  <section class="section"><div class="shell">
-    <div class="section-head"><h2>{esc(c['attention'])}</h2><p>{esc(c['attention_intro'])}</p></div>
-    <div class="attention-grid"><div>{''.join(attention_rows)}</div><aside class="time-callout"><span class="confidence {esc(m['time_estimate']['confidence'])}">{esc(c['confidence'])}: {esc(confidence_label(m['time_estimate']['confidence'], language))}</span><strong>{m['time_estimate']['hours']}h</strong><p>{'Estimated from ' if language == 'en' else '估算来源：'}{esc(m['time_estimate']['source'])}. {esc(c['git_limit'] if m['time_estimate']['source']=='git' else c['session_limit'])}</p></aside></div>
-  </div></section>
-  <section class="section"><div class="shell">
-    <div class="section-head"><h2>{esc(c['profile'])}</h2><p>{esc(c['profile_intro'])}</p></div>
-    <div class="dimensions">{''.join(dimension_rows)}</div>
-  </div></section>
-  <section class="section"><div class="shell">
-    <div class="section-head"><h2>{esc(c['proof'])}</h2><p>{esc(c['proof_intro'])}</p></div>
-    <div class="proof-list">{''.join(card_rows)}</div>
-  </div></section>
-  <section class="section"><div class="shell method">
-    <div><div class="section-head"><h2>{esc(c['method'])}</h2></div><p><strong>{esc(c['coverage'])}:</strong> {esc(sources)}</p><ul>{limitations}</ul></div>
-    <div><h3>{'Career-output rule' if language == 'en' else '职业输出规则'}</h3><p>{esc(c['resume_prompt'])}</p><h3>{'Local-first' if language == 'en' else '本地优先'}</h3><p>{'No source code or transcript is uploaded by this generator.' if language == 'en' else '生成器不会上传源代码或会话记录。'}</p></div>
-  </div></section>
+  <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['turning_points'])}</h2><p>{esc(c['turning_points_intro'])}</p></div><div class="turns">{''.join(turning_rows)}</div><details class="full-history"><summary>{esc(c['full_timeline'])} · {esc(count_text(len(data['timeline']), 'commit', language))}</summary><p>{esc(c['full_timeline_intro'])}</p><div class="filters">{''.join(filters)}</div><div class="timeline">{''.join(timeline_rows)}</div></details></div></section>
+  <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['friction'])}</h2><p>{esc(c['friction_intro'])}</p></div><div class="friction-layout"><div>{''.join(friction_rows)}</div><aside class="loops"><h3>{esc(c['loop_candidates'])}</h3>{''.join(loop_rows)}</aside></div></div></section>
+  <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['attention'])}</h2><p>{esc(c['attention_intro'])}</p></div><div class="attention-grid"><div>{''.join(attention_rows)}</div><aside class="time-callout"><span class="confidence {esc(m['time_estimate']['confidence'])}">{esc(label_value(c['confidence'], confidence_label(m['time_estimate']['confidence'], language), language))}</span><strong>{m['time_estimate']['hours']}{'h' if language == 'en' else ' 小时'}</strong><p>{'Estimated from: ' if language == 'en' else '估算来源：'}{esc(source_label)}{'. ' if language == 'en' else '。'}{esc(c['git_limit'] if m['time_estimate']['source']=='git' else c['session_limit'])}</p></aside></div></div></section>
+  <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['profile'])}</h2><p>{esc(c['profile_intro'])}</p></div><div class="dimensions">{''.join(dimension_rows)}</div></div></section>
+  <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['proof'])}</h2><p>{esc(c['proof_intro'])}</p></div><div class="proof-list">{''.join(card_rows)}</div></div></section>
+  <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['career_material'])}</h2><p>{esc(career_intro)}</p></div>{career_html}</div></section>
+  <section class="section"><div class="shell method"><div><div class="section-head"><h2>{esc(c['method'])}</h2></div><p><strong>{esc(label_value(c['coverage'], sources, language))}</strong></p><ul>{limitations}</ul></div><div><h3>{esc(c['career_output_rule'])}</h3><p>{esc(c['career_confirmed_rule'] if career['confirmed'] else c['resume_prompt'])}</p><h3>{esc(c['local_first'])}</h3><p>{esc(c['local_first_detail'])}</p></div></div></section>
 </main>
-<footer><div class="shell"><strong>BuildStory</strong><span>See how you built it.</span></div></footer>
+<footer><div class="shell"><strong>BuildStory</strong><span>{esc(c['footer'])}</span></div></footer>
 <script type="application/json" id="buildstory-data">{source_data}</script>
 <script>
-document.querySelectorAll('.filter').forEach(function(button) {{
-  button.addEventListener('click', function() {{
-    document.querySelectorAll('.filter').forEach(function(item) {{ item.classList.remove('is-active'); }});
-    button.classList.add('is-active');
-    var selected = button.dataset.filter;
-    document.querySelectorAll('.event').forEach(function(event) {{
-      event.hidden = selected !== 'all' && event.dataset.category !== selected;
-    }});
-  }});
-}});
+document.querySelectorAll('.filter').forEach(function(button) {{ button.addEventListener('click', function() {{ document.querySelectorAll('.filter').forEach(function(item) {{ item.classList.remove('is-active'); }}); button.classList.add('is-active'); var selected = button.dataset.filter; document.querySelectorAll('.event').forEach(function(event) {{ event.hidden = selected !== 'all' && event.dataset.category !== selected; }}); }}); }});
 </script>
 </body>
 </html>
 '''
-
 
 def write_outputs(
     data: dict[str, Any],
@@ -1275,10 +1753,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("repo", nargs="?", default=".", help="Git repository to analyze. Defaults to the current directory.")
     parser.add_argument("--output", "-o", help="Output directory. Defaults to <repo>/build-story-report.")
     parser.add_argument("--session", action="append", default=[], help="Authorized session file or directory. Repeatable.")
+    parser.add_argument("--context", help="Optional JSON file with user-confirmed role, outcome, decision, summary, and resume bullets.")
     parser.add_argument(
         "--language",
         choices=("en", "zh"),
-        default="en",
+        default="zh",
         help="Default language opened by report.html. Both English and Chinese reports are generated.",
     )
     parser.add_argument("--project-name", help="Override the project name shown in the report.")
@@ -1291,9 +1770,11 @@ def main(argv: list[str] | None = None) -> int:
     repo = Path(args.repo).expanduser().resolve()
     output = Path(args.output).expanduser().resolve() if args.output else repo / "build-story-report"
     sessions = [Path(item).expanduser().resolve() for item in args.session]
+    context_path = Path(args.context).expanduser().resolve() if args.context else None
     try:
+        context = load_context(context_path)
         datasets = {
-            language: build_evidence(repo, sessions, language, args.project_name)
+            language: build_evidence(repo, sessions, language, args.project_name, context)
             for language in ("en", "zh")
         }
         shared_links = {"en": "report.en.html", "zh": "report.zh.html"}

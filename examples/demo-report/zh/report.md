@@ -1,60 +1,139 @@
 # BuildStory: PocketTasks
 
-> 不只看你做出了什么，更看你是怎么做到的。
+> **从复杂的自动云同步，回到用户可控的本地优先。**
+
+- 1 次关键方向调整
+- 2 个循环候选需要复盘
+- 注意力最集中：核心代码
+
+<details>
+<summary>查看支撑证据</summary>
 
 - 12 次提交
 - 11 个文件
 - 18 个自然日
-- 3.4 小时估算活跃时间 (置信度: 中)
+- 3.4 小时估算活跃时间 (置信度：中)
 
-## 项目生命线
+</details>
 
-- `2026-07-01` **文档** · Initialize PocketTasks CLI (`7205f097`)
+## 真正改变项目的转折点
+
+- `2026-07-01` **项目起点** · Initialize PocketTasks CLI (`7205f097`)
+- `2026-07-03` **引入后续被撤销的方案** · Add experimental cloud sync queue (`a4ffcd52`)
+- `2026-07-04` **反复打磨** · Refactor cloud sync retry ownership (`9de0c2d9`)
+- `2026-07-05` **方向调整** · Revert "Add experimental cloud sync queue" (`d678a8a2`)
+- `2026-07-06` **确立新方向** · Replace cloud sync with local export (`25929cfc`)
+- `2026-07-08` **建立验证** · Add tests for storage and export (`ea9798bf`)
+- `2026-07-18` **完成交付** · Release PocketTasks 1.0 (`5e5bebe5`)
+
+<details>
+<summary>查看全部提交 · 12 次提交</summary>
+
+- `2026-07-01` **搭建** · Initialize PocketTasks CLI (`7205f097`)
 - `2026-07-02` **功能** · Add JSON task storage (`9acce59f`)
 - `2026-07-03` **功能** · Add experimental cloud sync queue (`a4ffcd52`)
 - `2026-07-03` **修复** · Fix cloud sync duplicate queue entries (`55eaaed9`)
 - `2026-07-04` **重构** · Refactor cloud sync retry ownership (`9de0c2d9`)
 - `2026-07-05` **修复** · Revert "Add experimental cloud sync queue" (`d678a8a2`)
-- `2026-07-06` **其他** · Replace cloud sync with local export (`25929cfc`)
+- `2026-07-06` **重构** · Replace cloud sync with local export (`25929cfc`)
 - `2026-07-08` **验证** · Add tests for storage and export (`ea9798bf`)
 - `2026-07-09` **验证** · Add CI validation workflow (`a3e930e6`)
 - `2026-07-12` **文档** · Document local-first architecture decision (`684b02c3`)
 - `2026-07-15` **交付** · Prepare v1 release documentation (`b621c977`)
 - `2026-07-18` **交付** · Release PocketTasks 1.0 (`5e5bebe5`)
 
+</details>
+
 ## 项目在哪里卡住了
 
-- `src/sync.py` · 5 commits · 16+ / 12- · rework signal 86%
+- `src/sync.py` · 5 次提交 · 新增 16 / 删除 12 · 双向变更信号 86%
 
-### Loop candidates
+### 循环候选
 
-- **Revert "Add experimental cloud sync queue"** · 2026-07-05 · d678a8a2 (置信度: 高)
-- **src/sync.py** · 在 5 次提交中被修改，双向变更比例约为 86%。 (置信度: 中)
+- **Revert "Add experimental cloud sync queue"** · 2026-07-05 · d678a8a2 (置信度：高)
+- **src/sync.py** · 在 5 次提交中被修改，双向变更比例约为 86%。 (置信度：中)
+
+## 注意力地图
+
+- **核心代码** · 34 行变更 · 7 次提交触达
+- **项目根目录** · 14 行变更 · 5 次提交触达
+- **自动化工作流** · 7 行变更 · 1 次提交触达
+- **测试** · 4 行变更 · 2 次提交触达
+- **文档** · 3 行变更 · 1 次提交触达
 
 ## 基于证据的能力画像
 
-- **交付证据: 100/100** (置信度: 高)
-  - README
-  - license
-  - package manifest
-  - 1 Git tag(s)
-  - project documentation
-- **验证纪律: 78/100** (置信度: 高)
-  - test files
-  - CI workflow
-  - 2 validation-related commit(s)
-- **变更可追溯性: 100/100** (置信度: 高)
-  - 100% descriptive commit subjects
-  - 100% reviewable-size commits
-- **迭代控制: 50/100** (置信度: 中)
-  - 1 explicit reversal(s)
-  - 1 high-change file candidate(s)
-  - High churn may represent productive iteration and requires review
-- **经验沉淀: 93/100** (置信度: 高)
-  - README
-  - docs directory or architecture guide
-  - changelog
-  - architecture decision records
+### 交付证据 · 充分
+
+- **原因：** README；许可证；项目清单；1 个 Git 标签；项目文档
+- **下次建议：** 继续把发布标签、变更说明和使用文档作为一次交付的收尾。
+
+<details>
+<summary>查看计算方法 · 100/100</summary>
+
+- README
+- 许可证
+- 项目清单
+- 1 个 Git 标签
+- 项目文档
+
+</details>
+
+### 验证纪律 · 较强
+
+- **原因：** 测试文件；CI 工作流；2 次验证相关提交
+- **下次建议：** 下次发布前，优先为返工最集中的路径补充回归测试。
+
+<details>
+<summary>查看计算方法 · 78/100</summary>
+
+- 测试文件
+- CI 工作流
+- 2 次验证相关提交
+
+</details>
+
+### 变更可追溯性 · 清晰
+
+- **原因：** 100% 的提交说明具有描述性；100% 的提交规模便于审查
+- **下次建议：** 保持提交规模可审查，并说明每次变更保留或替代了什么决定。
+
+<details>
+<summary>查看计算方法 · 100/100</summary>
+
+- 100% 的提交说明具有描述性
+- 100% 的提交规模便于审查
+
+</details>
+
+### 迭代控制 · 需要复盘
+
+- **原因：** 1 次明确回滚；1 个高频变更文件候选；高频变更可能是有效探索，仍需结合真实语境复盘
+- **下次建议：** 实现跨边界状态前，先写清失败恢复与退出条件；同一方案连续修复两次后，暂停并重新判断方向。
+
+<details>
+<summary>查看计算方法 · 50/100</summary>
+
+- 1 次明确回滚
+- 1 个高频变更文件候选
+- 高频变更可能是有效探索，仍需结合真实语境复盘
+
+</details>
+
+### 经验沉淀 · 充分
+
+- **原因：** README；文档目录或架构说明；变更记录；架构决策记录
+- **下次建议：** 继续把关键决策记录与它改变的发布结果或产品行为连接起来。
+
+<details>
+<summary>查看计算方法 · 93/100</summary>
+
+- README
+- 文档目录或架构说明
+- 变更记录
+- 架构决策记录
+
+</details>
 
 ## 这个项目证明了什么
 
@@ -62,19 +141,35 @@
 
 在 18 个自然日内完成 12 次提交，涉及 11 个受版本控制的文件。
 
-> 在 18 个自然日内持续构建并迭代 PocketTasks，覆盖 11 个受版本控制的文件；请补充经过验证的用户或业务结果。
+> 独立完成 PocketTasks 从方案试验到 1.0 发布，在发现自动云同步持续引入队列与重试复杂度后，主动回滚并改为显式 JSON 导出。
 
 ### 核心实现区域
 
-主要变更活动集中在：src, (root), .github。
+主要变更活动集中在：核心代码, 项目根目录, 自动化工作流。
 
-> 实现并持续完善项目核心区域 src, (root), .github；请补充关键技术决策和最终结果。
+> 为本地存储与导出路径补充测试和 CI，把关键方向调整沉淀为架构决策记录。
 
 ### 验证基础设施
 
-仓库中已包含 tests 和 CI。
+仓库中已包含 测试 和 CI。
 
-> 通过 tests 和 CI 让变更可验证；请补充经过确认的稳定性或发布结果。
+## 把证据变成能讲述的故事
+
+### 作品集摘要
+
+从复杂的自动云同步，回到用户可控的本地优先。 在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。 发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。
+
+### 简历要点
+
+- 独立完成 PocketTasks 从方案试验到 1.0 发布，在发现自动云同步持续引入队列与重试复杂度后，主动回滚并改为显式 JSON 导出。
+- 为本地存储与导出路径补充测试和 CI，把关键方向调整沉淀为架构决策记录。
+
+### STAR 面试故事
+
+- **背景：** Initialize PocketTasks CLI
+- **任务：** 产品方向判断、核心实现与发布验证
+- **行动：** 在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。
+- **结果：** 发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。
 
 ## 方法与限制
 

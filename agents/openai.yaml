@@ -1,5 +1,5 @@
 interface:
   display_name: "BuildStory"
-  short_description: "Turn a project's history into insight and proof"
+  short_description: "把项目开发历程变成复盘、故事与真实成就"
   brand_color: "#F05A28"
-  default_prompt: "Use $build-story to review this project, show its timeline and friction, and turn the evidence into lessons and achievements."
+  default_prompt: "使用 $build-story 复盘这个项目，提炼关键转折点、返工循环和注意力黑洞，并把真实证据整理成经验与成就。"

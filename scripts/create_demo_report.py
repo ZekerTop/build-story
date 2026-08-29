@@ -145,13 +145,35 @@ def build_demo_repository(repo: Path) -> Path:
 
 
 def main() -> int:
+    context = {
+        "zh": {
+            "role": "产品方向判断、核心实现与发布验证",
+            "outcome": "发布 PocketTasks 1.0，保留本地任务存储和显式 JSON 导出，让用户决定数据何时离开设备。",
+            "key_decision": "在同步队列与重试逻辑持续复杂化后，撤销自动云同步，改为用户主动导出。",
+            "summary": "从复杂的自动云同步，回到用户可控的本地优先。",
+            "resume_bullets": [
+                "独立完成 PocketTasks 从方案试验到 1.0 发布，在发现自动云同步持续引入队列与重试复杂度后，主动回滚并改为显式 JSON 导出。",
+                "为本地存储与导出路径补充测试和 CI，把关键方向调整沉淀为架构决策记录。",
+            ],
+        },
+        "en": {
+            "role": "product direction, core implementation, and release validation",
+            "outcome": "shipped PocketTasks 1.0 with local task storage and explicit JSON export, leaving users in control of when data leaves the device.",
+            "key_decision": "removed automatic cloud sync after queue and retry complexity kept growing, replacing it with user-initiated export.",
+            "summary": "From complex automatic cloud sync back to a user-controlled local-first product.",
+            "resume_bullets": [
+                "Took PocketTasks from early experiments to a 1.0 release; reversed automatic cloud sync when queue and retry complexity grew, replacing it with explicit JSON export.",
+                "Added tests and CI for local storage and export, then captured the direction change in an architecture decision record.",
+            ],
+        },
+    }
     with tempfile.TemporaryDirectory() as directory:
         repo = Path(directory) / "PocketTasks"
         repo.mkdir()
         transcript = build_demo_repository(repo)
         datasets = {}
         for language in ("en", "zh"):
-            data = build_story.build_evidence(repo, [transcript], language, "PocketTasks")
+            data = build_story.build_evidence(repo, [transcript], language, "PocketTasks", context)
             data["generated_at"] = "2026-08-29T00:00:00+00:00"
             datasets[language] = data
         build_story.write_outputs(

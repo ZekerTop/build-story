@@ -1,94 +1,132 @@
 # BuildStory
 
-**See how you built it, not just what you built.**
+**不只看你做出了什么，更看你是怎么做到的。**
 
-BuildStory is a local-first Agent Skill and report generator that reconstructs a software project's development history. It turns Git history and optional AI coding-session transcripts into a timeline, rework and rollback signals, attention estimates, an evidence-backed process profile, and material for retrospectives, portfolios, resumes, and interviews.
+BuildStory 是一个本地优先的 Agent Skill 和项目复盘报告生成器。它可以从 Git 历史和用户明确授权的 AI 编程会话中，提炼项目故事与关键转折点，发现可能的重复返工、回滚和注意力黑洞，生成基于证据的过程画像，并将真实证据转化为复盘、作品集、简历和面试材料。
 
-[简体中文](README.zh-CN.md)
+[English](README.en.md)
 
-![BuildStory report preview](examples/demo-report/preview.png)
+![BuildStory 报告预览](examples/demo-report/preview.png)
 
-## Why BuildStory
+## 为什么需要 BuildStory
 
-The finished repository shows what survived. It usually hides:
+最终仓库只展示了保留下来的结果，通常不会告诉你：
 
-- the feature that was rebuilt three times;
-- the component that absorbed most of the project's attention;
-- the decision that simplified the entire system;
-- the experiments that were discarded;
-- the real evidence behind a resume claim.
+- 哪个功能被重新做了三次；
+- 哪个模块消耗了最多注意力；
+- 哪个决定让整个系统突然变简单；
+- 哪些实验最终被放弃；
+- 一条简历描述背后到底有什么真实证据。
 
-BuildStory makes that invisible process inspectable without pretending Git can read a developer's mind.
+BuildStory 让这些看不见的过程重新变得可检查，同时不会假装 Git 能读懂开发者的全部想法。
 
-## What it produces
+## 它会生成什么
 
-One run creates a default report plus English and Chinese variants. The `--language` option chooses which language opens as `report.html`:
+每次运行都会生成默认报告以及中英文版本。`--language` 用于选择打开 `report.html` 时默认显示的语言：
 
 ```text
 build-story-report/
-├── evidence.json       # evidence in the selected default language
-├── evidence.en.json    # English evidence
-├── evidence.zh.json    # Chinese evidence
-├── report.md           # Markdown in the selected default language
-├── report.en.md        # English Markdown
-├── report.zh.md        # Chinese Markdown
-├── report.html         # default report with EN / 中文 switch
-├── report.en.html      # English visual report
-└── report.zh.html      # Chinese visual report
+├── evidence.json       # 默认语言的结构化证据
+├── evidence.en.json    # 英文证据
+├── evidence.zh.json    # 中文证据
+├── report.md           # 默认语言的 Markdown 报告
+├── report.en.md        # 英文 Markdown 报告
+├── report.zh.md        # 中文 Markdown 报告
+├── report.html         # 带 EN / 中文切换的默认报告
+├── report.en.html      # 英文可视化报告
+└── report.zh.html      # 中文可视化报告
 ```
 
-The report includes:
+报告包含：
 
-1. a chronological project life line;
-2. explicit reversals and high-churn loop candidates;
-3. estimated attention areas and active time;
-4. separate evidence scores for delivery, validation, traceability, iteration, and learning capture;
-5. evidence cards for portfolios, resume bullets, achievement records, and STAR interview stories.
+1. 第一屏先讲清楚项目发生了什么变化；
+2. 默认只展示 5～7 个真正改变方向、风险或交付状态的转折点；
+3. 明确回滚、高频变更和重复循环候选；
+4. 注意力区域和活跃时间估算；
+5. 交付、验证、可追溯性、迭代控制和经验沉淀的证据等级与行动建议；
+6. 可用于作品集、简历、成就记录和 STAR 面试故事的证据卡片。
 
-BuildStory deliberately does **not** calculate one overall score.
+完整提交记录和数字计算方法仍然保留，但默认折叠为支撑证据。BuildStory **不会**给项目计算一个虚假的总分。
 
-## Quick start
+## 快速开始
 
-Requirements:
+环境要求：
 
 - Python 3.10+
 - Git
-- a repository with at least one commit
+- 至少包含一次提交的 Git 仓库
 
-Generate both languages and open English by default:
-
-```bash
-python3 scripts/build_story.py /path/to/project \
-  --output /path/to/project/build-story-report \
-  --language en
-```
-
-Generate both languages and open Chinese by default:
+同时生成中英文版本，并默认打开中文：
 
 ```bash
-python3 scripts/build_story.py /path/to/project \
-  --output /path/to/project/build-story-report \
+python3 scripts/build_story.py /你的/项目路径 \
+  --output /你的/项目路径/build-story-report \
   --language zh
 ```
 
-Open `build-story-report/report.html` in a browser and use the **EN / 中文** switch in the top navigation. The language-specific files can also be opened or shared directly.
+未指定 `--language` 时，默认使用中文。
 
-### Add authorized AI-session evidence
-
-BuildStory can read local `.jsonl`, `.json`, `.txt`, and `.md` transcripts when you explicitly provide their paths:
+同时生成中英文版本，并默认打开英文：
 
 ```bash
 python3 scripts/build_story.py /path/to/project \
-  --session /path/to/authorized/session.jsonl \
   --output /path/to/project/build-story-report \
   --language en
 ```
 
-Repeat `--session` to add more authorized files or directories.
+生成完成后，用浏览器打开 `build-story-report/report.html`，可以在顶部使用 **EN / 中文** 切换语言，也可以直接打开或分享对应的语言文件。
 
-BuildStory does not automatically search private session directories.
+### 加入已授权的 AI 编程会话
 
-## Install as an Agent Skill
+当用户明确提供路径时，BuildStory 可以读取本地 `.jsonl`、`.json`、`.txt` 和 `.md` 会话文件：
+
+```bash
+python3 scripts/build_story.py /你的/项目路径 \
+  --session /已授权/会话/session.jsonl \
+  --output /你的/项目路径/build-story-report \
+  --language zh
+```
+
+可以重复使用 `--session` 添加多个已授权文件或目录。
+
+BuildStory 不会自动搜索私有会话目录。
+
+### 补充三项真实语境
+
+Git 可以证明发生了什么，却不能证明你的真实职责、最终结果和决策动机。需要生成简历、作品集或 STAR 面试故事时，只补充三项信息：
+
+1. 你在项目中的真实职责是什么？
+2. 最终给用户或自己带来了什么结果？
+3. 哪个决定最能代表你的能力？
+
+创建 `context.json`：
+
+```json
+{
+  "zh": {
+    "role": "产品方向判断、核心实现与发布验证",
+    "outcome": "发布 1.0，并让用户可以自主控制数据导出",
+    "key_decision": "撤销持续复杂化的自动同步，改为显式导出",
+    "summary": "从复杂的自动同步，回到用户可控的本地优先。",
+    "resume_bullets": [
+      "在自动同步持续引入队列与重试复杂度后，主动回滚并改为显式导出。"
+    ]
+  }
+}
+```
+
+重新生成报告：
+
+```bash
+python3 scripts/build_story.py /你的/项目路径 \
+  --context /你的/项目路径/context.json \
+  --output /你的/项目路径/build-story-report \
+  --language zh
+```
+
+报告会据此生成作品集摘要、简历要点和 STAR 面试故事，不再用提交次数冒充成就。
+
+## 作为 Agent Skill 安装
 
 ### Codex
 
@@ -97,121 +135,123 @@ git clone https://github.com/ZekerTop/build-story.git \
   "${CODEX_HOME:-$HOME/.codex}/skills/build-story"
 ```
 
-Then invoke:
+调用示例：
 
 ```text
-$build-story Review this project and show where I repeatedly reworked decisions.
+$build-story 复盘当前项目，重点找出我反复返工和改变方向的部分。
 ```
 
-### Other Agent Skills-compatible clients
+### 其他兼容 Agent Skills 的客户端
 
-Clone or copy the `build-story` folder into the client's user-level or project-level skills directory. Keep `SKILL.md`, `scripts/`, `references/`, `assets/`, and `agents/` together.
+将完整的 `build-story` 文件夹克隆或复制到客户端的用户级或项目级 Skills 目录。请保留 `SKILL.md`、`scripts/`、`references/` 和 `agents/`。
 
-Example prompts:
-
-```text
-Use $build-story to create a project retrospective from this repository.
-```
+更多示例：
 
 ```text
-Use $build-story to identify repeated loops, likely time sinks, and the most defensible achievements from this project.
+使用 $build-story 为当前仓库生成一次完整项目复盘。
 ```
 
 ```text
-Use $build-story to turn this project's evidence into a portfolio case study and three truthful resume bullets. Ask me only for impact that cannot be verified from the repository.
+使用 $build-story 找出重复循环、可能的时间黑洞，以及这个项目最有证据支撑的成就。
 ```
 
-## Evidence model
+```text
+使用 $build-story 把当前项目整理成作品集案例和三条真实简历描述。仓库里无法验证的结果再问我，不要编造数字。
+```
 
-BuildStory keeps three things separate:
+## 证据模型
 
-| Type | Meaning | Example |
+BuildStory 会明确区分三种内容：
+
+| 类型 | 含义 | 示例 |
 |---|---|---|
-| Observation | Directly present in data | An explicit `Revert` commit |
-| Inference | A repeatable signal that needs interpretation | A file with high bidirectional churn |
-| Confirmed context | Supplied by the user | Why a design was abandoned |
+| 观察事实 | 数据中直接存在 | 明确的 `Revert` 提交 |
+| 分析推断 | 可重复观察但仍需解释 | 一个文件出现大量双向变更 |
+| 用户确认 | 由用户补充的真实语境 | 为什么最终放弃某个方案 |
 
-Every inferred loop and time estimate includes a confidence level.
+每个推断出的循环和时间估算都会显示置信度。
 
-### Loop detection
+### 循环检测
 
-The analyzer uses:
+分析器会检查：
 
-- explicit `revert`, `rollback`, and equivalent commit messages;
-- repeated normalized commit topics;
-- files changed repeatedly with substantial additions and deletions;
-- repeated prompts in authorized session transcripts.
+- 包含 `revert`、`rollback`、回滚或撤销的提交；
+- 重复出现的规范化提交主题；
+- 多次发生新增和删除的高频变更文件；
+- 已授权会话中高度相似的重复提示。
 
-High churn can mean productive iteration. BuildStory calls these **loop candidates**, not mistakes.
+高频变更也可能意味着有价值的探索。因此 BuildStory 将它们称为**循环候选**，而不是错误。
 
-### Time estimates
+### 时间估算
 
-Git does not record thinking time. A Git-only estimate groups nearby commits into work sessions and is labeled low confidence.
+Git 不记录思考时间。仅使用 Git 时，BuildStory 会将时间接近的提交划分为工作会话，这个估算会被标记为低置信度。
 
-Authorized timestamped transcripts improve coverage, but still miss offline thinking, meetings, research, and unrecorded experiments.
+带时间戳的已授权会话可以改善覆盖范围，但仍然无法记录离线思考、会议、调研和未保存实验。
 
-## Evidence-backed profile
+## 基于证据的过程画像
 
-BuildStory reports separate dimensions:
+BuildStory 分别展示：
 
-- **Delivery evidence:** release, packaging, documentation, and completion signals.
-- **Validation discipline:** tests, CI, linting, and validation-related changes.
-- **Change traceability:** descriptive commit messages and reviewable commit size.
-- **Iteration control:** reversals and concentrated rework signals.
-- **Learning capture:** README, changelog, ADRs, documentation, and retrospectives.
+- **交付证据：** 发布、打包、文档和完成信号；
+- **验证纪律：** 测试、CI、代码检查和验证相关变更；
+- **变更可追溯性：** 提交描述质量和可审查的提交规模；
+- **迭代控制：** 明确回滚和集中返工信号；
+- **经验沉淀：** README、Changelog、ADR、文档和复盘记录。
 
-These scores describe repository evidence. They do not measure a person's intelligence, seniority, or worth.
+报告首先展示“充分、较强、清晰、需要复盘、证据不足”等人能理解的等级，并为每个维度给出原因和下一次行动建议。原始数字只放在“查看计算方法”中。
 
-## Demo
+这些等级描述仓库中可观察到的证据，不衡量一个人的智力、职级或价值。
 
-The repository includes deterministic reports for a synthetic project called PocketTasks:
+## 示例效果
 
-- [English HTML report](examples/demo-report/en/report.html)
-- [English Markdown report](examples/demo-report/en/report.md)
-- [Chinese HTML report](examples/demo-report/zh/report.html)
-- [Chinese Markdown report](examples/demo-report/zh/report.md)
+仓库内包含一个名为 PocketTasks 的虚构项目及其确定性示例报告：
 
-Regenerate them with:
+- [英文 HTML 报告](examples/demo-report/en/report.html)
+- [英文 Markdown 报告](examples/demo-report/en/report.md)
+- [中文 HTML 报告](examples/demo-report/zh/report.html)
+- [中文 Markdown 报告](examples/demo-report/zh/report.md)
+
+重新生成：
 
 ```bash
 python3 scripts/create_demo_report.py
 ```
 
-## Privacy and safety
+## 隐私与安全
 
-- Analysis runs locally.
-- The generator makes no network requests.
-- Source files are never modified.
-- Output is written only to the selected directory.
-- Absolute local paths are not included in generated reports.
-- Full transcripts are not copied into reports.
-- Resume and portfolio output must not invent impact metrics.
+- 所有分析都在本地进行；
+- 生成器不会发送网络请求；
+- 不修改项目源文件；
+- 只向用户指定的输出目录写入结果；
+- 报告中不会包含本机绝对路径；
+- 不会将完整会话复制进报告；
+- 简历和作品集不得编造影响指标。
 
-See [SECURITY.md](SECURITY.md) for responsible reporting.
+安全问题请参阅 [SECURITY.md](SECURITY.md)。
 
-## Limitations
+## 已知限制
 
-- Git-only analysis cannot see uncommitted experiments or invisible thinking.
-- Commit-message classification is heuristic.
-- High churn is not automatically waste.
-- Transcript formats vary across tools; the v0.1 parser intentionally uses a conservative generic schema.
-- Career outcomes require the user's verified role and result.
+- 仅使用 Git 时，无法看到未提交实验和不可见思考；
+- 提交信息分类使用启发式规则；
+- 高频变更并不自动等于浪费；
+- 不同 AI 工具的会话格式差异很大，v0.1 使用保守的通用解析方式；
+- 职业成果仍需要用户确认自己的职责和最终影响。
 
-## Development
+## 开发与验证
 
-Run tests:
+运行测试：
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-Validate the Skill structure:
+验证 Skill 结构：
 
 ```bash
 python3 /path/to/skill-creator/scripts/quick_validate.py .
 ```
 
-## Project structure
+## 项目结构
 
 ```text
 build-story/
@@ -228,18 +268,17 @@ build-story/
 └── docs/superpowers/specs/
 ```
 
-## Roadmap
+## 路线图
 
-- richer Codex, Claude Code, Cursor, and OpenCode transcript adapters;
-- phase-level comparison between planned and actual work;
-- optional user-confirmed outcome cards;
-- project-to-project comparison without employee ranking;
-- export templates for portfolio pages and promotion packets.
+- 更完整的 Codex、Claude Code、Cursor 和 OpenCode 会话适配器；
+- 对比计划过程与实际开发过程；
+- 不用于员工排名的项目间对比；
+- 作品集和晋升材料导出模板。
 
-## Contributing
+## 参与贡献
 
-Issues and focused pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md).
+欢迎提交 Issue 和范围清晰的 Pull Request。请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-## License
+## 许可证
 
 [MIT](LICENSE)

@@ -4,7 +4,7 @@ Date: 2026-08-29
 
 ## Product promise
 
-BuildStory reconstructs how a software project was actually built and turns that evidence into a useful retrospective, a jagged capability profile, lessons, and career proof.
+BuildStory reconstructs how a software project was actually built and turns that evidence into one memorable story, a small set of turning points, a jagged capability profile, lessons, and career proof.
 
 Public brand: `BuildStory`  
 Skill and repository name: `build-story`
@@ -24,11 +24,13 @@ The experience must work with one command and no external account. Advanced tran
 ### Included
 
 - Git timeline reconstruction;
-- phase and turning-point classification;
+- a story-first opening backed by repository evidence;
+- automatic selection of at most seven turning points;
 - explicit revert and high-churn loop candidates;
 - Git-based time estimate with visible confidence;
 - optional local transcript analysis;
-- evidence-backed dimension scores with no overall score;
+- human-readable dimension levels and action suggestions, with numeric calculations kept in details and no overall score;
+- optional bilingual user-confirmed context for role, outcome, key decision, project summary, and resume bullets;
 - self-contained JSON, Markdown, and HTML reports;
 - English and Chinese report variants with a visible language switch;
 - guidance for retrospectives, portfolio cases, achievements, resume bullets, and STAR stories;
@@ -72,15 +74,17 @@ Git repository + optional authorized transcripts
 
 ## Report structure
 
-1. Project identity and data coverage
-2. Project life line
-3. Friction zones and loop candidates
-4. Attention and time-sink estimates
-5. Jagged capability profile
-6. Evidence cards and career-story prompts
-7. Methodology and confidence
+1. Project identity and one-sentence story
+2. Five to seven turning points
+3. Collapsed complete Git history
+4. Friction zones and loop candidates
+5. Attention and time-sink estimates
+6. Jagged capability profile with levels, reasons, and next-run actions
+7. Evidence cards
+8. User-confirmed portfolio, resume, and STAR material, or three missing-context questions
+9. Methodology and confidence
 
-Design read: a developer-facing, evidence-first report for non-experts, using an editorial technical language, monochrome surfaces, one orange accent, restrained motion, and print-friendly layout.
+Design read: a story-first report for non-experts, using an editorial technical language, monochrome surfaces, one orange accent, restrained motion, and print-friendly layout. Evidence remains inspectable without taking over the first screen.
 
 ## Safety and truthfulness
 
@@ -88,6 +92,7 @@ Design read: a developer-facing, evidence-first report for non-experts, using an
 - Full conversations are not reproduced by default.
 - Low-confidence inferences are visibly labeled.
 - Resume output cannot invent impact.
+- Career material is generated only after the user's role, outcome, and key decision are confirmed.
 - Generated files go only into the chosen output directory.
 - The script does not alter the analyzed repository.
 
@@ -96,6 +101,7 @@ Design read: a developer-facing, evidence-first report for non-experts, using an
 - Skill frontmatter and layout pass the bundled Skill validator.
 - Unit tests create a temporary Git history containing features, fixes, tests, churn, and an explicit revert.
 - Tests verify the three output formats, source metrics, loop candidates, and dimension-score evidence.
+- Tests verify story summaries, turning-point limits, evidence levels, action suggestions, context-backed career output, and visible Chinese localization.
 - The demo report is rendered and visually inspected at desktop and mobile widths.
 
 ## Self-review

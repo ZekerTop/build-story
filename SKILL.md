@@ -5,11 +5,13 @@ description: Reconstruct and review how a software project was built. Use when s
 
 # BuildStory
 
-BuildStory helps a person see **how** a project was built, not only what was shipped. It reconstructs a project timeline, surfaces repeated rework and likely time sinks, builds an evidence-backed capability profile, and turns the evidence into lessons and career material.
+BuildStory helps a person see **how** a project was built, not only what was shipped. It reconstructs a small set of turning points, surfaces repeated rework and likely time sinks, builds an evidence-backed capability profile, and turns the evidence into lessons and career material.
 
 ## Non-negotiable principles
 
 - Treat Git and session logs as evidence, not mind-reading. Label inferences and confidence.
+- Lead with the project's story. Keep raw commit counts, full history, and numeric calculations as supporting evidence.
+- Select at most seven turning points by default. A complete Git log is evidence, not a narrative.
 - Never collapse the project into one total score. Show a jagged profile across dimensions.
 - Do not equate iteration with waste. Call suspicious patterns "loop candidates" until the evidence or user confirms them.
 - Do not invent business impact, ownership, team size, performance gains, or resume metrics.
@@ -44,6 +46,34 @@ python3 <skill-dir>/scripts/build_story.py <repo-path> \
   --language <zh|en>
 ```
 
+When user-confirmed context is available, save it in the report output directory and rerun with `--context`:
+
+```json
+{
+  "zh": {
+    "role": "你在项目中的真实职责",
+    "outcome": "最终带来的真实结果",
+    "key_decision": "最能代表能力的关键决定",
+    "summary": "一句话项目故事",
+    "resume_bullets": ["经过确认的简历要点"]
+  },
+  "en": {
+    "role": "your real responsibility",
+    "outcome": "the verified result",
+    "key_decision": "the decision that best demonstrates your ability",
+    "summary": "the one-line project story",
+    "resume_bullets": ["a confirmed resume bullet"]
+  }
+}
+```
+
+```bash
+python3 <skill-dir>/scripts/build_story.py <repo-path> \
+  --context <repo-path>/build-story-report/context.json \
+  --output <repo-path>/build-story-report \
+  --language <zh|en>
+```
+
 The script generates a default report plus English and Chinese variants:
 
 - `evidence.json`: machine-readable evidence and transparent metrics
@@ -58,6 +88,7 @@ Read `evidence.json` and verify:
 
 - data sources and stated limitations;
 - project dates, commit counts, authors, and file counts;
+- whether the first-screen story is supported by the selected turning points;
 - explicit reverts versus inferred high-churn loops;
 - whether time estimates came from Git or timestamped sessions;
 - the evidence and confidence behind every dimension score.
@@ -68,11 +99,13 @@ If the data contradicts the user's description, show the discrepancy and ask rat
 
 Do not turn the workflow into an interview. Ask at most the smallest set needed for the requested deliverable, usually:
 
-1. What outcome did the project create?
-2. What was the user's personal responsibility?
-3. Which difficult decision or trade-off mattered most?
+1. What was the user's real responsibility?
+2. What outcome did the project create for the user or for themselves?
+3. Which decision best demonstrates the user's ability?
 
 Skip questions whose answers are already documented in the repository.
+
+For career, portfolio, achievement, or interview output, do not leave these answers as chat-only context. Save them to `context.json`, rerun the analyzer, and verify the resulting reusable material.
 
 ### 5. Produce the requested story
 
@@ -90,10 +123,11 @@ Read [references/narrative-guide.md](references/narrative-guide.md) when produci
 
 A finished BuildStory report should let the user answer:
 
-1. What phases did this project pass through?
-2. Where did work repeatedly loop or reverse?
-3. Which areas absorbed the most attention, and how confident is that estimate?
-4. What did the user demonstrably learn or improve?
-5. What credible achievement can be reused in a resume, portfolio, interview, or personal record?
+1. What is the one-sentence story of this project?
+2. Which five to seven turns changed its direction, risk, understanding, or delivery state?
+3. Where did work repeatedly loop or reverse?
+4. Which areas absorbed the most attention, and how confident is that estimate?
+5. What did the user demonstrably learn or improve?
+6. What credible achievement can be reused in a resume, portfolio, interview, or personal record?
 
 If the available evidence cannot answer one of these, state what is missing. A smaller honest story is better than an impressive fictional one.
