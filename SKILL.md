@@ -44,11 +44,13 @@ python3 <skill-dir>/scripts/build_story.py <repo-path> \
   --language <zh|en>
 ```
 
-The script generates:
+The script generates a default report plus English and Chinese variants:
 
 - `evidence.json`: machine-readable evidence and transparent metrics
 - `report.md`: portable text report
-- `report.html`: self-contained visual report
+- `report.html`: self-contained visual report with an EN / 中文 switch
+- `evidence.en.json`, `report.en.md`, `report.en.html`: English outputs
+- `evidence.zh.json`, `report.zh.md`, `report.zh.html`: Chinese outputs
 
 ### 3. Inspect the evidence before narrating
 

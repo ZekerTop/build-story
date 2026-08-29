@@ -149,10 +149,21 @@ def main() -> int:
         repo = Path(directory) / "PocketTasks"
         repo.mkdir()
         transcript = build_demo_repository(repo)
+        datasets = {}
         for language in ("en", "zh"):
             data = build_story.build_evidence(repo, [transcript], language, "PocketTasks")
             data["generated_at"] = "2026-08-29T00:00:00+00:00"
-            build_story.write_outputs(data, DEMO_OUTPUT / language)
+            datasets[language] = data
+        build_story.write_outputs(
+            datasets["en"],
+            DEMO_OUTPUT / "en",
+            {"en": "report.html", "zh": "../zh/report.html"},
+        )
+        build_story.write_outputs(
+            datasets["zh"],
+            DEMO_OUTPUT / "zh",
+            {"en": "../en/report.html", "zh": "report.html"},
+        )
     print(f"Demo reports created: {DEMO_OUTPUT}")
     return 0
 

@@ -965,7 +965,7 @@ def esc(value: Any) -> str:
     return html.escape(str(value), quote=True)
 
 
-def render_html(data: dict[str, Any]) -> str:
+def render_html(data: dict[str, Any], language_links: dict[str, str] | None = None) -> str:
     language = data["language"]
     c = COPY[language]
     p = data["project"]
@@ -1054,6 +1054,12 @@ def render_html(data: dict[str, Any]) -> str:
     limitations = "".join(f"<li>{esc(item)}</li>" for item in data["coverage"]["limitations"])
     generated_date = data["generated_at"][:10]
     source_data = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    language_switch = ""
+    if language_links:
+        language_switch = f'''<div class="lang-switch" aria-label="Language">
+  <a href="{esc(language_links['en'])}" class="{'is-current' if language == 'en' else ''}" lang="en">EN</a>
+  <a href="{esc(language_links['zh'])}" class="{'is-current' if language == 'zh' else ''}" lang="zh-CN">中文</a>
+</div>'''
 
     return f'''<!doctype html>
 <html lang="{language}">
@@ -1074,7 +1080,12 @@ code {{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; overflow-wrap:a
 .nav {{ display:flex; align-items:center; justify-content:space-between; gap:20px; }}
 .wordmark {{ font-weight:850; letter-spacing:-.04em; font-size:20px; }}
 .wordmark i {{ color:var(--accent); font-style:normal; }}
+.nav-right {{ display:flex; align-items:center; justify-content:flex-end; gap:16px; }}
 .nav-meta {{ color:var(--muted); font-size:13px; }}
+.lang-switch {{ display:flex; align-items:center; padding:3px; border:1px solid var(--line); border-radius:9px; background:rgb(255 255 255 / .45); }}
+.lang-switch a {{ min-width:42px; padding:5px 8px; border-radius:6px; color:var(--muted); font:700 11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace; text-align:center; text-decoration:none; }}
+.lang-switch a:hover {{ color:var(--ink); }}
+.lang-switch a.is-current {{ color:white; background:var(--ink); }}
 .hero {{ align-self:center; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(260px,.55fr); gap:8vw; align-items:end; padding:54px 0; }}
 .kicker {{ color:var(--accent); font:700 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.14em; text-transform:uppercase; }}
 h1 {{ margin:18px 0 20px; max-width:12ch; font-size:clamp(54px,9vw,132px); line-height:.88; letter-spacing:-.075em; }}
@@ -1159,6 +1170,9 @@ footer .shell {{ display:flex; justify-content:space-between; gap:30px; }}
 footer span {{ color:#aaa; }}
 @media (max-width:800px) {{
   .shell {{ width:min(100% - 28px,1180px); }}
+  .nav {{ align-items:flex-start; }}
+  .nav-right {{ flex-direction:column-reverse; align-items:flex-end; gap:8px; }}
+  .nav-meta {{ max-width:230px; text-align:right; }}
   .masthead {{ min-height:auto; padding-bottom:36px; }}
   .hero,.friction-layout,.attention-grid,.method {{ grid-template-columns:1fr; gap:34px; }}
   .hero {{ padding:70px 0 54px; }}
@@ -1182,7 +1196,7 @@ footer span {{ color:#aaa; }}
 </head>
 <body>
 <header class="masthead">
-  <nav class="shell nav"><div class="wordmark">Build<i>Story</i></div><div class="nav-meta">{esc(c['generated'])} · {generated_date}</div></nav>
+  <nav class="shell nav"><div class="wordmark">Build<i>Story</i></div><div class="nav-right"><div class="nav-meta">{esc(c['generated'])} · {generated_date}</div>{language_switch}</div></nav>
   <div class="shell hero">
     <div><div class="kicker">Project retrospective</div><h1>{esc(p['name'])}</h1><p class="tagline">{esc(c['tagline'])}</p></div>
     <div class="coverage"><span>{esc(c['coverage'])}</span><strong>{esc(sources)}</strong><p>{esc(p['branch'])} · {esc(p['start'][:10])} to {esc(p['end'][:10])}</p></div>
@@ -1240,11 +1254,18 @@ document.querySelectorAll('.filter').forEach(function(button) {{
 '''
 
 
-def write_outputs(data: dict[str, Any], output: Path) -> None:
+def write_outputs(
+    data: dict[str, Any],
+    output: Path,
+    language_links: dict[str, str] | None = None,
+    suffix: str = "",
+) -> None:
     output.mkdir(parents=True, exist_ok=True)
-    (output / "evidence.json").write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (output / "report.md").write_text(render_markdown(data), encoding="utf-8")
-    (output / "report.html").write_text(render_html(data), encoding="utf-8")
+    (output / f"evidence{suffix}.json").write_text(
+        json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    (output / f"report{suffix}.md").write_text(render_markdown(data), encoding="utf-8")
+    (output / f"report{suffix}.html").write_text(render_html(data, language_links), encoding="utf-8")
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -1254,7 +1275,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("repo", nargs="?", default=".", help="Git repository to analyze. Defaults to the current directory.")
     parser.add_argument("--output", "-o", help="Output directory. Defaults to <repo>/build-story-report.")
     parser.add_argument("--session", action="append", default=[], help="Authorized session file or directory. Repeatable.")
-    parser.add_argument("--language", choices=("en", "zh"), default="en", help="Report language.")
+    parser.add_argument(
+        "--language",
+        choices=("en", "zh"),
+        default="en",
+        help="Default language opened by report.html. Both English and Chinese reports are generated.",
+    )
     parser.add_argument("--project-name", help="Override the project name shown in the report.")
     parser.add_argument("--version", action="version", version=f"BuildStory {VERSION}")
     return parser.parse_args(argv)
@@ -1266,13 +1292,25 @@ def main(argv: list[str] | None = None) -> int:
     output = Path(args.output).expanduser().resolve() if args.output else repo / "build-story-report"
     sessions = [Path(item).expanduser().resolve() for item in args.session]
     try:
-        data = build_evidence(repo, sessions, args.language, args.project_name)
-        write_outputs(data, output)
+        datasets = {
+            language: build_evidence(repo, sessions, language, args.project_name)
+            for language in ("en", "zh")
+        }
+        shared_links = {"en": "report.en.html", "zh": "report.zh.html"}
+        for language, data in datasets.items():
+            write_outputs(data, output, shared_links, suffix=f".{language}")
+        primary_links = {
+            "en": "report.html" if args.language == "en" else "report.en.html",
+            "zh": "report.html" if args.language == "zh" else "report.zh.html",
+        }
+        write_outputs(datasets[args.language], output, primary_links)
     except (RuntimeError, OSError) as error:
         print(f"BuildStory error: {error}", file=sys.stderr)
         return 1
     print(f"BuildStory report created: {output}")
     print(f"  HTML: {output / 'report.html'}")
+    print(f"  English HTML: {output / 'report.en.html'}")
+    print(f"  Chinese HTML: {output / 'report.zh.html'}")
     print(f"  Markdown: {output / 'report.md'}")
     print(f"  Evidence: {output / 'evidence.json'}")
     return 0

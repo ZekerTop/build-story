@@ -22,13 +22,19 @@ BuildStory makes that invisible process inspectable without pretending Git can r
 
 ## What it produces
 
-One run creates three local files:
+One run creates a default report plus English and Chinese variants. The `--language` option chooses which language opens as `report.html`:
 
 ```text
 build-story-report/
-├── evidence.json   # structured observations, scores, and confidence
-├── report.md       # portable retrospective
-└── report.html     # self-contained interactive visual report
+├── evidence.json       # evidence in the selected default language
+├── evidence.en.json    # English evidence
+├── evidence.zh.json    # Chinese evidence
+├── report.md           # Markdown in the selected default language
+├── report.en.md        # English Markdown
+├── report.zh.md        # Chinese Markdown
+├── report.html         # default report with EN / 中文 switch
+├── report.en.html      # English visual report
+└── report.zh.html      # Chinese visual report
 ```
 
 The report includes:
@@ -49,7 +55,7 @@ Requirements:
 - Git
 - a repository with at least one commit
 
-Generate an English report:
+Generate both languages and open English by default:
 
 ```bash
 python3 scripts/build_story.py /path/to/project \
@@ -57,7 +63,7 @@ python3 scripts/build_story.py /path/to/project \
   --language en
 ```
 
-Generate a Chinese report:
+Generate both languages and open Chinese by default:
 
 ```bash
 python3 scripts/build_story.py /path/to/project \
@@ -65,7 +71,7 @@ python3 scripts/build_story.py /path/to/project \
   --language zh
 ```
 
-Open `build-story-report/report.html` in a browser.
+Open `build-story-report/report.html` in a browser and use the **EN / 中文** switch in the top navigation. The language-specific files can also be opened or shared directly.
 
 ### Add authorized AI-session evidence
 
@@ -237,4 +243,3 @@ Issues and focused pull requests are welcome. Please read [CONTRIBUTING.md](CONT
 ## License
 
 [MIT](LICENSE)
-

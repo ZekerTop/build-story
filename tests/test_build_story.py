@@ -101,6 +101,10 @@ class BuildStoryTests(unittest.TestCase):
         self.assertTrue((output / "evidence.json").exists())
         self.assertTrue((output / "report.md").exists())
         self.assertTrue((output / "report.html").exists())
+        self.assertTrue((output / "evidence.en.json").exists())
+        self.assertTrue((output / "evidence.zh.json").exists())
+        self.assertTrue((output / "report.en.html").exists())
+        self.assertTrue((output / "report.zh.html").exists())
         data = json.loads((output / "evidence.json").read_text(encoding="utf-8"))
         self.assertEqual(data["metrics"]["commits"], 7)
         self.assertEqual(data["project"]["path"], "sample-project")
@@ -110,6 +114,8 @@ class BuildStoryTests(unittest.TestCase):
         report = (output / "report.html").read_text(encoding="utf-8")
         self.assertIn("See how you built it", report)
         self.assertIn("Project life line", report)
+        self.assertIn('class="lang-switch"', report)
+        self.assertIn('href="report.zh.html"', report)
         self.assertNotIn(str(self.repo.parent), report)
 
     def test_authorized_transcript_adds_repeat_signal(self):
@@ -142,8 +148,10 @@ class BuildStoryTests(unittest.TestCase):
         self.assertEqual(data["coverage"]["transcript_files"], ["session.jsonl"])
         self.assertTrue(data["transcripts"]["repeated_prompts"])
         self.assertNotIn(str(transcript.parent), (output / "report.html").read_text(encoding="utf-8"))
+        report = (output / "report.html").read_text(encoding="utf-8")
+        self.assertIn('href="report.en.html"', report)
+        self.assertIn('class="is-current" lang="zh-CN"', report)
 
 
 if __name__ == "__main__":
     unittest.main()
-

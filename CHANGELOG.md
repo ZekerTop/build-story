@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added an EN / 中文 switch to visual reports.
+- Every analysis now generates default, English, and Chinese JSON, Markdown, and HTML outputs.
+
 ## 0.1.0 - 2026-08-29
 
 - Added the BuildStory Agent Skill.
@@ -9,4 +14,3 @@
 - Added self-contained JSON, Markdown, and HTML reports.
 - Added deterministic English and Chinese demo reports.
 - Added English and Chinese documentation, tests, and CI.
-

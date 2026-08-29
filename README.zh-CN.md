@@ -22,13 +22,19 @@ BuildStory 让这些看不见的过程重新变得可检查，同时不会假装
 
 ## 它会生成什么
 
-每次运行会在本地生成三个文件：
+每次运行都会生成默认报告以及中英文版本。`--language` 用于选择打开 `report.html` 时默认显示的语言：
 
 ```text
 build-story-report/
-├── evidence.json   # 结构化证据、分维度评分和置信度
-├── report.md       # 便于保存和继续编辑的复盘报告
-└── report.html     # 自包含的交互式可视化报告
+├── evidence.json       # 默认语言的结构化证据
+├── evidence.en.json    # 英文证据
+├── evidence.zh.json    # 中文证据
+├── report.md           # 默认语言的 Markdown 报告
+├── report.en.md        # 英文 Markdown 报告
+├── report.zh.md        # 中文 Markdown 报告
+├── report.html         # 带 EN / 中文切换的默认报告
+├── report.en.html      # 英文可视化报告
+└── report.zh.html      # 中文可视化报告
 ```
 
 报告包含：
@@ -49,7 +55,7 @@ BuildStory **不会**给项目计算一个虚假的总分。
 - Git
 - 至少包含一次提交的 Git 仓库
 
-生成中文报告：
+同时生成中英文版本，并默认打开中文：
 
 ```bash
 python3 scripts/build_story.py /你的/项目路径 \
@@ -57,7 +63,7 @@ python3 scripts/build_story.py /你的/项目路径 \
   --language zh
 ```
 
-生成英文报告：
+同时生成中英文版本，并默认打开英文：
 
 ```bash
 python3 scripts/build_story.py /path/to/project \
@@ -65,7 +71,7 @@ python3 scripts/build_story.py /path/to/project \
   --language en
 ```
 
-生成完成后，用浏览器打开 `build-story-report/report.html`。
+生成完成后，用浏览器打开 `build-story-report/report.html`，可以在顶部使用 **EN / 中文** 切换语言，也可以直接打开或分享对应的语言文件。
 
 ### 加入已授权的 AI 编程会话
 
@@ -237,4 +243,3 @@ build-story/
 ## 许可证
 
 [MIT](LICENSE)
-

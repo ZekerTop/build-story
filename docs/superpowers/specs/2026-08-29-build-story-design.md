@@ -30,6 +30,7 @@ The experience must work with one command and no external account. Advanced tran
 - optional local transcript analysis;
 - evidence-backed dimension scores with no overall score;
 - self-contained JSON, Markdown, and HTML reports;
+- English and Chinese report variants with a visible language switch;
 - guidance for retrospectives, portfolio cases, achievements, resume bullets, and STAR stories;
 - English and Chinese documentation.
 
@@ -104,4 +105,3 @@ Design read: a developer-facing, evidence-first report for non-experts, using an
 - Scores are evidence summaries, not personal judgments.
 - Git-only time analysis explicitly states its limitations.
 - The architecture matches the privacy and local-first promise.
-
