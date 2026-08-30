@@ -12,6 +12,8 @@
 - Completed visible Chinese localization for counts, evidence, attention areas, and report controls.
 - Added exact dynamic-text translations so Chinese reports can localize commit subjects and conversation excerpts.
 - Added short user-request and AI-response excerpts to evidence-backed turning points.
+- Added a project-scoped activity pulse with calendar span, active development days, longest continuous run, and an interactive day story.
+- Added a most-active-day explanation without treating commit volume as diligence or productivity.
 
 ## 0.1.0 - 2026-08-29
 

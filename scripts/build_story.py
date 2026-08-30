@@ -37,6 +37,16 @@ COPY = {
         "story_kicker": "The build story",
         "story_fallback": "A project moved from its first implementation through visible friction to a reviewable delivery.",
         "story_evidence": "View supporting evidence",
+        "rhythm": "Project rhythm",
+        "rhythm_intro": "A project-scoped activity pulse. It shows when observable work happened, not how hard someone worked.",
+        "project_span": "Project span",
+        "active_days": "Active development days",
+        "longest_streak": "Longest continuous run",
+        "busiest_day": "Most active day",
+        "conversation_events": "conversation events",
+        "lines_changed": "lines changed",
+        "day_story": "What happened",
+        "no_activity": "No observable Git or conversation activity",
         "turning_points": "The turns that changed the project",
         "turning_points_intro": "Only the moments that changed direction, risk, understanding, or delivery state.",
         "full_timeline": "View every commit",
@@ -109,6 +119,16 @@ COPY = {
         "story_kicker": "项目故事",
         "story_fallback": "这个项目从第一次实现出发，穿过可见的阻力，最终形成了一次可以复盘的交付。",
         "story_evidence": "查看支撑证据",
+        "rhythm": "项目节奏",
+        "rhythm_intro": "只展示项目范围内可观察到的活动脉搏。它说明工作何时发生，不评价一个人有多勤快。",
+        "project_span": "项目跨度",
+        "active_days": "活跃开发日",
+        "longest_streak": "最长连续推进",
+        "busiest_day": "变更最密集日",
+        "conversation_events": "条会话",
+        "lines_changed": "行变更",
+        "day_story": "当天发生了什么",
+        "no_activity": "未观察到 Git 或会话活动",
         "turning_points": "真正改变项目的转折点",
         "turning_points_intro": "只保留改变方向、风险、理解或交付状态的关键时刻。",
         "full_timeline": "查看全部提交",
@@ -963,6 +983,102 @@ def directory_attention(file_stats: dict[str, dict[str, Any]], language: str) ->
     return results[:8]
 
 
+def build_activity_history(
+    commits: list[Commit],
+    transcript_events: list[dict[str, Any]],
+    context: dict[str, Any],
+    language: str,
+) -> dict[str, Any]:
+    start = commits[0].timestamp.date()
+    end = commits[-1].timestamp.date()
+    rows: dict[str, dict[str, Any]] = collections.defaultdict(
+        lambda: {
+            "commits": 0,
+            "transcript_events": 0,
+            "lines_changed": 0,
+            "subjects": [],
+            "prompts": [],
+        }
+    )
+    for commit in commits:
+        day = commit.timestamp.date().isoformat()
+        row = rows[day]
+        row["commits"] += 1
+        row["lines_changed"] += commit.additions + commit.deletions
+        row["subjects"].append(localized_dynamic_text(commit.subject, context, language))
+
+    for event in transcript_events:
+        timestamp = event.get("timestamp")
+        if timestamp is None or timestamp.date() < start or timestamp.date() > end:
+            continue
+        day = timestamp.date().isoformat()
+        row = rows[day]
+        row["transcript_events"] += 1
+        if any(token in event["role"] for token in ("user", "human", "prompt")) and event.get("text"):
+            row["prompts"].append(localized_dynamic_text(event["text"][:180], context, language))
+
+    total_days = (end - start).days + 1
+    active_dates = sorted(
+        dt.date.fromisoformat(day)
+        for day, row in rows.items()
+        if row["commits"] or row["transcript_events"]
+    )
+    longest_streak = 0
+    current_streak = 0
+    previous: dt.date | None = None
+    for day in active_dates:
+        current_streak = current_streak + 1 if previous and day == previous + dt.timedelta(days=1) else 1
+        longest_streak = max(longest_streak, current_streak)
+        previous = day
+
+    maximum_events = max(
+        (row["commits"] + row["transcript_events"] for row in rows.values()),
+        default=1,
+    )
+    days = []
+    for offset in range(total_days):
+        date_value = start + dt.timedelta(days=offset)
+        day = date_value.isoformat()
+        source = rows[day]
+        observed_events = source["commits"] + source["transcript_events"]
+        level = 0 if observed_events == 0 else max(1, min(4, math.ceil(observed_events / maximum_events * 4)))
+        summaries = source["subjects"] or source["prompts"]
+        summary = ("；" if language == "zh" else "; ").join(summaries[:2]) if summaries else COPY[language]["no_activity"]
+        days.append(
+            {
+                "date": day,
+                "commits": source["commits"],
+                "transcript_events": source["transcript_events"],
+                "lines_changed": source["lines_changed"],
+                "observed_events": observed_events,
+                "level": level,
+                "summary": summary,
+            }
+        )
+
+    active_rows = [row for row in days if row["observed_events"]]
+    busiest = max(
+        active_rows,
+        key=lambda row: (
+            row["observed_events"],
+            row["commits"],
+            row["lines_changed"],
+            -dt.date.fromisoformat(row["date"]).toordinal(),
+        ),
+    )
+    return {
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+        "calendar_days": total_days,
+        "active_days": len(active_dates),
+        "longest_streak": longest_streak,
+        "leading_empty_days": start.weekday(),
+        "weeks": math.ceil((start.weekday() + total_days) / 7),
+        "busiest_day": busiest,
+        "days": days,
+    }
+
+
 def evidence_cards(
     project_name: str,
     commits: list[Commit],
@@ -1326,6 +1442,7 @@ def build_evidence(
         row["original_title"] = item["title"]
         row["title"] = localized_dynamic_text(item["title"], localized_context, language)
         localized_loops.append(row)
+    activity = build_activity_history(commits, transcript_events, localized_context, language)
     authors = sorted({commit.author for commit in commits})
     categories = collections.Counter(commit.category for commit in commits)
     start = commits[0].timestamp
@@ -1357,7 +1474,7 @@ def build_evidence(
     career_material = build_career_material(name, story, localized_context, turning_points, language)
     source_list = ["git"] + (["transcripts"] if transcript_files else [])
     return {
-        "schema_version": "1.2",
+        "schema_version": "1.3",
         "generator_version": VERSION,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "language": language,
@@ -1389,6 +1506,7 @@ def build_evidence(
             "time_estimate": time_estimate,
         },
         "story": story,
+        "activity": activity,
         "turning_points": turning_points,
         "timeline": timeline,
         "friction_zones": friction,
@@ -1434,6 +1552,24 @@ def render_markdown(data: dict[str, Any]) -> str:
             f"- {m['time_estimate']['hours']} {c['hours']} ({label_value(c['confidence'], confidence_label(m['time_estimate']['confidence'], language), language)})",
             "",
             "</details>",
+            "",
+            f"## {c['rhythm']}",
+            "",
+            f"> {c['rhythm_intro']}",
+            "",
+            f"- **{c['project_span']}：** {data['activity']['calendar_days']} 天" if language == "zh" else f"- **{c['project_span']}:** {data['activity']['calendar_days']} calendar days",
+            f"- **{c['active_days']}：** {data['activity']['active_days']} 天" if language == "zh" else f"- **{c['active_days']}:** {data['activity']['active_days']} days",
+            f"- **{c['longest_streak']}：** {data['activity']['longest_streak']} 天" if language == "zh" else f"- **{c['longest_streak']}:** {data['activity']['longest_streak']} days",
+            "",
+            f"### {c['busiest_day']} · {data['activity']['busiest_day']['date']}",
+            "",
+            (
+                f"{data['activity']['busiest_day']['commits']} 次提交 · {data['activity']['busiest_day']['transcript_events']} 条会话 · {data['activity']['busiest_day']['lines_changed']} 行变更"
+                if language == "zh"
+                else f"{count_text(data['activity']['busiest_day']['commits'], 'commit', language)} · {data['activity']['busiest_day']['transcript_events']} conversation events · {data['activity']['busiest_day']['lines_changed']} lines changed"
+            ),
+            "",
+            data['activity']['busiest_day']['summary'],
             "",
             f"## {c['turning_points']}",
             "",
@@ -1574,6 +1710,29 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
 </article>'''
         )
 
+    activity = data["activity"]
+    busiest = activity["busiest_day"]
+    activity_is_strip = activity["calendar_days"] <= 45
+    activity_calendar_class = "activity-calendar is-strip" if activity_is_strip else "activity-calendar is-grid"
+    leading_cells = "" if activity_is_strip else "".join('<span class="activity-empty" aria-hidden="true"></span>' for _ in range(activity["leading_empty_days"]))
+    activity_cells = []
+    for day in activity["days"]:
+        detail = (
+            f"{count_text(day['commits'], 'commit', language)} · {day['transcript_events']} conversation events · {day['lines_changed']} lines changed"
+            if language == "en"
+            else f"{day['commits']} 次提交 · {day['transcript_events']} 条会话 · {day['lines_changed']} 行变更"
+        )
+        label = f"{day['date']} · {detail} · {day['summary']}"
+        selected = " is-selected" if day["date"] == busiest["date"] else ""
+        activity_cells.append(
+            f'''<button type="button" class="activity-cell level-{day['level']}{selected}" aria-label="{esc(label)}" title="{esc(label)}" data-date="{esc(day['date'])}" data-detail="{esc(detail)}" data-summary="{esc(day['summary'])}"></button>'''
+        )
+    busiest_detail = (
+        f"{count_text(busiest['commits'], 'commit', language)} · {busiest['transcript_events']} conversation events · {busiest['lines_changed']} lines changed"
+        if language == "en"
+        else f"{busiest['commits']} 次提交 · {busiest['transcript_events']} 条会话 · {busiest['lines_changed']} 行变更"
+    )
+
     friction_rows = []
     for index, item in enumerate(data["friction_zones"][:8], start=1):
         commit_text = count_text(item["commits"], "commit", language)
@@ -1713,6 +1872,34 @@ main {{ background:var(--surface); }}
 .section-head {{ max-width:760px; margin-bottom:48px; }}
 .section-head h2 {{ margin:0 0 12px; font-size:clamp(38px,6vw,72px); line-height:.95; letter-spacing:-.055em; }}
 .section-head p {{ margin:0; color:var(--muted); font-size:18px; }}
+.rhythm-section {{ padding:72px 0; }}
+.rhythm-layout {{ display:grid; grid-template-columns:minmax(280px,.7fr) minmax(0,1.3fr); gap:70px; align-items:start; }}
+.rhythm-section .section-head {{ margin-bottom:34px; }}
+.rhythm-section .section-head h2 {{ font-size:clamp(38px,5vw,62px); }}
+.rhythm-stats {{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }}
+.rhythm-stat {{ padding-top:14px; border-top:1px solid var(--line); }}
+.rhythm-stat strong {{ display:block; font-size:32px; letter-spacing:-.05em; }}
+.rhythm-stat span {{ color:var(--muted); font-size:12px; }}
+.activity-panel {{ padding:26px; background:var(--paper); border-radius:var(--radius); }}
+.activity-range {{ display:flex; justify-content:space-between; gap:20px; margin-bottom:14px; color:var(--muted); font:11px ui-monospace,SFMono-Regular,Menlo,monospace; }}
+.activity-scroll {{ overflow-x:auto; padding:3px; }}
+.activity-calendar {{ gap:5px; }}
+.activity-calendar.is-strip {{ display:grid; grid-template-columns:repeat(var(--days),minmax(13px,1fr)); min-width:max(100%,calc(var(--days) * 18px)); }}
+.activity-calendar.is-grid {{ display:grid; grid-template-rows:repeat(7,13px); grid-auto-flow:column; grid-auto-columns:13px; min-width:max-content; }}
+.activity-cell,.activity-empty {{ width:13px; height:13px; border-radius:3px; }}
+.activity-calendar.is-strip .activity-cell {{ width:100%; height:18px; }}
+.activity-cell {{ border:0; padding:0; cursor:pointer; background:#dedad1; }}
+.activity-cell.level-1 {{ background:#f6cdbc; }}
+.activity-cell.level-2 {{ background:#f2a17f; }}
+.activity-cell.level-3 {{ background:#ee7445; }}
+.activity-cell.level-4 {{ background:var(--accent); }}
+.activity-cell:hover,.activity-cell:focus-visible {{ outline:2px solid var(--ink); outline-offset:2px; }}
+.activity-cell.is-selected {{ outline:2px solid var(--ink); outline-offset:2px; }}
+.activity-focus {{ display:grid; grid-template-columns:150px 1fr; gap:22px; margin-top:26px; padding-top:22px; border-top:1px solid var(--line); }}
+.activity-focus time {{ display:block; margin-top:8px; font:700 18px ui-monospace,SFMono-Regular,Menlo,monospace; }}
+.activity-focus h3 {{ margin:0 0 8px; font-size:20px; }}
+.activity-focus p {{ margin:6px 0; color:var(--muted); }}
+.activity-focus .activity-summary {{ color:var(--ink); font-size:16px; }}
 .turns {{ max-width:960px; border-top:1px solid var(--line); }}
 .turn {{ display:grid; grid-template-columns:84px 1fr; gap:24px; padding:30px 0; border-bottom:1px solid var(--line); }}
 .turn-number {{ color:var(--accent); font:700 13px ui-monospace,SFMono-Regular,Menlo,monospace; }}
@@ -1807,12 +1994,13 @@ footer .shell {{ display:flex; justify-content:space-between; gap:30px; }}
 footer span {{ color:#aaa; }}
 @media (max-width:800px) {{
   .shell {{ width:min(100% - 28px,1180px); }} .nav {{ align-items:flex-start; }} .nav-right {{ flex-direction:column-reverse; align-items:flex-end; gap:8px; }} .nav-meta {{ max-width:230px; text-align:right; }}
-  .masthead {{ min-height:auto; padding-bottom:32px; }} .hero,.friction-layout,.attention-grid,.method,.context-callout {{ grid-template-columns:1fr; gap:34px; }} .hero {{ padding:70px 0 34px; }} h1 {{ font-size:clamp(52px,17vw,86px); }} .coverage {{ max-width:440px; }} .section {{ padding:68px 0; }}
+  .masthead {{ min-height:auto; padding-bottom:32px; }} .hero,.rhythm-layout,.friction-layout,.attention-grid,.method,.context-callout {{ grid-template-columns:1fr; gap:34px; }} .hero {{ padding:70px 0 34px; }} h1 {{ font-size:clamp(52px,17vw,86px); }} .coverage {{ max-width:440px; }} .section {{ padding:68px 0; }}
   .turn {{ grid-template-columns:44px 1fr; gap:14px; }} .turn-meta {{ align-items:flex-start; flex-direction:column; gap:5px; }} .event {{ grid-template-columns:84px 14px 1fr; gap:12px; }} .friction-row {{ grid-template-columns:34px 1fr; }} .ratio {{ grid-column:2; text-align:left; display:flex; align-items:baseline; gap:8px; }}
   .dimensions,.proof-list,.career-grid {{ grid-template-columns:1fr; }} .attention-row {{ grid-template-columns:100px 1fr; }} .attention-row span {{ grid-column:2; text-align:left; }}
 }}
 @media (max-width:420px) {{
   .shell {{ width:min(100% - 22px,1180px); }} .nav-meta {{ display:none; }} .story-statement {{ font-size:25px; }} .story-highlights {{ display:grid; }} .full-history {{ padding:16px; }}
+  .rhythm-stats {{ gap:8px; }} .rhythm-stat strong {{ font-size:26px; }} .activity-panel {{ padding:18px; }} .activity-focus {{ grid-template-columns:1fr; gap:10px; }}
   .event {{ grid-template-columns:1fr; min-height:auto; padding:16px 0; border-bottom:1px solid var(--line); }} .event-mark {{ display:none; }} .event-body {{ padding:0; }}
   .attention-row {{ grid-template-columns:1fr; gap:8px; }} .attention-row span {{ grid-column:1; }}
 }}
@@ -1831,6 +2019,16 @@ footer span {{ color:#aaa; }}
   </div>
 </header>
 <main>
+  <section class="section rhythm-section"><div class="shell rhythm-layout">
+    <div><div class="section-head"><h2>{esc(c['rhythm'])}</h2><p>{esc(c['rhythm_intro'])}</p></div><div class="rhythm-stats">
+      <div class="rhythm-stat"><strong>{activity['calendar_days']}</strong><span>{esc(c['project_span'])}</span></div>
+      <div class="rhythm-stat"><strong>{activity['active_days']}</strong><span>{esc(c['active_days'])}</span></div>
+      <div class="rhythm-stat"><strong>{activity['longest_streak']}</strong><span>{esc(c['longest_streak'])}</span></div>
+    </div></div>
+    <div class="activity-panel"><div class="activity-range"><span>{esc(activity['start'])}</span><span>{esc(activity['end'])}</span></div><div class="activity-scroll"><div class="{activity_calendar_class}" style="--days:{activity['calendar_days']}">{leading_cells}{''.join(activity_cells)}</div></div>
+      <article class="activity-focus" aria-live="polite"><div><span class="eyebrow">{esc(c['busiest_day'])}</span><time id="activity-date">{esc(busiest['date'])}</time></div><div><h3>{esc(c['day_story'])}</h3><p id="activity-detail">{esc(busiest_detail)}</p><p class="activity-summary" id="activity-summary">{esc(busiest['summary'])}</p></div></article>
+    </div>
+  </div></section>
   <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['turning_points'])}</h2><p>{esc(c['turning_points_intro'])}</p></div><div class="turns">{''.join(turning_rows)}</div><details class="full-history"><summary>{esc(c['full_timeline'])} · {esc(count_text(len(data['timeline']), 'commit', language))}</summary><p>{esc(c['full_timeline_intro'])}</p><div class="filters">{''.join(filters)}</div><div class="timeline">{''.join(timeline_rows)}</div></details></div></section>
   <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['friction'])}</h2><p>{esc(c['friction_intro'])}</p></div><div class="friction-layout"><div>{''.join(friction_rows)}</div><aside class="loops"><h3>{esc(c['loop_candidates'])}</h3>{''.join(loop_rows)}</aside></div></div></section>
   <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['attention'])}</h2><p>{esc(c['attention_intro'])}</p></div><div class="attention-grid"><div>{''.join(attention_rows)}</div><aside class="time-callout"><span class="confidence {esc(m['time_estimate']['confidence'])}">{esc(label_value(c['confidence'], confidence_label(m['time_estimate']['confidence'], language), language))}</span><strong>{m['time_estimate']['hours']}{'h' if language == 'en' else ' 小时'}</strong><p>{'Estimated from: ' if language == 'en' else '估算来源：'}{esc(source_label)}{'. ' if language == 'en' else '。'}{esc(c['git_limit'] if m['time_estimate']['source']=='git' else c['session_limit'])}</p></aside></div></div></section>
@@ -1842,6 +2040,7 @@ footer span {{ color:#aaa; }}
 <footer><div class="shell"><strong>BuildStory</strong><span>{esc(c['footer'])}</span></div></footer>
 <script type="application/json" id="buildstory-data">{source_data}</script>
 <script>
+document.querySelectorAll('.activity-cell').forEach(function(cell) {{ cell.addEventListener('click', function() {{ document.querySelectorAll('.activity-cell').forEach(function(item) {{ item.classList.remove('is-selected'); }}); cell.classList.add('is-selected'); document.getElementById('activity-date').textContent = cell.dataset.date; document.getElementById('activity-detail').textContent = cell.dataset.detail; document.getElementById('activity-summary').textContent = cell.dataset.summary; }}); }});
 document.querySelectorAll('.filter').forEach(function(button) {{ button.addEventListener('click', function() {{ document.querySelectorAll('.filter').forEach(function(item) {{ item.classList.remove('is-active'); }}); button.classList.add('is-active'); var selected = button.dataset.filter; document.querySelectorAll('.event').forEach(function(event) {{ event.hidden = selected !== 'all' && event.dataset.category !== selected; }}); }}); }});
 </script>
 </body>

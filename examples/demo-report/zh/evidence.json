@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "generator_version": "0.2.0",
-  "generated_at": "2026-08-29T00:00:00+00:00",
+  "generated_at": "2026-08-30T00:00:00+00:00",
   "language": "zh",
   "project": {
     "name": "PocketTasks",
@@ -60,6 +60,188 @@
       "注意力最集中：核心代码"
     ],
     "context_confirmed": true
+  },
+  "activity": {
+    "start": "2026-07-01",
+    "end": "2026-07-18",
+    "calendar_days": 18,
+    "active_days": 11,
+    "longest_streak": 6,
+    "leading_empty_days": 2,
+    "weeks": 3,
+    "busiest_day": {
+      "date": "2026-07-03",
+      "commits": 2,
+      "transcript_events": 4,
+      "lines_changed": 7,
+      "observed_events": 6,
+      "level": 4,
+      "summary": "尝试加入云同步队列；修复云同步队列中的重复任务"
+    },
+    "days": [
+      {
+        "date": "2026-07-01",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 9,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "初始化 PocketTasks 命令行工具"
+      },
+      {
+        "date": "2026-07-02",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 4,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "新增 JSON 任务存储"
+      },
+      {
+        "date": "2026-07-03",
+        "commits": 2,
+        "transcript_events": 4,
+        "lines_changed": 7,
+        "observed_events": 6,
+        "level": 4,
+        "summary": "尝试加入云同步队列；修复云同步队列中的重复任务"
+      },
+      {
+        "date": "2026-07-04",
+        "commits": 1,
+        "transcript_events": 2,
+        "lines_changed": 7,
+        "observed_events": 3,
+        "level": 2,
+        "summary": "重构云同步重试状态的归属"
+      },
+      {
+        "date": "2026-07-05",
+        "commits": 1,
+        "transcript_events": 2,
+        "lines_changed": 8,
+        "observed_events": 3,
+        "level": 2,
+        "summary": "回滚“尝试加入云同步队列”"
+      },
+      {
+        "date": "2026-07-06",
+        "commits": 1,
+        "transcript_events": 2,
+        "lines_changed": 6,
+        "observed_events": 3,
+        "level": 2,
+        "summary": "用本地导出替代云同步"
+      },
+      {
+        "date": "2026-07-07",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "未观察到 Git 或会话活动"
+      },
+      {
+        "date": "2026-07-08",
+        "commits": 1,
+        "transcript_events": 2,
+        "lines_changed": 4,
+        "observed_events": 3,
+        "level": 2,
+        "summary": "为任务存储与导出补充测试"
+      },
+      {
+        "date": "2026-07-09",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 7,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "新增 CI 验证工作流"
+      },
+      {
+        "date": "2026-07-10",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "未观察到 Git 或会话活动"
+      },
+      {
+        "date": "2026-07-11",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "未观察到 Git 或会话活动"
+      },
+      {
+        "date": "2026-07-12",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 3,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "记录本地优先架构决策"
+      },
+      {
+        "date": "2026-07-13",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "未观察到 Git 或会话活动"
+      },
+      {
+        "date": "2026-07-14",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "未观察到 Git 或会话活动"
+      },
+      {
+        "date": "2026-07-15",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 5,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "准备 v1 发布文档"
+      },
+      {
+        "date": "2026-07-16",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "未观察到 Git 或会话活动"
+      },
+      {
+        "date": "2026-07-17",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "未观察到 Git 或会话活动"
+      },
+      {
+        "date": "2026-07-18",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 2,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "发布 PocketTasks 1.0"
+      }
+    ]
   },
   "turning_points": [
     {

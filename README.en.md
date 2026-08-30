@@ -40,11 +40,15 @@ build-story-report/
 The report includes:
 
 1. a story-first opening that explains what changed;
-2. five to seven turning points that changed direction, risk, understanding, or delivery state;
-3. explicit reversals and high-churn loop candidates;
-4. estimated attention areas and active time;
-5. evidence levels and actions for delivery, validation, traceability, iteration, and learning capture;
-6. evidence cards for portfolios, resume bullets, achievement records, and STAR interview stories.
+2. project span, active development days, longest continuous run, and the most active day;
+3. a project-scoped activity pulse that reveals what happened on a selected day;
+4. five to seven turning points that changed direction, risk, understanding, or delivery state;
+5. explicit reversals and high-churn loop candidates;
+6. estimated attention areas and active time;
+7. evidence levels and actions for delivery, validation, traceability, iteration, and learning capture;
+8. evidence cards for portfolios, resume bullets, achievement records, and STAR interview stories.
+
+The activity pulse describes observable Git and conversation evidence. It does not turn commit volume into a judgment of effort or productivity.
 
 The complete commit log and numeric calculations remain available as collapsed evidence. BuildStory deliberately does **not** calculate one overall score.
 

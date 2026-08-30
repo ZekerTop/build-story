@@ -200,7 +200,7 @@ def main() -> int:
         datasets = {}
         for language in ("en", "zh"):
             data = build_story.build_evidence(repo, [transcript], language, "PocketTasks", context)
-            data["generated_at"] = "2026-08-29T00:00:00+00:00"
+            data["generated_at"] = "2026-08-30T00:00:00+00:00"
             datasets[language] = data
         build_story.write_outputs(
             datasets["en"],

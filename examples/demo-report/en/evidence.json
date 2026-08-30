@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "generator_version": "0.2.0",
-  "generated_at": "2026-08-29T00:00:00+00:00",
+  "generated_at": "2026-08-30T00:00:00+00:00",
   "language": "en",
   "project": {
     "name": "PocketTasks",
@@ -60,6 +60,188 @@
       "Most visible attention: Core code"
     ],
     "context_confirmed": true
+  },
+  "activity": {
+    "start": "2026-07-01",
+    "end": "2026-07-18",
+    "calendar_days": 18,
+    "active_days": 11,
+    "longest_streak": 6,
+    "leading_empty_days": 2,
+    "weeks": 3,
+    "busiest_day": {
+      "date": "2026-07-03",
+      "commits": 2,
+      "transcript_events": 4,
+      "lines_changed": 7,
+      "observed_events": 6,
+      "level": 4,
+      "summary": "Add experimental cloud sync queue; Fix cloud sync duplicate queue entries"
+    },
+    "days": [
+      {
+        "date": "2026-07-01",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 9,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "Initialize PocketTasks CLI"
+      },
+      {
+        "date": "2026-07-02",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 4,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "Add JSON task storage"
+      },
+      {
+        "date": "2026-07-03",
+        "commits": 2,
+        "transcript_events": 4,
+        "lines_changed": 7,
+        "observed_events": 6,
+        "level": 4,
+        "summary": "Add experimental cloud sync queue; Fix cloud sync duplicate queue entries"
+      },
+      {
+        "date": "2026-07-04",
+        "commits": 1,
+        "transcript_events": 2,
+        "lines_changed": 7,
+        "observed_events": 3,
+        "level": 2,
+        "summary": "Refactor cloud sync retry ownership"
+      },
+      {
+        "date": "2026-07-05",
+        "commits": 1,
+        "transcript_events": 2,
+        "lines_changed": 8,
+        "observed_events": 3,
+        "level": 2,
+        "summary": "Revert \"Add experimental cloud sync queue\""
+      },
+      {
+        "date": "2026-07-06",
+        "commits": 1,
+        "transcript_events": 2,
+        "lines_changed": 6,
+        "observed_events": 3,
+        "level": 2,
+        "summary": "Replace cloud sync with local export"
+      },
+      {
+        "date": "2026-07-07",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "No observable Git or conversation activity"
+      },
+      {
+        "date": "2026-07-08",
+        "commits": 1,
+        "transcript_events": 2,
+        "lines_changed": 4,
+        "observed_events": 3,
+        "level": 2,
+        "summary": "Add tests for storage and export"
+      },
+      {
+        "date": "2026-07-09",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 7,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "Add CI validation workflow"
+      },
+      {
+        "date": "2026-07-10",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "No observable Git or conversation activity"
+      },
+      {
+        "date": "2026-07-11",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "No observable Git or conversation activity"
+      },
+      {
+        "date": "2026-07-12",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 3,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "Document local-first architecture decision"
+      },
+      {
+        "date": "2026-07-13",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "No observable Git or conversation activity"
+      },
+      {
+        "date": "2026-07-14",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "No observable Git or conversation activity"
+      },
+      {
+        "date": "2026-07-15",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 5,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "Prepare v1 release documentation"
+      },
+      {
+        "date": "2026-07-16",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "No observable Git or conversation activity"
+      },
+      {
+        "date": "2026-07-17",
+        "commits": 0,
+        "transcript_events": 0,
+        "lines_changed": 0,
+        "observed_events": 0,
+        "level": 0,
+        "summary": "No observable Git or conversation activity"
+      },
+      {
+        "date": "2026-07-18",
+        "commits": 1,
+        "transcript_events": 0,
+        "lines_changed": 2,
+        "observed_events": 1,
+        "level": 1,
+        "summary": "Release PocketTasks 1.0"
+      }
+    ]
   },
   "turning_points": [
     {

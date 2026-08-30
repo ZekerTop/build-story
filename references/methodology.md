@@ -43,6 +43,14 @@ BuildStory uses three signals:
 
 High churn may mean central, valuable iteration rather than waste. The narrative must explain the evidence and ask the user when the distinction matters.
 
+## Project rhythm
+
+Project span runs from the first reachable commit date through the last, inclusive. An active development day contains at least one commit or timestamped event from an authorized transcript within that span.
+
+The longest continuous run counts consecutive active dates. The most active day is selected by observable event count, then commit count and changed lines as tie-breakers. Calendar intensity is normalized only within the current project.
+
+These values describe when recorded activity happened. They must not be labeled as diligence, productivity, effort, or personal performance. The day story should explain the commits or user requests behind the density.
+
 ## Time estimates
 
 Git does not record thinking time. A Git-only estimate groups commits into sessions separated by more than two hours and treats short gaps as active time. It is a lower-bound approximation with low confidence.

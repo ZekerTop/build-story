@@ -25,6 +25,7 @@ The experience must work with one command and no external account. Advanced tran
 
 - Git timeline reconstruction;
 - a story-first opening backed by repository evidence;
+- a project-scoped activity pulse with span, active days, longest run, and a narrative for the most active day;
 - automatic selection of at most seven turning points;
 - explicit revert and high-churn loop candidates;
 - Git-based time estimate with visible confidence;
@@ -77,14 +78,15 @@ Git repository + optional authorized transcripts
 ## Report structure
 
 1. Project identity and one-sentence story
-2. Five to seven turning points
-3. Collapsed complete Git history
-4. Friction zones and loop candidates
-5. Attention and time-sink estimates
-6. Jagged capability profile with levels, reasons, and next-run actions
-7. Evidence cards
-8. User-confirmed portfolio, resume, and STAR material, or three missing-context questions
-9. Methodology and confidence
+2. Project rhythm and interactive activity calendar
+3. Five to seven turning points
+4. Collapsed complete Git history
+5. Friction zones and loop candidates
+6. Attention and time-sink estimates
+7. Jagged capability profile with levels, reasons, and next-run actions
+8. Evidence cards
+9. User-confirmed portfolio, resume, and STAR material, or three missing-context questions
+10. Methodology and confidence
 
 Design read: a story-first report for non-experts, using an editorial technical language, monochrome surfaces, one orange accent, restrained motion, and print-friendly layout. Evidence remains inspectable without taking over the first screen.
 

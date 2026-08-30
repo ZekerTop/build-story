@@ -11,6 +11,7 @@ BuildStory helps a person see **how** a project was built, not only what was shi
 
 - Treat Git and session logs as evidence, not mind-reading. Label inferences and confidence.
 - Lead with the project's story. Keep raw commit counts, full history, and numeric calculations as supporting evidence.
+- Show project rhythm as observable activity, never as a measure of diligence or productivity. Use “most active day,” not “hardest-working day.”
 - Select at most seven turning points by default. A complete Git log is evidence, not a narrative.
 - Never collapse the project into one total score. Show a jagged profile across dimensions.
 - Do not equate iteration with waste. Call suspicious patterns "loop candidates" until the evidence or user confirms them.
@@ -93,6 +94,7 @@ Read `evidence.json` and verify:
 - data sources and stated limitations;
 - project dates, commit counts, authors, and file counts;
 - whether the first-screen story is supported by the selected turning points;
+- whether project span, active days, longest run, and the most active day match the underlying dated evidence;
 - explicit reverts versus inferred high-churn loops;
 - whether time estimates came from Git or timestamped sessions;
 - the evidence and confidence behind every dimension score.
@@ -132,10 +134,11 @@ Read [references/narrative-guide.md](references/narrative-guide.md) when produci
 A finished BuildStory report should let the user answer:
 
 1. What is the one-sentence story of this project?
-2. Which five to seven turns changed its direction, risk, understanding, or delivery state?
-3. Where did work repeatedly loop or reverse?
-4. Which areas absorbed the most attention, and how confident is that estimate?
-5. What did the user demonstrably learn or improve?
-6. What credible achievement can be reused in a resume, portfolio, interview, or personal record?
+2. Over what calendar span did observable work occur, on how many days, and what happened on the most active day?
+3. Which five to seven turns changed its direction, risk, understanding, or delivery state?
+4. Where did work repeatedly loop or reverse?
+5. Which areas absorbed the most attention, and how confident is that estimate?
+6. What did the user demonstrably learn or improve?
+7. What credible achievement can be reused in a resume, portfolio, interview, or personal record?
 
 If the available evidence cannot answer one of these, state what is missing. A smaller honest story is better than an impressive fictional one.

@@ -16,6 +16,20 @@
 
 </details>
 
+## Project rhythm
+
+> A project-scoped activity pulse. It shows when observable work happened, not how hard someone worked.
+
+- **Project span:** 18 calendar days
+- **Active development days:** 11 days
+- **Longest continuous run:** 6 days
+
+### Most active day · 2026-07-03
+
+2 commits · 4 conversation events · 7 lines changed
+
+Add experimental cloud sync queue; Fix cloud sync duplicate queue entries
+
 ## The turns that changed the project
 
 - `2026-07-01` **Project start** · Initialize PocketTasks CLI (`7205f097`)
