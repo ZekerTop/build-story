@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.3",
-  "generator_version": "0.2.0",
+  "schema_version": "1.4",
+  "generator_version": "0.3.0",
   "generated_at": "2026-08-30T00:00:00+00:00",
   "language": "zh",
   "project": {
@@ -55,9 +55,9 @@
   "story": {
     "headline": "从复杂的自动云同步，回到用户可控的本地优先。",
     "highlights": [
-      "1 次关键方向调整",
-      "2 个循环候选需要复盘",
-      "注意力最集中：核心代码"
+      "1 次已确认的方向转变",
+      "注意力最集中：核心代码",
+      "最终完成测试、CI、版本发布"
     ],
     "context_confirmed": true
   },
@@ -361,6 +361,58 @@
       "added": 1,
       "deleted": 1,
       "turning_point_reason": "完成交付"
+    }
+  ],
+  "journey_insights": [
+    {
+      "id": "path:src/sync.py",
+      "topic": "尝试加入云同步队列",
+      "classification": "direction-change",
+      "classification_label": "方向转变",
+      "confidence": "confirmed",
+      "evidence_chain": [
+        {
+          "date": "2026-07-03",
+          "subject": "尝试加入云同步队列",
+          "original_subject": "Add experimental cloud sync queue",
+          "hash": "a4ffcd52",
+          "category": "feature"
+        },
+        {
+          "date": "2026-07-03",
+          "subject": "修复云同步队列中的重复任务",
+          "original_subject": "Fix cloud sync duplicate queue entries",
+          "hash": "55eaaed9",
+          "category": "fix"
+        },
+        {
+          "date": "2026-07-04",
+          "subject": "重构云同步重试状态的归属",
+          "original_subject": "Refactor cloud sync retry ownership",
+          "hash": "9de0c2d9",
+          "category": "refactor"
+        },
+        {
+          "date": "2026-07-05",
+          "subject": "回滚“尝试加入云同步队列”",
+          "original_subject": "Revert \"Add experimental cloud sync queue\"",
+          "hash": "d678a8a2",
+          "category": "fix"
+        },
+        {
+          "date": "2026-07-06",
+          "subject": "用本地导出替代云同步",
+          "original_subject": "Replace cloud sync with local export",
+          "hash": "25929cfc",
+          "category": "refactor"
+        }
+      ],
+      "hypothesis": "用户已确认：这段经历属于方向转变。",
+      "evidence_basis": "5 次相关提交、3 次修复或重构、1 次明确回滚、1 个替代方向。",
+      "question": "你最终放弃或改变“尝试加入云同步队列”，主要是技术实现困难，还是产品判断？",
+      "confirmation": "自动同步引入的队列与重试复杂度违背了面向小白的简单性。",
+      "lesson": "当一个功能持续引入恢复机制时，先重新判断它是否值得存在。",
+      "supporting_path": "src/sync.py"
     }
   ],
   "timeline": [

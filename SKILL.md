@@ -15,6 +15,8 @@ BuildStory helps a person see **how** a project was built, not only what was shi
 - Select at most seven turning points by default. A complete Git log is evidence, not a narrative.
 - Never collapse the project into one total score. Show a jagged profile across dimensions.
 - Do not equate iteration with waste. Call suspicious patterns "loop candidates" until the evidence or user confirms them.
+- Prefer a theme-level journey insight over a file-level statistic. A path and churn ratio are evidence; they are not the conclusion.
+- Classify repeated work only as a tentative `blocked-loop`, `necessary-exploration`, or `direction-change`, then ask the user to confirm the cause.
 - Do not invent business impact, ownership, team size, performance gains, or resume metrics.
 - Read only the current project by default. Ask before reading session files outside the authorized workspace.
 - Keep analysis local unless the user explicitly requests an external service.
@@ -57,6 +59,13 @@ When user-confirmed context is available, save it in the report output directory
     "key_decision": "最能代表能力的关键决定",
     "summary": "一句话项目故事",
     "resume_bullets": ["经过确认的简历要点"],
+    "insight_confirmations": {
+      "path:src/sync.py": {
+        "classification": "direction-change",
+        "reason": "自动同步违背了面向小白的简单性。",
+        "lesson": "当一个功能持续引入恢复机制时，先重新判断它是否值得存在。"
+      }
+    },
     "translations": {
       "Initialize project": "初始化项目",
       "Add the requested feature": "加入用户要求的功能"
@@ -91,6 +100,7 @@ The script generates a default report plus English and Chinese variants:
 
 Read `evidence.json` and verify:
 
+- `journey_insights` first: its topic, tentative classification, evidence chain, confidence, and confirmation question;
 - data sources and stated limitations;
 - project dates, commit counts, authors, and file counts;
 - whether the first-screen story is supported by the selected turning points;
@@ -99,15 +109,24 @@ Read `evidence.json` and verify:
 - whether time estimates came from Git or timestamped sessions;
 - the evidence and confidence behind every dimension score.
 
+Do not lead the chat with `src/foo.py`, commit counts, or churn percentages. Translate the strongest insight into plain language first:
+
+1. what the user appears to have tried;
+2. whether it currently looks like a blocked loop, necessary exploration, or direction change;
+3. which commits support that interpretation;
+4. the one missing human fact that could change the conclusion.
+
 If the data contradicts the user's description, show the discrepancy and ask rather than silently choosing one version.
 
 For a Chinese report, inspect the visible turning-point titles and conversation excerpts. If the source material is in another language, add exact source-to-Chinese entries under `zh.translations` and rerun. Keep the original text in evidence data, but do not make the user read an English development story inside a Chinese interface.
 
 When authorized transcripts exist, use the short user request and AI response attached to each turning point. Prefer this human-readable dialogue over presenting a commit subject as the whole story.
 
-### 4. Ask only for missing human context
+### 4. Confirm the journey before writing the achievement
 
-Do not turn the workflow into an interview. Ask at most the smallest set needed for the requested deliverable, usually:
+Ask no more than three questions, chosen from the highest-confidence unconfirmed `journey_insights`. Do not ask the user to edit `insight_confirmations` manually. After the user answers, write the confirmation and lesson into `context.json`, rerun the analyzer, and verify that the report shows the confirmed interpretation.
+
+Only after the journey is confirmed, ask for any remaining career context. Do not turn the workflow into an interview. The usual missing facts are:
 
 1. What was the user's real responsibility?
 2. What outcome did the project create for the user or for themselves?
@@ -115,7 +134,7 @@ Do not turn the workflow into an interview. Ask at most the smallest set needed 
 
 Skip questions whose answers are already documented in the repository.
 
-For career, portfolio, achievement, or interview output, do not leave these answers as chat-only context. Save them to `context.json`, rerun the analyzer, and verify the resulting reusable material.
+For career, portfolio, achievement, or interview output, do not leave these answers as chat-only context. Save them to `context.json`, rerun the analyzer, and verify the resulting reusable material. The HTML report is the durable artifact, not a substitute for the confirmation conversation.
 
 ### 5. Produce the requested story
 
@@ -137,8 +156,9 @@ A finished BuildStory report should let the user answer:
 2. Over what calendar span did observable work occur, on how many days, and what happened on the most active day?
 3. Which five to seven turns changed its direction, risk, understanding, or delivery state?
 4. Where did work repeatedly loop or reverse?
-5. Which areas absorbed the most attention, and how confident is that estimate?
-6. What did the user demonstrably learn or improve?
-7. What credible achievement can be reused in a resume, portfolio, interview, or personal record?
+5. Was each repeated area a blocked loop, necessary exploration, or direction change, and what still needs confirmation?
+6. Which areas absorbed the most attention, and how confident is that estimate?
+7. What did the user demonstrably learn or improve?
+8. What credible achievement can be reused in a resume, portfolio, interview, or personal record?
 
 If the available evidence cannot answer one of these, state what is missing. A smaller honest story is better than an impressive fictional one.

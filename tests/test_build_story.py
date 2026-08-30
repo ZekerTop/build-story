@@ -131,6 +131,8 @@ class BuildStoryTests(unittest.TestCase):
         self.assertTrue((output / "report.en.html").exists())
         self.assertTrue((output / "report.zh.html").exists())
         data = json.loads((output / "evidence.json").read_text(encoding="utf-8"))
+        self.assertEqual(data["schema_version"], "1.4")
+        self.assertEqual(data["generator_version"], "0.3.0")
         self.assertEqual(data["metrics"]["commits"], 7)
         self.assertEqual(data["project"]["path"], "sample-project")
         self.assertEqual(data["activity"]["calendar_days"], 4)
@@ -145,10 +147,37 @@ class BuildStoryTests(unittest.TestCase):
         self.assertTrue(all(item["level"] and item["recommendation"] for item in data["dimensions"]))
         self.assertTrue(any(item["type"] == "explicit-reversal" for item in data["loop_candidates"]))
         self.assertTrue(any(item["path"] == "src/app.py" for item in data["friction_zones"]))
+        self.assertTrue(data["journey_insights"])
+        insight = data["journey_insights"][0]
+        self.assertEqual(insight["classification"], "direction-change")
+        self.assertEqual(insight["topic"], "Add persistent task cache")
+        self.assertEqual(
+            [item["subject"] for item in insight["evidence_chain"]],
+            [
+                "Initialize project structure",
+                "Add persistent task cache",
+                "Fix cache invalidation for repeated tasks",
+                "Refactor cache ownership",
+                'Revert "Add persistent task cache"',
+            ],
+        )
         report = (output / "report.html").read_text(encoding="utf-8")
         self.assertIn("From a fragile persistent cache", report)
         self.assertIn("The turns that changed the project", report)
         self.assertIn("Project rhythm", report)
+        self.assertIn('id="story-map"', report)
+        self.assertIn('id="insights"', report)
+        self.assertIn('class="section-nav"', report)
+        self.assertIn('data-turn-index="1"', report)
+        self.assertIn('data-focus-date="2026-08-01"', report)
+        self.assertIn('aria-pressed="true"', report)
+        self.assertIn("Related turning points", report)
+        self.assertIn("The story behind the rework", report)
+        self.assertIn("Direction change", report)
+        self.assertIn("Current judgment", report)
+        self.assertIn("Needs your confirmation", report)
+        self.assertLess(report.index('id="story-map"'), report.index('id="insights"'))
+        self.assertLess(report.index('id="insights"'), report.index('id="rhythm"'))
         self.assertIn('class="activity-cell', report)
         self.assertIn("View every commit", report)
         self.assertIn("Turn evidence into a story", report)
@@ -171,6 +200,13 @@ class BuildStoryTests(unittest.TestCase):
             json.dumps(
                 {
                     "zh": {
+                        "insight_confirmations": {
+                            "path:src/app.py": {
+                                "classification": "direction-change",
+                                "reason": "持久缓存带来的失效复杂度超过了它的价值。",
+                                "lesson": "同一状态问题连续修复后，先重新判断是否需要这层状态。",
+                            }
+                        },
                         "translations": {
                             "Add tests for greeting behavior": "为问候行为补充测试",
                             "Please fix cache invalidation when the same task is executed twice": "修复同一任务重复执行时的缓存失效问题。",
@@ -210,6 +246,10 @@ class BuildStoryTests(unittest.TestCase):
         self.assertEqual(validation_point["original_subject"], "Add tests for greeting behavior")
         self.assertEqual(validation_point["dialogue"]["user"], "修复同一任务重复执行时的缓存失效问题。")
         self.assertEqual(validation_point["dialogue"]["ai"], "测试现在已经通过。")
+        insight = next(item for item in data["journey_insights"] if item["supporting_path"] == "src/app.py")
+        self.assertEqual(insight["confidence"], "confirmed")
+        self.assertEqual(insight["confirmation"], "持久缓存带来的失效复杂度超过了它的价值。")
+        self.assertEqual(insight["lesson"], "同一状态问题连续修复后，先重新判断是否需要这层状态。")
         self.assertNotIn(str(transcript.parent), (output / "report.html").read_text(encoding="utf-8"))
         report = (output / "report.html").read_text(encoding="utf-8")
         self.assertIn('href="report.en.html"', report)
@@ -229,6 +269,8 @@ class BuildStoryTests(unittest.TestCase):
         self.assertIn("用户", visible)
         self.assertIn("AI", visible)
         self.assertIn("修复同一任务重复执行时的缓存失效问题。", visible)
+        self.assertIn("你的确认", visible)
+        self.assertIn("沉淀的经验", visible)
         self.assertNotIn("Add tests for greeting behavior", visible)
         self.assertNotIn(" files ·", visible)
         self.assertNotIn(" commits ·", visible)
@@ -236,6 +278,113 @@ class BuildStoryTests(unittest.TestCase):
         self.assertNotIn("explicit reversal", visible)
         self.assertNotIn("test files", visible)
         self.assertNotIn("CI workflow", visible)
+
+    def test_classifies_necessary_exploration_when_changes_reach_validation(self):
+        self.commit(
+            "Initialize parser project",
+            "2026-08-01T09:00:00+00:00",
+            {
+                "README.md": "# Parser\n",
+                "src/parser.py": "def parse(text):\n    return text.split()\n",
+            },
+        )
+        self.commit(
+            "Add quoted value parsing",
+            "2026-08-02T09:00:00+00:00",
+            {
+                "src/parser.py": "def parse(text):\n    parts = []\n    current = ''\n    quoted = False\n    for char in text:\n        if char == '\"':\n            quoted = not quoted\n        elif char == ' ' and not quoted:\n            parts.append(current)\n            current = ''\n        else:\n            current += char\n    return parts + [current]\n",
+            },
+        )
+        self.commit(
+            "Refactor parser state boundaries",
+            "2026-08-03T09:00:00+00:00",
+            {
+                "src/parser.py": "def parse(text):\n    result = []\n    token = []\n    quote = None\n    for char in text:\n        if char in {'\"', \"'\"}:\n            quote = None if quote == char else char\n        elif char.isspace() and quote is None:\n            if token:\n                result.append(''.join(token))\n                token = []\n        else:\n            token.append(char)\n    if token:\n        result.append(''.join(token))\n    return result\n",
+            },
+        )
+        self.commit(
+            "Add parser regression tests",
+            "2026-08-04T09:00:00+00:00",
+            {
+                "src/parser.py": "# Covered by regression tests.\n\ndef parse(text):\n    result = []\n    token = []\n    quote = None\n    for char in text:\n        if char in {'\"', \"'\"}:\n            quote = None if quote == char else char\n        elif char.isspace() and quote is None:\n            if token:\n                result.append(''.join(token))\n                token = []\n        else:\n            token.append(char)\n    if token:\n        result.append(''.join(token))\n    return result\n",
+                "tests/test_parser.py": "from src.parser import parse\n\ndef test_quotes():\n    assert parse('a \"b c\"') == ['a', 'b c']\n",
+            },
+        )
+        output = Path(self.temp.name) / "exploration-report"
+        run([sys.executable, str(SCRIPT), str(self.repo), "--output", str(output)], self.repo)
+        data = json.loads((output / "evidence.json").read_text(encoding="utf-8"))
+        insight = next(item for item in data["journey_insights"] if item["supporting_path"] == "src/parser.py")
+        self.assertEqual(insight["classification"], "necessary-exploration")
+        self.assertEqual(insight["confidence"], "medium")
+
+    def test_classifies_blocked_loop_when_repairs_repeat_without_closure(self):
+        self.commit(
+            "Initialize retry worker",
+            "2026-08-01T09:00:00+00:00",
+            {
+                "README.md": "# Retry Worker\n",
+                "src/retry.py": "def retry(job):\n    return job()\n",
+            },
+        )
+        self.commit(
+            "Add retry queue",
+            "2026-08-02T09:00:00+00:00",
+            {
+                "src/retry.py": "QUEUE = []\n\ndef retry(job):\n    QUEUE.append(job)\n    return job()\n",
+            },
+        )
+        self.commit(
+            "Fix retry timeout handling",
+            "2026-08-03T09:00:00+00:00",
+            {
+                "src/retry.py": "QUEUE = []\n\ndef retry(job, timeout=3):\n    QUEUE.append((job, timeout))\n    return job()\n",
+            },
+        )
+        self.commit(
+            "Fix retry timeout state again",
+            "2026-08-04T09:00:00+00:00",
+            {
+                "src/retry.py": "QUEUE = {}\n\ndef retry(job, timeout=3):\n    QUEUE[id(job)] = timeout\n    return job()\n",
+            },
+        )
+        self.commit(
+            "Refactor retry backoff ownership",
+            "2026-08-05T09:00:00+00:00",
+            {
+                "src/retry.py": "QUEUE = {}\n\ndef retry(job, timeout=3, backoff=1):\n    QUEUE[id(job)] = {'timeout': timeout, 'backoff': backoff}\n    return job()\n",
+            },
+        )
+        output = Path(self.temp.name) / "blocked-report"
+        run([sys.executable, str(SCRIPT), str(self.repo), "--output", str(output)], self.repo)
+        data = json.loads((output / "evidence.json").read_text(encoding="utf-8"))
+        insight = next(item for item in data["journey_insights"] if item["supporting_path"] == "src/retry.py")
+        self.assertEqual(insight["classification"], "blocked-loop")
+        self.assertEqual(insight["confidence"], "high")
+
+    def test_malformed_json_session_does_not_break_git_report(self):
+        self.make_history()
+        transcript = Path(self.temp.name) / "broken.json"
+        transcript.write_text("{not valid json", encoding="utf-8")
+        output = Path(self.temp.name) / "report-with-broken-session"
+        run(
+            [
+                sys.executable,
+                str(SCRIPT),
+                str(self.repo),
+                "--session",
+                str(transcript),
+                "--output",
+                str(output),
+                "--language",
+                "zh",
+            ],
+            self.repo,
+        )
+        data = json.loads((output / "evidence.json").read_text(encoding="utf-8"))
+        self.assertEqual(data["metrics"]["commits"], 7)
+        self.assertEqual(data["coverage"]["transcript_files"], ["broken.json"])
+        self.assertEqual(data["transcripts"]["events"], 0)
+        self.assertEqual(data["transcripts"]["confidence"], "low")
 
 
 if __name__ == "__main__":

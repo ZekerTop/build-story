@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 MAX_TRANSCRIPT_BYTES = 20 * 1024 * 1024
 MAX_TRANSCRIPT_EVENTS = 20_000
 SESSION_GAP_HOURS = 2.0
@@ -46,6 +46,11 @@ COPY = {
         "conversation_events": "conversation events",
         "lines_changed": "lines changed",
         "day_story": "What happened",
+        "related_turns": "Related turning points",
+        "no_related_turns": "No selected turning point on this day",
+        "story_map": "Decision spine",
+        "story_map_intro": "Follow the decisions, reversals, and evidence that changed the project's direction.",
+        "chapter_navigation": "Report sections",
         "no_activity": "No observable Git or conversation activity",
         "turning_points": "The turns that changed the project",
         "turning_points_intro": "Only the moments that changed direction, risk, understanding, or delivery state.",
@@ -53,6 +58,16 @@ COPY = {
         "full_timeline_intro": "The complete Git history remains available as evidence, but it is not the story itself.",
         "friction": "Where the project fought back",
         "friction_intro": "High-change areas and loop candidates. These are prompts for review, not verdicts.",
+        "journey_insights": "The story behind the rework",
+        "journey_insights_intro": "BuildStory groups related changes into a tentative explanation, shows the evidence, and asks you to confirm what Git cannot know.",
+        "attempted_path": "Attempted path",
+        "current_judgment": "Current judgment",
+        "evidence_basis": "Evidence basis",
+        "needs_confirmation": "Needs your confirmation",
+        "confirmed_context": "Your confirmation",
+        "captured_lesson": "Lesson captured",
+        "raw_change_evidence": "View file-level evidence",
+        "no_journey_insights": "No theme-level rework story met the evidence threshold.",
         "attention": "Attention map",
         "attention_intro": "Estimated from change density and activity timestamps. Invisible thinking time is not captured.",
         "profile": "Evidence-backed profile",
@@ -86,6 +101,7 @@ COPY = {
         "high": "high",
         "medium": "medium",
         "low": "low",
+        "confirmed": "confirmed",
         "none": "No signal found",
         "all": "All",
         "source_git": "Git history",
@@ -128,6 +144,11 @@ COPY = {
         "conversation_events": "条会话",
         "lines_changed": "行变更",
         "day_story": "当天发生了什么",
+        "related_turns": "对应转折点",
+        "no_related_turns": "这一天没有选中的转折点",
+        "story_map": "决策脊柱",
+        "story_map_intro": "沿着改变项目方向的决定、回头和证据，重新走一遍这段历程。",
+        "chapter_navigation": "报告章节",
         "no_activity": "未观察到 Git 或会话活动",
         "turning_points": "真正改变项目的转折点",
         "turning_points_intro": "只保留改变方向、风险、理解或交付状态的关键时刻。",
@@ -135,6 +156,16 @@ COPY = {
         "full_timeline_intro": "完整 Git 历史仍然保留为证据，但它本身不是故事。",
         "friction": "项目在哪里卡住了",
         "friction_intro": "高频变更区域与循环候选。它们用于复盘，不是对人的判决。",
+        "journey_insights": "反复背后的故事",
+        "journey_insights_intro": "BuildStory 会把相关变更组织成一个待确认的解释，展示证据，再把 Git 无法知道的原因交给你确认。",
+        "attempted_path": "尝试路径",
+        "current_judgment": "当前判断",
+        "evidence_basis": "判断依据",
+        "needs_confirmation": "需要你确认",
+        "confirmed_context": "你的确认",
+        "captured_lesson": "沉淀的经验",
+        "raw_change_evidence": "查看文件级证据",
+        "no_journey_insights": "没有达到证据门槛的主题级反复故事。",
         "attention": "注意力地图",
         "attention_intro": "根据变更密度和活动时间估算，无法覆盖离线思考时间。",
         "profile": "基于证据的能力画像",
@@ -168,6 +199,7 @@ COPY = {
         "high": "高",
         "medium": "中",
         "low": "低",
+        "confirmed": "已确认",
         "none": "未发现信号",
         "all": "全部",
         "source_git": "Git 历史",
@@ -217,6 +249,20 @@ CATEGORY_LABELS = {
         "documentation": "文档",
         "delivery": "交付",
         "other": "其他",
+    },
+}
+
+
+JOURNEY_CLASSIFICATION_LABELS = {
+    "en": {
+        "blocked-loop": "Blocked loop",
+        "necessary-exploration": "Necessary exploration",
+        "direction-change": "Direction change",
+    },
+    "zh": {
+        "blocked-loop": "失败循环",
+        "necessary-exploration": "必要探索",
+        "direction-change": "方向转变",
     },
 }
 
@@ -336,12 +382,22 @@ def context_for_language(context: dict[str, Any], language: str) -> dict[str, An
     value = context.get(language, context)
     if not isinstance(value, dict):
         return {}
-    allowed = {"role", "outcome", "key_decision", "summary", "resume_bullets", "translations"}
+    allowed = {
+        "role",
+        "outcome",
+        "key_decision",
+        "summary",
+        "resume_bullets",
+        "translations",
+        "insight_confirmations",
+    }
     result = {key: value[key] for key in allowed if key in value}
     if "resume_bullets" in result and not isinstance(result["resume_bullets"], list):
         result["resume_bullets"] = []
     if "translations" in result and not isinstance(result["translations"], dict):
         result["translations"] = {}
+    if "insight_confirmations" in result and not isinstance(result["insight_confirmations"], dict):
+        result["insight_confirmations"] = {}
     return result
 
 
@@ -521,6 +577,169 @@ def build_friction(file_stats: dict[str, dict[str, Any]]) -> list[dict[str, Any]
         rows.append({"path": path, **stat})
     rows.sort(key=lambda row: (row["friction_score"], row["gross"]), reverse=True)
     return rows[:10]
+
+
+def build_journey_insights(
+    commits: list[Commit],
+    friction: list[dict[str, Any]],
+    context: dict[str, Any],
+    language: str,
+) -> list[dict[str, Any]]:
+    confirmations = context.get("insight_confirmations", {})
+    if not isinstance(confirmations, dict):
+        confirmations = {}
+    results = []
+    reversal_pattern = re.compile(r"\b(revert|rollback|back out|backout)\b|回滚|撤销", re.I)
+    direction_pattern = re.compile(
+        r"\b(replace|switch|remove|drop|abandon|simplify|migrate|deprecat(?:e|ed))\b|替代|替换|改为|移除|放弃|简化|迁移",
+        re.I,
+    )
+
+    for zone in friction:
+        path = zone["path"]
+        related = [
+            commit
+            for commit in commits
+            if any(item["path"] == path for item in commit.files)
+        ]
+        if len(related) < 3:
+            continue
+
+        explicit_reversals = [commit for commit in related if reversal_pattern.search(commit.subject)]
+        direction_changes = [
+            commit
+            for commit in related
+            if not reversal_pattern.search(commit.subject) and direction_pattern.search(commit.subject)
+        ]
+        repair_count = sum(
+            commit.category in {"fix", "refactor"} and not reversal_pattern.search(commit.subject)
+            for commit in related
+        )
+        validation_count = sum(commit.category == "validation" for commit in related)
+
+        if explicit_reversals or direction_changes:
+            classification = "direction-change"
+            confidence = "high" if explicit_reversals else "medium"
+        elif repair_count >= 2 and not validation_count:
+            classification = "blocked-loop"
+            confidence = "high" if repair_count >= 3 else "medium"
+        else:
+            classification = "necessary-exploration"
+            confidence = "medium" if validation_count else "low"
+
+        topic_commit = next(
+            (commit for commit in related if commit.category == "feature"),
+            next(
+                (
+                    commit
+                    for commit in related
+                    if commit.category not in {"foundation", "documentation", "delivery", "validation"}
+                ),
+                related[0],
+            ),
+        )
+        topic = localized_dynamic_text(topic_commit.subject, context, language)
+        alternative = direction_changes[-1] if direction_changes else None
+        alternative_subject = (
+            localized_dynamic_text(alternative.subject, context, language) if alternative else ""
+        )
+
+        if language == "zh":
+            evidence_basis = (
+                f"{len(related)} 次相关提交、{repair_count} 次修复或重构、"
+                f"{len(explicit_reversals)} 次明确回滚、{len(direction_changes)} 个替代方向。"
+            )
+            if classification == "direction-change":
+                hypothesis = "这更像一次方向转变，而不是失败循环。"
+                if alternative_subject:
+                    hypothesis += f"原方案在连续调整后被“{alternative_subject}”接替。"
+                elif explicit_reversals:
+                    hypothesis += "原方案在连续调整后被明确回滚。"
+                question = f"你最终放弃或改变“{topic}”，主要是技术实现困难，还是产品判断？"
+            elif classification == "blocked-loop":
+                hypothesis = "这更像一个尚未收敛的失败循环：同一路径反复修复，但没有看到明确换向或验证闭环。"
+                question = "这些反复修改的根因是什么？最后是否已经通过测试或真实使用得到验证？"
+            else:
+                hypothesis = "这更像必要探索：现有证据不足以把高频修改判定为浪费。"
+                if validation_count:
+                    hypothesis += " 相关尝试最终出现了验证收口。"
+                question = "这些修改是在验证不同方案，还是被同一个问题反复卡住？最终哪条证据让你停止探索？"
+        else:
+            reversal_noun = "reversal" if len(explicit_reversals) == 1 else "reversals"
+            direction_noun = "replacement direction" if len(direction_changes) == 1 else "replacement directions"
+            evidence_basis = (
+                f"{len(related)} related commits, {repair_count} fixes or refactors, "
+                f"{len(explicit_reversals)} explicit {reversal_noun}, and "
+                f"{len(direction_changes)} {direction_noun}."
+            )
+            if classification == "direction-change":
+                hypothesis = "This looks more like a direction change than a failed loop."
+                if alternative_subject:
+                    hypothesis += f" After repeated adjustment, the original approach was replaced by “{alternative_subject}.”"
+                elif explicit_reversals:
+                    hypothesis += " The original approach was explicitly reversed after repeated adjustment."
+                question = f"Did you abandon or change “{topic}” mainly because the implementation failed, or because the product judgment changed?"
+            elif classification == "blocked-loop":
+                hypothesis = "This looks like an unresolved blocked loop: the same path kept receiving fixes without a visible direction change or validation closure."
+                question = "What was the root cause of the repeated changes, and was the final result verified by tests or real use?"
+            else:
+                hypothesis = "This looks more like necessary exploration: the evidence is not strong enough to label frequent change as waste."
+                if validation_count:
+                    hypothesis += " The related attempts eventually reached validation."
+                question = "Were these changes testing distinct approaches, or repeatedly hitting the same problem? What evidence ended the exploration?"
+
+        insight_id = f"path:{path}"
+        confirmation_entry = confirmations.get(insight_id, confirmations.get(path))
+        confirmation = None
+        lesson = None
+        confirmed_classification = None
+        if isinstance(confirmation_entry, str):
+            confirmation = confirmation_entry.strip() or None
+        elif isinstance(confirmation_entry, dict):
+            confirmed_classification = confirmation_entry.get("classification")
+            confirmation = str(
+                confirmation_entry.get("reason") or confirmation_entry.get("confirmation") or ""
+            ).strip() or None
+            lesson = str(confirmation_entry.get("lesson") or "").strip() or None
+            confirmed_topic = str(confirmation_entry.get("topic") or "").strip()
+            if confirmed_topic:
+                topic = confirmed_topic
+        if confirmation:
+            if confirmed_classification in JOURNEY_CLASSIFICATION_LABELS[language]:
+                classification = confirmed_classification
+            confidence = "confirmed"
+            hypothesis = (
+                f"用户已确认：这段经历属于{JOURNEY_CLASSIFICATION_LABELS[language][classification]}。"
+                if language == "zh"
+                else f"User confirmed the current classification: {JOURNEY_CLASSIFICATION_LABELS[language][classification]}."
+            )
+
+        results.append(
+            {
+                "id": insight_id,
+                "topic": topic,
+                "classification": classification,
+                "classification_label": JOURNEY_CLASSIFICATION_LABELS[language][classification],
+                "confidence": confidence,
+                "evidence_chain": [
+                    {
+                        "date": commit.timestamp.date().isoformat(),
+                        "subject": localized_dynamic_text(commit.subject, context, language),
+                        "original_subject": commit.subject,
+                        "hash": commit.commit_hash[:8],
+                        "category": commit.category,
+                    }
+                    for commit in related[:10]
+                ],
+                "hypothesis": hypothesis,
+                "evidence_basis": evidence_basis,
+                "question": question,
+                "confirmation": confirmation,
+                "lesson": lesson,
+                "supporting_path": path,
+            }
+        )
+    return results[:5]
 
 
 def build_loops(commits: list[Commit], friction: list[dict[str, Any]], language: str) -> list[dict[str, Any]]:
@@ -1298,12 +1517,21 @@ def build_story_summary(
     project_name: str,
     timeline: list[dict[str, Any]],
     loops: list[dict[str, Any]],
+    journey_insights: list[dict[str, Any]],
     signals: dict[str, Any],
     attention: list[dict[str, Any]],
     context: dict[str, Any],
     language: str,
 ) -> dict[str, Any]:
     explicit_reverts = sum(item["type"] == "explicit-reversal" for item in loops)
+    confirmed_direction_changes = sum(
+        item["classification"] == "direction-change" and bool(item.get("confirmation"))
+        for item in journey_insights
+    )
+    pending_direction_changes = sum(
+        item["classification"] == "direction-change" and not item.get("confirmation")
+        for item in journey_insights
+    )
     headline = str(context.get("summary") or "").strip()
     if not headline:
         if explicit_reverts:
@@ -1316,18 +1544,25 @@ def build_story_summary(
             headline = COPY[language]["story_fallback"]
 
     highlights = []
-    if explicit_reverts:
+    if pending_direction_changes:
         highlights.append(
-            f"{explicit_reverts} explicit direction {'change' if explicit_reverts == 1 else 'changes'}"
+            f"{pending_direction_changes} direction {'change' if pending_direction_changes == 1 else 'changes'} to confirm"
             if language == "en"
-            else f"{explicit_reverts} 次关键方向调整"
+            else f"{pending_direction_changes} 次方向转变待确认"
         )
-    review_loops = len([item for item in loops if item["confidence"] in {"high", "medium"}])
-    highlights.append(
-        f"{count_text(review_loops, 'loop', language)} worth reviewing"
-        if language == "en"
-        else f"{count_text(review_loops, 'loop', language)}需要复盘"
-    )
+    elif confirmed_direction_changes:
+        highlights.append(
+            f"{confirmed_direction_changes} confirmed direction {'change' if confirmed_direction_changes == 1 else 'changes'}"
+            if language == "en"
+            else f"{confirmed_direction_changes} 次已确认的方向转变"
+        )
+    review_insights = sum(not item.get("confirmation") for item in journey_insights)
+    if review_insights:
+        highlights.append(
+            f"{review_insights} evidence-backed {'question' if review_insights == 1 else 'questions'} for review"
+            if language == "en"
+            else f"{review_insights} 个有证据的问题需要复盘"
+        )
     if attention:
         highlights.append(
             f"Most visible attention: {attention[0]['label']}"
@@ -1347,7 +1582,10 @@ def build_story_summary(
             if language == "en"
             else f"最终完成{'、'.join(finish)}"
         )
-    confirmed_story_context = any(context.get(key) for key in ("role", "outcome", "key_decision", "summary"))
+    confirmed_story_context = any(
+        context.get(key)
+        for key in ("role", "outcome", "key_decision", "summary", "insight_confirmations")
+    )
     return {"headline": headline, "highlights": highlights[:3], "context_confirmed": confirmed_story_context}
 
 
@@ -1436,6 +1674,7 @@ def build_evidence(
     attention = directory_attention(file_stats, language)
     name = project_name or root.name
     localized_context = context_for_language(context or {}, language)
+    journey_insights = build_journey_insights(commits, friction, localized_context, language)
     localized_loops = []
     for item in loops:
         row = dict(item)
@@ -1470,11 +1709,20 @@ def build_evidence(
     turning_points = attach_dialogue_to_turning_points(
         turning_points, transcript_events, localized_context, language
     )
-    story = build_story_summary(name, timeline, localized_loops, signals, attention, localized_context, language)
+    story = build_story_summary(
+        name,
+        timeline,
+        localized_loops,
+        journey_insights,
+        signals,
+        attention,
+        localized_context,
+        language,
+    )
     career_material = build_career_material(name, story, localized_context, turning_points, language)
     source_list = ["git"] + (["transcripts"] if transcript_files else [])
     return {
-        "schema_version": "1.3",
+        "schema_version": "1.4",
         "generator_version": VERSION,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "language": language,
@@ -1508,6 +1756,7 @@ def build_evidence(
         "story": story,
         "activity": activity,
         "turning_points": turning_points,
+        "journey_insights": journey_insights,
         "timeline": timeline,
         "friction_zones": friction,
         "loop_candidates": localized_loops[:15],
@@ -1553,24 +1802,6 @@ def render_markdown(data: dict[str, Any]) -> str:
             "",
             "</details>",
             "",
-            f"## {c['rhythm']}",
-            "",
-            f"> {c['rhythm_intro']}",
-            "",
-            f"- **{c['project_span']}：** {data['activity']['calendar_days']} 天" if language == "zh" else f"- **{c['project_span']}:** {data['activity']['calendar_days']} calendar days",
-            f"- **{c['active_days']}：** {data['activity']['active_days']} 天" if language == "zh" else f"- **{c['active_days']}:** {data['activity']['active_days']} days",
-            f"- **{c['longest_streak']}：** {data['activity']['longest_streak']} 天" if language == "zh" else f"- **{c['longest_streak']}:** {data['activity']['longest_streak']} days",
-            "",
-            f"### {c['busiest_day']} · {data['activity']['busiest_day']['date']}",
-            "",
-            (
-                f"{data['activity']['busiest_day']['commits']} 次提交 · {data['activity']['busiest_day']['transcript_events']} 条会话 · {data['activity']['busiest_day']['lines_changed']} 行变更"
-                if language == "zh"
-                else f"{count_text(data['activity']['busiest_day']['commits'], 'commit', language)} · {data['activity']['busiest_day']['transcript_events']} conversation events · {data['activity']['busiest_day']['lines_changed']} lines changed"
-            ),
-            "",
-            data['activity']['busiest_day']['summary'],
-            "",
             f"## {c['turning_points']}",
             "",
         ]
@@ -1595,7 +1826,43 @@ def render_markdown(data: dict[str, Any]) -> str:
     for event in data["timeline"]:
         label = CATEGORY_LABELS[language][event["category"]]
         lines.append(f"- `{event['date']}` **{label}** · {event['subject']} (`{event['short_hash']}`)")
-    lines.extend(["", "</details>", "", f"## {c['friction']}", ""])
+    lines.extend(["", "</details>", "", f"## {c['journey_insights']}", "", f"> {c['journey_insights_intro']}", ""])
+    if data["journey_insights"]:
+        for insight in data["journey_insights"]:
+            lines.extend(
+                [
+                    f"### {insight['topic']} · {insight['classification_label']}",
+                    "",
+                    f"- **{c['current_judgment']}：** {insight['hypothesis']}" if language == "zh" else f"- **{c['current_judgment']}:** {insight['hypothesis']}",
+                    f"- **{c['evidence_basis']}：** {insight['evidence_basis']}" if language == "zh" else f"- **{c['evidence_basis']}:** {insight['evidence_basis']}",
+                    f"- **{c['attempted_path']}：**" if language == "zh" else f"- **{c['attempted_path']}:**",
+                ]
+            )
+            for evidence in insight["evidence_chain"]:
+                lines.append(f"  - `{evidence['date']}` {evidence['subject']} (`{evidence['hash']}`)")
+            if insight.get("confirmation"):
+                lines.append(
+                    f"- **{c['confirmed_context']}：** {insight['confirmation']}"
+                    if language == "zh"
+                    else f"- **{c['confirmed_context']}:** {insight['confirmation']}"
+                )
+                if insight.get("lesson"):
+                    lines.append(
+                        f"- **{c['captured_lesson']}：** {insight['lesson']}"
+                        if language == "zh"
+                        else f"- **{c['captured_lesson']}:** {insight['lesson']}"
+                    )
+            else:
+                lines.append(
+                    f"- **{c['needs_confirmation']}：** {insight['question']}"
+                    if language == "zh"
+                    else f"- **{c['needs_confirmation']}:** {insight['question']}"
+                )
+            lines.append("")
+    else:
+        lines.extend([f"- {c['no_journey_insights']}", ""])
+
+    lines.extend(["<details>", f"<summary>{c['raw_change_evidence']}</summary>", "", f"### {c['friction']}", ""])
     if data["friction_zones"]:
         for item in data["friction_zones"]:
             if language == "en":
@@ -1613,7 +1880,32 @@ def render_markdown(data: dict[str, Any]) -> str:
             )
     else:
         lines.append(f"- {c['none']}")
-    lines.extend(["", f"## {c['attention']}", ""])
+    lines.extend(["", "</details>"])
+    lines.extend(
+        [
+            "",
+            f"## {c['rhythm']}",
+            "",
+            f"> {c['rhythm_intro']}",
+            "",
+            f"- **{c['project_span']}：** {data['activity']['calendar_days']} 天" if language == "zh" else f"- **{c['project_span']}:** {data['activity']['calendar_days']} calendar days",
+            f"- **{c['active_days']}：** {data['activity']['active_days']} 天" if language == "zh" else f"- **{c['active_days']}:** {data['activity']['active_days']} days",
+            f"- **{c['longest_streak']}：** {data['activity']['longest_streak']} 天" if language == "zh" else f"- **{c['longest_streak']}:** {data['activity']['longest_streak']} days",
+            "",
+            f"### {c['busiest_day']} · {data['activity']['busiest_day']['date']}",
+            "",
+            (
+                f"{data['activity']['busiest_day']['commits']} 次提交 · {data['activity']['busiest_day']['transcript_events']} 条会话 · {data['activity']['busiest_day']['lines_changed']} 行变更"
+                if language == "zh"
+                else f"{count_text(data['activity']['busiest_day']['commits'], 'commit', language)} · {data['activity']['busiest_day']['transcript_events']} conversation events · {data['activity']['busiest_day']['lines_changed']} lines changed"
+            ),
+            "",
+            data['activity']['busiest_day']['summary'],
+            "",
+            f"## {c['attention']}",
+            "",
+        ]
+    )
     for item in data["attention_areas"]:
         if language == "en":
             lines.append(f"- **{item['label']}** · {int(item['gross'])} lines changed · {int(item['commits'])} commit touches")
@@ -1700,15 +1992,39 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
             ai_line = f'<p><b>{esc(c["dialogue_ai"])}</b><span>{esc(dialogue["ai"])}</span></p>' if dialogue.get("ai") else ""
             dialogue_html = f'''\n    <div class="dialogue"><p><b>{esc(c['dialogue_user'])}</b><span>{esc(dialogue['user'])}</span></p>{ai_line}</div>'''
         turning_rows.append(
-            f'''<article class="turn">
+            f'''<article class="turn" data-date="{esc(event['date'])}" data-turn-index="{index}">
   <div class="turn-number">{index:02d}</div>
   <div class="turn-body">
-    <div class="turn-meta"><span>{esc(event['turning_point_reason'])}</span><time>{esc(event['date'])}</time></div>
+    <div class="turn-meta"><span>{esc(event['turning_point_reason'])}</span><button type="button" class="turn-date" data-focus-date="{esc(event['date'])}">{esc(event['date'])}</button></div>
     <h3>{esc(event['subject'])}</h3>
     <p>{esc(category_labels[event['category']])} · {esc(file_text)} · <code>{esc(event['short_hash'])}</code></p>{dialogue_html}
   </div>
 </article>'''
         )
+
+    insight_rows = []
+    for insight in data["journey_insights"]:
+        evidence_items = "".join(
+            f'''<li><time>{esc(item['date'])}</time><span>{esc(item['subject'])}</span><code>{esc(item['hash'])}</code></li>'''
+            for item in insight["evidence_chain"]
+        )
+        if insight.get("confirmation"):
+            lesson_html = (
+                f'''<div class="insight-lesson"><b>{esc(c['captured_lesson'])}</b><p>{esc(insight['lesson'])}</p></div>'''
+                if insight.get("lesson")
+                else ""
+            )
+            review_html = f'''<div class="insight-confirmation"><b>{esc(c['confirmed_context'])}</b><p>{esc(insight['confirmation'])}</p></div>{lesson_html}'''
+        else:
+            review_html = f'''<div class="insight-question"><b>{esc(c['needs_confirmation'])}</b><p>{esc(insight['question'])}</p></div>'''
+        insight_rows.append(
+            f'''<article class="insight-card">
+  <div class="insight-head"><div><span class="insight-kind {esc(insight['classification'])}">{esc(insight['classification_label'])}</span><h3>{esc(insight['topic'])}</h3></div><span class="confidence {esc(insight['confidence'])}">{esc(confidence_label(insight['confidence'], language))}</span></div>
+  <div class="insight-grid"><div><h4>{esc(c['current_judgment'])}</h4><p class="insight-hypothesis">{esc(insight['hypothesis'])}</p><h4>{esc(c['evidence_basis'])}</h4><p>{esc(insight['evidence_basis'])}</p>{review_html}</div><div><h4>{esc(c['attempted_path'])}</h4><ol class="evidence-chain">{evidence_items}</ol><details class="supporting-path"><summary>{esc(c['raw_change_evidence'])}</summary><code>{esc(insight['supporting_path'])}</code></details></div></div>
+</article>'''
+        )
+    if not insight_rows:
+        insight_rows.append(f'<p class="empty">{esc(c["no_journey_insights"])}</p>')
 
     activity = data["activity"]
     busiest = activity["busiest_day"]
@@ -1725,7 +2041,7 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
         label = f"{day['date']} · {detail} · {day['summary']}"
         selected = " is-selected" if day["date"] == busiest["date"] else ""
         activity_cells.append(
-            f'''<button type="button" class="activity-cell level-{day['level']}{selected}" aria-label="{esc(label)}" title="{esc(label)}" data-date="{esc(day['date'])}" data-detail="{esc(detail)}" data-summary="{esc(day['summary'])}"></button>'''
+            f'''<button type="button" class="activity-cell level-{day['level']}{selected}" aria-pressed="{'true' if selected else 'false'}" aria-label="{esc(label)}" title="{esc(label)}" data-date="{esc(day['date'])}" data-detail="{esc(detail)}" data-summary="{esc(day['summary'])}"></button>'''
         )
     busiest_detail = (
         f"{count_text(busiest['commits'], 'commit', language)} · {busiest['transcript_events']} conversation events · {busiest['lines_changed']} lines changed"
@@ -1824,6 +2140,12 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
     date_connector = "to" if language == "en" else "至"
     html_lang = "en" if language == "en" else "zh-CN"
     kicker = "PROJECT RETROSPECTIVE" if language == "en" else "项目复盘"
+    section_navigation = f'''<nav class="section-nav" aria-label="{esc(c['chapter_navigation'])}">
+  <a href="#story-map">{esc(c['story_map'])}</a>
+  <a href="#insights">{esc(c['journey_insights'])}</a>
+  <a href="#rhythm">{esc(c['rhythm'])}</a>
+  <a href="#career">{esc(c['career_material'])}</a>
+</nav>'''
 
     return f'''<!doctype html>
 <html lang="{html_lang}">
@@ -1840,7 +2162,7 @@ body {{ margin:0; color:var(--ink); background:var(--paper); font-family:ui-sans
 button {{ font:inherit; }}
 code,pre {{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; overflow-wrap:anywhere; }}
 .shell {{ width:min(1180px,calc(100% - 40px)); margin:0 auto; }}
-.masthead {{ min-height:88dvh; padding:28px 0 44px; display:grid; grid-template-rows:auto 1fr; border-bottom:1px solid var(--line); }}
+.masthead {{ min-height:76dvh; padding:28px 0 30px; display:grid; grid-template-rows:auto 1fr auto; border-bottom:1px solid var(--line); }}
 .nav {{ display:flex; align-items:center; justify-content:space-between; gap:20px; }}
 .wordmark {{ font-weight:850; letter-spacing:-.04em; font-size:20px; }}
 .wordmark i {{ color:var(--accent); font-style:normal; }}
@@ -1850,7 +2172,13 @@ code,pre {{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; overflow-wr
 .lang-switch a {{ min-width:42px; padding:5px 8px; border-radius:6px; color:var(--muted); font:700 11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace; text-align:center; text-decoration:none; }}
 .lang-switch a:hover {{ color:var(--ink); }}
 .lang-switch a.is-current {{ color:white; background:var(--ink); }}
-.hero {{ align-self:center; display:grid; grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr); gap:8vw; align-items:end; padding:68px 0 36px; }}
+.hero {{ align-self:center; display:grid; grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr); gap:8vw; align-items:end; padding:48px 0 26px; }}
+.hero-foot {{ display:flex; align-items:center; justify-content:space-between; gap:24px; }}
+.hero-scroll-note {{ color:var(--muted); font:11px ui-monospace,SFMono-Regular,Menlo,monospace; }}
+.section-nav {{ display:flex; flex-wrap:wrap; gap:8px 18px; }}
+.section-nav a {{ color:var(--muted); font-size:12px; text-decoration:none; }}
+.section-nav a::before {{ content:'↘'; margin-right:6px; color:var(--accent); }}
+.section-nav a:hover,.section-nav a:focus-visible {{ color:var(--ink); }}
 .kicker,.eyebrow {{ color:var(--accent); font:700 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.14em; text-transform:uppercase; }}
 h1 {{ margin:18px 0 28px; max-width:12ch; font-size:clamp(54px,9vw,126px); line-height:.88; letter-spacing:-.075em; }}
 .story-statement {{ margin:0; max-width:25ch; font-size:clamp(25px,3.2vw,45px); line-height:1.12; letter-spacing:-.035em; }}
@@ -1868,8 +2196,9 @@ h1 {{ margin:18px 0 28px; max-width:12ch; font-size:clamp(54px,9vw,126px); line-
 .stat strong {{ display:block; font-size:32px; letter-spacing:-.05em; }}
 .stat span {{ color:var(--muted); font-size:12px; }}
 main {{ background:var(--surface); }}
-.section {{ padding:96px 0; border-bottom:1px solid var(--line); }}
+.section {{ padding:88px 0; border-bottom:1px solid var(--line); scroll-margin-top:24px; }}
 .section-head {{ max-width:760px; margin-bottom:48px; }}
+.section-index {{ display:block; margin-bottom:12px; color:var(--accent); font:700 11px ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.12em; }}
 .section-head h2 {{ margin:0 0 12px; font-size:clamp(38px,6vw,72px); line-height:.95; letter-spacing:-.055em; }}
 .section-head p {{ margin:0; color:var(--muted); font-size:18px; }}
 .rhythm-section {{ padding:72px 0; }}
@@ -1900,11 +2229,42 @@ main {{ background:var(--surface); }}
 .activity-focus h3 {{ margin:0 0 8px; font-size:20px; }}
 .activity-focus p {{ margin:6px 0; color:var(--muted); }}
 .activity-focus .activity-summary {{ color:var(--ink); font-size:16px; }}
+.activity-related {{ margin-top:16px!important; color:var(--accent)!important; font-size:12px; }}
+.story-map-layout {{ display:grid; grid-template-columns:220px minmax(0,960px); gap:56px; align-items:start; }}
+.story-map-label {{ position:sticky; top:24px; color:var(--muted); }}
+.story-map-label p {{ margin:14px 0 0; font-size:14px; line-height:1.6; }}
+.story-map-line {{ width:1px; height:170px; margin:28px 0 0 4px; background:linear-gradient(to bottom,var(--accent),transparent); }}
+.insight-list {{ display:grid; gap:26px; max-width:1040px; }}
+.insight-card {{ padding:30px; border-radius:var(--radius); background:var(--paper); border-top:3px solid var(--accent); }}
+.insight-head {{ display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }}
+.insight-head h3 {{ margin:10px 0 0; font-size:clamp(25px,4vw,40px); line-height:1; letter-spacing:-.045em; }}
+.insight-kind {{ display:inline-block; color:var(--accent); font:700 11px ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.1em; text-transform:uppercase; }}
+.insight-kind.blocked-loop {{ color:var(--ink); }}
+.insight-kind.necessary-exploration {{ color:var(--muted); }}
+.insight-grid {{ display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,.9fr); gap:56px; margin-top:30px; }}
+.insight-grid h4 {{ margin:22px 0 8px; color:var(--muted); font:700 11px ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.08em; text-transform:uppercase; }}
+.insight-grid h4:first-child {{ margin-top:0; }}
+.insight-grid p {{ margin:0; color:#3f3f3f; line-height:1.65; }}
+.insight-hypothesis {{ color:var(--ink)!important; font-size:18px; }}
+.evidence-chain {{ margin:0; padding:0; list-style:none; border-top:1px solid var(--line); }}
+.evidence-chain li {{ display:grid; grid-template-columns:90px minmax(0,1fr) auto; gap:14px; padding:13px 0; border-bottom:1px solid var(--line); align-items:start; }}
+.evidence-chain time,.evidence-chain code {{ color:var(--muted); font:11px ui-monospace,SFMono-Regular,Menlo,monospace; }}
+.evidence-chain span {{ font-size:13px; }}
+.insight-question,.insight-confirmation,.insight-lesson {{ margin-top:24px; padding:18px; border-left:3px solid var(--accent); background:var(--surface); }}
+.insight-question b,.insight-confirmation b,.insight-lesson b {{ display:block; margin-bottom:7px; color:var(--accent); font-size:12px; }}
+.supporting-path {{ margin-top:14px; color:var(--muted); font-size:12px; }}
+.supporting-path summary {{ cursor:pointer; }}
+.supporting-path code {{ display:block; margin-top:8px; color:var(--ink); }}
+.raw-evidence {{ max-width:1040px; }}
 .turns {{ max-width:960px; border-top:1px solid var(--line); }}
-.turn {{ display:grid; grid-template-columns:84px 1fr; gap:24px; padding:30px 0; border-bottom:1px solid var(--line); }}
+.turn {{ position:relative; display:grid; grid-template-columns:84px 1fr; gap:24px; padding:30px 0 30px 14px; border-bottom:1px solid var(--line); transition:background .24s ease, padding-left .24s ease; }}
+.turn::before {{ content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:transparent; }}
+.turn.is-match {{ padding-left:22px; background:linear-gradient(90deg,var(--paper),transparent 72%); }}
+.turn.is-match::before {{ background:var(--accent); }}
 .turn-number {{ color:var(--accent); font:700 13px ui-monospace,SFMono-Regular,Menlo,monospace; }}
 .turn-meta {{ display:flex; align-items:center; justify-content:space-between; gap:20px; color:var(--accent); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }}
-.turn-meta time {{ color:var(--muted); font:12px ui-monospace,SFMono-Regular,Menlo,monospace; text-transform:none; letter-spacing:0; }}
+.turn-date {{ border:0; padding:0; color:var(--muted); background:transparent; font:12px ui-monospace,SFMono-Regular,Menlo,monospace; cursor:pointer; }}
+.turn-date:hover,.turn-date:focus-visible {{ color:var(--ink); text-decoration:underline; text-underline-offset:3px; }}
 .turn h3 {{ margin:9px 0 8px; font-size:clamp(21px,3vw,30px); letter-spacing:-.03em; }}
 .turn p {{ margin:0; color:var(--muted); font-size:13px; }}
 .dialogue {{ margin-top:18px; padding:16px 18px; border-left:3px solid var(--accent); background:var(--paper); border-radius:0 10px 10px 0; }}
@@ -1946,6 +2306,7 @@ main {{ background:var(--surface); }}
 .confidence {{ display:inline-block; width:max-content; border:1px solid var(--line); border-radius:7px; padding:2px 6px; color:var(--muted); font:10px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; text-transform:uppercase; }}
 .confidence.high {{ color:var(--ink); border-color:var(--ink); }}
 .confidence.medium {{ color:var(--accent); border-color:var(--accent); }}
+.confidence.confirmed {{ color:white; border-color:var(--accent); background:var(--accent); }}
 .attention-grid {{ display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:70px; }}
 .attention-row {{ display:grid; grid-template-columns:minmax(120px,.6fr) minmax(130px,1fr) auto; gap:18px; align-items:center; padding:16px 0; border-bottom:1px solid var(--line); }}
 .attention-dots {{ display:flex; gap:5px; }}
@@ -1994,14 +2355,14 @@ footer .shell {{ display:flex; justify-content:space-between; gap:30px; }}
 footer span {{ color:#aaa; }}
 @media (max-width:800px) {{
   .shell {{ width:min(100% - 28px,1180px); }} .nav {{ align-items:flex-start; }} .nav-right {{ flex-direction:column-reverse; align-items:flex-end; gap:8px; }} .nav-meta {{ max-width:230px; text-align:right; }}
-  .masthead {{ min-height:auto; padding-bottom:32px; }} .hero,.rhythm-layout,.friction-layout,.attention-grid,.method,.context-callout {{ grid-template-columns:1fr; gap:34px; }} .hero {{ padding:70px 0 34px; }} h1 {{ font-size:clamp(52px,17vw,86px); }} .coverage {{ max-width:440px; }} .section {{ padding:68px 0; }}
+  .masthead {{ min-height:auto; padding-bottom:26px; }} .hero,.rhythm-layout,.friction-layout,.attention-grid,.method,.context-callout,.story-map-layout,.insight-grid {{ grid-template-columns:1fr; gap:34px; }} .hero {{ padding:64px 0 34px; }} .hero-foot {{ align-items:flex-start; flex-direction:column; gap:12px; }} .section-nav {{ gap:8px 14px; }} h1 {{ font-size:clamp(52px,17vw,86px); }} .coverage {{ max-width:440px; }} .section {{ padding:68px 0; }} .story-map-label {{ position:static; }} .story-map-line {{ height:56px; margin-top:18px; }}
   .turn {{ grid-template-columns:44px 1fr; gap:14px; }} .turn-meta {{ align-items:flex-start; flex-direction:column; gap:5px; }} .event {{ grid-template-columns:84px 14px 1fr; gap:12px; }} .friction-row {{ grid-template-columns:34px 1fr; }} .ratio {{ grid-column:2; text-align:left; display:flex; align-items:baseline; gap:8px; }}
   .dimensions,.proof-list,.career-grid {{ grid-template-columns:1fr; }} .attention-row {{ grid-template-columns:100px 1fr; }} .attention-row span {{ grid-column:2; text-align:left; }}
 }}
 @media (max-width:420px) {{
-  .shell {{ width:min(100% - 22px,1180px); }} .nav-meta {{ display:none; }} .story-statement {{ font-size:25px; }} .story-highlights {{ display:grid; }} .full-history {{ padding:16px; }}
+  .shell {{ width:min(100% - 22px,1180px); }} .nav-meta {{ display:none; }} .story-statement {{ font-size:25px; }} .story-highlights {{ display:grid; }} .full-history {{ padding:16px; }} .masthead {{ padding-bottom:10px; }} .rhythm-section {{ padding-top:26px; }}
   .rhythm-stats {{ gap:8px; }} .rhythm-stat strong {{ font-size:26px; }} .activity-panel {{ padding:18px; }} .activity-focus {{ grid-template-columns:1fr; gap:10px; }}
-  .event {{ grid-template-columns:1fr; min-height:auto; padding:16px 0; border-bottom:1px solid var(--line); }} .event-mark {{ display:none; }} .event-body {{ padding:0; }}
+  .event {{ grid-template-columns:1fr; min-height:auto; padding:16px 0; border-bottom:1px solid var(--line); }} .event-mark {{ display:none; }} .event-body {{ padding:0; }} .turn {{ padding-left:10px; }} .turn.is-match {{ padding-left:16px; }} .insight-card {{ padding:22px 18px; }} .insight-head {{ gap:12px; }} .evidence-chain li {{ grid-template-columns:82px 1fr; }} .evidence-chain code {{ grid-column:2; }}
   .attention-row {{ grid-template-columns:1fr; gap:8px; }} .attention-row span {{ grid-column:1; }}
 }}
 @media (prefers-reduced-motion:reduce) {{ * {{ scroll-behavior:auto!important; transition:none!important; animation:none!important; }} }}
@@ -2017,31 +2378,68 @@ footer span {{ color:#aaa; }}
       <details class="hero-evidence"><summary>{esc(c['story_evidence'])}</summary><div class="stats"><div class="stat"><strong>{m['commits']}</strong><span>{esc(c['commits'])}</span></div><div class="stat"><strong>{m['files']}</strong><span>{esc(c['files'])}</span></div><div class="stat"><strong>{m['calendar_days']}</strong><span>{esc(c['days'])}</span></div><div class="stat"><strong>{m['time_estimate']['hours']}</strong><span>{esc(c['hours'])} · {esc(confidence_label(m['time_estimate']['confidence'], language))}</span></div></div></details>
     </div>
   </div>
+  <div class="shell hero-foot">{section_navigation}<span class="hero-scroll-note">{'Scroll to trace the build' if language == 'en' else '向下查看项目如何转向'}</span></div>
 </header>
 <main>
-  <section class="section rhythm-section"><div class="shell rhythm-layout">
-    <div><div class="section-head"><h2>{esc(c['rhythm'])}</h2><p>{esc(c['rhythm_intro'])}</p></div><div class="rhythm-stats">
+  <section class="section story-map-section" id="story-map"><div class="shell"><div class="section-head"><span class="section-index">01 / 08</span><h2>{esc(c['turning_points'])}</h2><p>{esc(c['story_map_intro'])}</p></div><div class="story-map-layout"><aside class="story-map-label"><span class="eyebrow">{esc(c['story_map'])}</span><p>{esc(c['turning_points_intro'])}</p><div class="story-map-line" aria-hidden="true"></div></aside><div class="turns">{''.join(turning_rows)}</div></div><details class="full-history"><summary>{esc(c['full_timeline'])} · {esc(count_text(len(data['timeline']), 'commit', language))}</summary><p>{esc(c['full_timeline_intro'])}</p><div class="filters">{''.join(filters)}</div><div class="timeline">{''.join(timeline_rows)}</div></details></div></section>
+  <section class="section" id="insights"><div class="shell"><div class="section-head"><span class="section-index">02 / 08</span><h2>{esc(c['journey_insights'])}</h2><p>{esc(c['journey_insights_intro'])}</p></div><div class="insight-list">{''.join(insight_rows)}</div><details class="full-history raw-evidence"><summary>{esc(c['raw_change_evidence'])}</summary><p>{esc(c['friction_intro'])}</p><div class="friction-layout"><div>{''.join(friction_rows)}</div><aside class="loops"><h3>{esc(c['loop_candidates'])}</h3>{''.join(loop_rows)}</aside></div></details></div></section>
+  <section class="section rhythm-section" id="rhythm"><div class="shell rhythm-layout">
+    <div><div class="section-head"><span class="section-index">03 / 08</span><h2>{esc(c['rhythm'])}</h2><p>{esc(c['rhythm_intro'])}</p></div><div class="rhythm-stats">
       <div class="rhythm-stat"><strong>{activity['calendar_days']}</strong><span>{esc(c['project_span'])}</span></div>
       <div class="rhythm-stat"><strong>{activity['active_days']}</strong><span>{esc(c['active_days'])}</span></div>
       <div class="rhythm-stat"><strong>{activity['longest_streak']}</strong><span>{esc(c['longest_streak'])}</span></div>
     </div></div>
     <div class="activity-panel"><div class="activity-range"><span>{esc(activity['start'])}</span><span>{esc(activity['end'])}</span></div><div class="activity-scroll"><div class="{activity_calendar_class}" style="--days:{activity['calendar_days']}">{leading_cells}{''.join(activity_cells)}</div></div>
-      <article class="activity-focus" aria-live="polite"><div><span class="eyebrow">{esc(c['busiest_day'])}</span><time id="activity-date">{esc(busiest['date'])}</time></div><div><h3>{esc(c['day_story'])}</h3><p id="activity-detail">{esc(busiest_detail)}</p><p class="activity-summary" id="activity-summary">{esc(busiest['summary'])}</p></div></article>
+      <article class="activity-focus" aria-live="polite"><div><span class="eyebrow">{esc(c['busiest_day'])}</span><time id="activity-date">{esc(busiest['date'])}</time></div><div><h3>{esc(c['day_story'])}</h3><p id="activity-detail">{esc(busiest_detail)}</p><p class="activity-summary" id="activity-summary">{esc(busiest['summary'])}</p><p class="activity-related" id="activity-related"></p></div></article>
     </div>
   </div></section>
-  <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['turning_points'])}</h2><p>{esc(c['turning_points_intro'])}</p></div><div class="turns">{''.join(turning_rows)}</div><details class="full-history"><summary>{esc(c['full_timeline'])} · {esc(count_text(len(data['timeline']), 'commit', language))}</summary><p>{esc(c['full_timeline_intro'])}</p><div class="filters">{''.join(filters)}</div><div class="timeline">{''.join(timeline_rows)}</div></details></div></section>
-  <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['friction'])}</h2><p>{esc(c['friction_intro'])}</p></div><div class="friction-layout"><div>{''.join(friction_rows)}</div><aside class="loops"><h3>{esc(c['loop_candidates'])}</h3>{''.join(loop_rows)}</aside></div></div></section>
   <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['attention'])}</h2><p>{esc(c['attention_intro'])}</p></div><div class="attention-grid"><div>{''.join(attention_rows)}</div><aside class="time-callout"><span class="confidence {esc(m['time_estimate']['confidence'])}">{esc(label_value(c['confidence'], confidence_label(m['time_estimate']['confidence'], language), language))}</span><strong>{m['time_estimate']['hours']}{'h' if language == 'en' else ' 小时'}</strong><p>{'Estimated from: ' if language == 'en' else '估算来源：'}{esc(source_label)}{'. ' if language == 'en' else '。'}{esc(c['git_limit'] if m['time_estimate']['source']=='git' else c['session_limit'])}</p></aside></div></div></section>
   <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['profile'])}</h2><p>{esc(c['profile_intro'])}</p></div><div class="dimensions">{''.join(dimension_rows)}</div></div></section>
   <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['proof'])}</h2><p>{esc(c['proof_intro'])}</p></div><div class="proof-list">{''.join(card_rows)}</div></div></section>
-  <section class="section"><div class="shell"><div class="section-head"><h2>{esc(c['career_material'])}</h2><p>{esc(career_intro)}</p></div>{career_html}</div></section>
+  <section class="section" id="career"><div class="shell"><div class="section-head"><h2>{esc(c['career_material'])}</h2><p>{esc(career_intro)}</p></div>{career_html}</div></section>
   <section class="section"><div class="shell method"><div><div class="section-head"><h2>{esc(c['method'])}</h2></div><p><strong>{esc(label_value(c['coverage'], sources, language))}</strong></p><ul>{limitations}</ul></div><div><h3>{esc(c['career_output_rule'])}</h3><p>{esc(c['career_confirmed_rule'] if career['confirmed'] else c['resume_prompt'])}</p><h3>{esc(c['local_first'])}</h3><p>{esc(c['local_first_detail'])}</p></div></div></section>
 </main>
 <footer><div class="shell"><strong>BuildStory</strong><span>{esc(c['footer'])}</span></div></footer>
 <script type="application/json" id="buildstory-data">{source_data}</script>
 <script>
-document.querySelectorAll('.activity-cell').forEach(function(cell) {{ cell.addEventListener('click', function() {{ document.querySelectorAll('.activity-cell').forEach(function(item) {{ item.classList.remove('is-selected'); }}); cell.classList.add('is-selected'); document.getElementById('activity-date').textContent = cell.dataset.date; document.getElementById('activity-detail').textContent = cell.dataset.detail; document.getElementById('activity-summary').textContent = cell.dataset.summary; }}); }});
-document.querySelectorAll('.filter').forEach(function(button) {{ button.addEventListener('click', function() {{ document.querySelectorAll('.filter').forEach(function(item) {{ item.classList.remove('is-active'); }}); button.classList.add('is-active'); var selected = button.dataset.filter; document.querySelectorAll('.event').forEach(function(event) {{ event.hidden = selected !== 'all' && event.dataset.category !== selected; }}); }}); }});
+(function() {{
+  var cells = Array.prototype.slice.call(document.querySelectorAll('.activity-cell'));
+  var turns = Array.prototype.slice.call(document.querySelectorAll('.turn[data-date]'));
+  var related = document.getElementById('activity-related');
+  var relatedLabel = {json.dumps(c['related_turns'], ensure_ascii=False)};
+  var noRelatedLabel = {json.dumps(c['no_related_turns'], ensure_ascii=False)};
+
+  function selectDay(cell, scrollToRhythm) {{
+    cells.forEach(function(item) {{
+      var active = item === cell;
+      item.classList.toggle('is-selected', active);
+      item.setAttribute('aria-pressed', active ? 'true' : 'false');
+    }});
+    document.getElementById('activity-date').textContent = cell.dataset.date;
+    document.getElementById('activity-detail').textContent = cell.dataset.detail;
+    document.getElementById('activity-summary').textContent = cell.dataset.summary;
+    var matches = turns.filter(function(turn) {{ return turn.dataset.date === cell.dataset.date; }});
+    turns.forEach(function(turn) {{ turn.classList.toggle('is-match', matches.indexOf(turn) !== -1); }});
+    related.textContent = matches.length ? relatedLabel + ' · ' + matches.length : noRelatedLabel;
+    if (scrollToRhythm) {{ document.getElementById('rhythm').scrollIntoView({{ behavior: 'smooth', block: 'center' }}); }}
+  }}
+
+  cells.forEach(function(cell) {{ cell.addEventListener('click', function() {{ selectDay(cell, false); }}); }});
+  document.querySelectorAll('.turn-date').forEach(function(button) {{
+    button.addEventListener('click', function() {{
+      var cell = cells.find(function(item) {{ return item.dataset.date === button.dataset.focusDate; }});
+      if (cell) selectDay(cell, true);
+    }});
+  }});
+  document.querySelectorAll('.filter').forEach(function(button) {{ button.addEventListener('click', function() {{
+    document.querySelectorAll('.filter').forEach(function(item) {{ item.classList.remove('is-active'); }});
+    button.classList.add('is-active');
+    var selected = button.dataset.filter;
+    document.querySelectorAll('.event').forEach(function(event) {{ event.hidden = selected !== 'all' && event.dataset.category !== selected; }});
+  }}); }});
+  var initial = cells.find(function(cell) {{ return cell.classList.contains('is-selected'); }}) || cells[0];
+  if (initial) selectDay(initial, false);
+}})();
 </script>
 </body>
 </html>
@@ -2068,7 +2466,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("repo", nargs="?", default=".", help="Git repository to analyze. Defaults to the current directory.")
     parser.add_argument("--output", "-o", help="Output directory. Defaults to <repo>/build-story-report.")
     parser.add_argument("--session", action="append", default=[], help="Authorized session file or directory. Repeatable.")
-    parser.add_argument("--context", help="Optional JSON file with user-confirmed role, outcome, decision, summary, and resume bullets.")
+    parser.add_argument("--context", help="Optional JSON file with user-confirmed journey insights, role, outcome, decision, summary, and resume bullets.")
     parser.add_argument(
         "--language",
         choices=("en", "zh"),

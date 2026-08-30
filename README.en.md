@@ -8,6 +8,19 @@ BuildStory is a local-first Agent Skill and report generator that reconstructs a
 
 ![BuildStory report preview](examples/demo-report/preview.png)
 
+> Turn Git history and authorized AI sessions into a verifiable decision timeline.
+
+## A 60-second run
+
+```bash
+git clone https://github.com/ZekerTop/build-story.git
+cd build-story
+python3 scripts/build_story.py /path/to/your/project --output ./build-story-report
+open ./build-story-report/report.html
+```
+
+No API key, account, or upload is required. Start with the Chinese HTML report, then add authorized session files when you need conversation-level context.
+
 ## Why BuildStory
 
 The finished repository shows what survived. It usually hides:
@@ -40,13 +53,14 @@ build-story-report/
 The report includes:
 
 1. a story-first opening that explains what changed;
-2. project span, active development days, longest continuous run, and the most active day;
-3. a project-scoped activity pulse that reveals what happened on a selected day;
-4. five to seven turning points that changed direction, risk, understanding, or delivery state;
-5. explicit reversals and high-churn loop candidates;
-6. estimated attention areas and active time;
-7. evidence levels and actions for delivery, validation, traceability, iteration, and learning capture;
-8. evidence cards for portfolios, resume bullets, achievement records, and STAR interview stories.
+2. five to seven turning points that changed direction, risk, understanding, or delivery state;
+3. theme-level interpretations of repeated work as a blocked loop, necessary exploration, or direction change;
+4. an attempted path, evidence basis, and one confirmation question for each interpretation;
+5. project span, active development days, longest continuous run, and the most active day;
+6. a project-scoped activity pulse that reveals what happened on a selected day;
+7. estimated attention areas and active time;
+8. evidence levels and actions for delivery, validation, traceability, iteration, and learning capture;
+9. evidence cards for portfolios, resume bullets, achievement records, and STAR interview stories.
 
 The activity pulse describes observable Git and conversation evidence. It does not turn commit volume into a judgment of effort or productivity.
 
@@ -95,7 +109,9 @@ Repeat `--session` to add more authorized files or directories.
 
 BuildStory does not automatically search private session directories.
 
-### Add three confirmed facts
+The parser accepts generic `.jsonl`, `.json`, `.txt`, and `.md` inputs. Agent-specific field names may differ; when timestamps or roles cannot be identified, BuildStory keeps the Git report and lowers confidence instead of inventing context.
+
+### Confirm the journey, then add three career facts
 
 Git can show what changed, but it cannot prove your responsibility, the final outcome, or why a decision mattered. For resume, portfolio, or STAR output, confirm only:
 
@@ -114,7 +130,14 @@ Create `context.json`:
     "summary": "From complex automatic sync back to a user-controlled local-first product.",
     "resume_bullets": [
       "Reversed automatic sync after queue and retry complexity grew, replacing it with explicit export."
-    ]
+    ],
+    "insight_confirmations": {
+      "path:src/sync.py": {
+        "classification": "direction-change",
+        "reason": "Automatic sync conflicted with a beginner-friendly product.",
+        "lesson": "When a feature keeps adding recovery machinery, reconsider whether it deserves to exist."
+      }
+    }
   }
 }
 ```
@@ -175,7 +198,7 @@ BuildStory keeps three things separate:
 | Inference | A repeatable signal that needs interpretation | A file with high bidirectional churn |
 | Confirmed context | Supplied by the user | Why a design was abandoned |
 
-Every inferred loop and time estimate includes a confidence level.
+Every theme-level journey interpretation and time estimate includes a confidence level. Until the user confirms it, the interpretation remains an evidence-backed hypothesis rather than a career claim.
 
 ### Loop detection
 
@@ -186,7 +209,7 @@ The analyzer uses:
 - files changed repeatedly with substantial additions and deletions;
 - repeated prompts in authorized session transcripts.
 
-High churn can mean productive iteration. BuildStory calls these **loop candidates**, not mistakes.
+High churn can mean productive iteration. BuildStory combines reversal, replacement, repeated-fix, and validation signals to propose one of three interpretations: blocked loop, necessary exploration, or direction change. File paths, change counts, and churn ratios remain collapsed evidence rather than verdicts of failure or waste.
 
 ### Time estimates
 
@@ -256,6 +279,8 @@ Validate the Skill structure:
 ```bash
 python3 /path/to/skill-creator/scripts/quick_validate.py .
 ```
+
+The example reports and tests cover Git-only input, authorized sessions, localized dynamic text, activity-pulse interaction, malformed JSON input, and mobile layout.
 
 ## Project structure
 

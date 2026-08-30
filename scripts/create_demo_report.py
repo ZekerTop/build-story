@@ -155,6 +155,13 @@ def main() -> int:
                 "独立完成 PocketTasks 从方案试验到 1.0 发布，在发现自动云同步持续引入队列与重试复杂度后，主动回滚并改为显式 JSON 导出。",
                 "为本地存储与导出路径补充测试和 CI，把关键方向调整沉淀为架构决策记录。",
             ],
+            "insight_confirmations": {
+                "path:src/sync.py": {
+                    "classification": "direction-change",
+                    "reason": "自动同步引入的队列与重试复杂度违背了面向小白的简单性。",
+                    "lesson": "当一个功能持续引入恢复机制时，先重新判断它是否值得存在。",
+                }
+            },
             "translations": {
                 "Initialize PocketTasks CLI": "初始化 PocketTasks 命令行工具",
                 "Add JSON task storage": "新增 JSON 任务存储",
@@ -191,6 +198,13 @@ def main() -> int:
                 "Took PocketTasks from early experiments to a 1.0 release; reversed automatic cloud sync when queue and retry complexity grew, replacing it with explicit JSON export.",
                 "Added tests and CI for local storage and export, then captured the direction change in an architecture decision record.",
             ],
+            "insight_confirmations": {
+                "path:src/sync.py": {
+                    "classification": "direction-change",
+                    "reason": "The queue and retry complexity of automatic sync conflicted with a beginner-friendly product.",
+                    "lesson": "When a feature keeps adding recovery machinery, reconsider whether the feature deserves to exist.",
+                }
+            },
         },
     }
     with tempfile.TemporaryDirectory() as directory:

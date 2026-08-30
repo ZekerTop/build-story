@@ -2,9 +2,9 @@
 
 > **From complex automatic cloud sync back to a user-controlled local-first product.**
 
-- 1 explicit direction change
-- 2 loop candidates worth reviewing
+- 1 confirmed direction change
 - Most visible attention: Core code
+- Finished with tests, CI, a tagged release
 
 <details>
 <summary>View supporting evidence</summary>
@@ -15,20 +15,6 @@
 - 3.4 estimated active hours (confidence: medium)
 
 </details>
-
-## Project rhythm
-
-> A project-scoped activity pulse. It shows when observable work happened, not how hard someone worked.
-
-- **Project span:** 18 calendar days
-- **Active development days:** 11 days
-- **Longest continuous run:** 6 days
-
-### Most active day · 2026-07-03
-
-2 commits · 4 conversation events · 7 lines changed
-
-Add experimental cloud sync queue; Fix cloud sync duplicate queue entries
 
 ## The turns that changed the project
 
@@ -68,7 +54,27 @@ Add experimental cloud sync queue; Fix cloud sync duplicate queue entries
 
 </details>
 
-## Where the project fought back
+## The story behind the rework
+
+> BuildStory groups related changes into a tentative explanation, shows the evidence, and asks you to confirm what Git cannot know.
+
+### Add experimental cloud sync queue · Direction change
+
+- **Current judgment:** User confirmed the current classification: Direction change.
+- **Evidence basis:** 5 related commits, 3 fixes or refactors, 1 explicit reversal, and 1 replacement direction.
+- **Attempted path:**
+  - `2026-07-03` Add experimental cloud sync queue (`a4ffcd52`)
+  - `2026-07-03` Fix cloud sync duplicate queue entries (`55eaaed9`)
+  - `2026-07-04` Refactor cloud sync retry ownership (`9de0c2d9`)
+  - `2026-07-05` Revert "Add experimental cloud sync queue" (`d678a8a2`)
+  - `2026-07-06` Replace cloud sync with local export (`25929cfc`)
+- **Your confirmation:** The queue and retry complexity of automatic sync conflicted with a beginner-friendly product.
+- **Lesson captured:** When a feature keeps adding recovery machinery, reconsider whether the feature deserves to exist.
+
+<details>
+<summary>View file-level evidence</summary>
+
+### Where the project fought back
 
 - `src/sync.py` · 5 commits · +16 / -12 · 86% bidirectional churn
 
@@ -76,6 +82,22 @@ Add experimental cloud sync queue; Fix cloud sync duplicate queue entries
 
 - **Revert "Add experimental cloud sync queue"** · 2026-07-05 · d678a8a2 (confidence: high)
 - **src/sync.py** · Changed in 5 commits with 86% bidirectional churn. (confidence: medium)
+
+</details>
+
+## Project rhythm
+
+> A project-scoped activity pulse. It shows when observable work happened, not how hard someone worked.
+
+- **Project span:** 18 calendar days
+- **Active development days:** 11 days
+- **Longest continuous run:** 6 days
+
+### Most active day · 2026-07-03
+
+2 commits · 4 conversation events · 7 lines changed
+
+Add experimental cloud sync queue; Fix cloud sync duplicate queue entries
 
 ## Attention map
 

@@ -2,4 +2,4 @@ interface:
   display_name: "BuildStory"
   short_description: "把项目开发历程变成复盘、故事与真实成就"
   brand_color: "#F05A28"
-  default_prompt: "使用 $build-story 复盘这个项目，提炼关键转折点、返工循环和注意力黑洞，并把真实证据整理成经验与成就。"
+  default_prompt: "使用 $build-story 复盘这个项目，提炼关键转折点，判断反复修改更像失败循环、必要探索还是方向转变；先让我确认原因，再把真实证据整理成经验与成就。"

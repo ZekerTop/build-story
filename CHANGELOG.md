@@ -14,6 +14,9 @@
 - Added short user-request and AI-response excerpts to evidence-backed turning points.
 - Added a project-scoped activity pulse with calendar span, active development days, longest continuous run, and an interactive day story.
 - Added a most-active-day explanation without treating commit volume as diligence or productivity.
+- Added theme-level journey insights that classify repeated work as a blocked loop, necessary exploration, or direction change.
+- Added evidence chains, confirmation questions, and local `insight_confirmations` for capturing the user's reason and lesson.
+- Moved file paths, churn ratios, and loop candidates into supporting evidence instead of presenting them as the main conclusion.
 
 ## 0.1.0 - 2026-08-29
 

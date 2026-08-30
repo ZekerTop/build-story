@@ -33,7 +33,7 @@ When authorized transcripts contain timestamped user and assistant messages, Bui
 
 Localized reports may use exact source-to-display translations supplied in context. The translated subject or excerpt is shown to the reader while `original_subject` and the source transcript remain the underlying evidence.
 
-## Rework and loop candidates
+## Rework signals and journey insights
 
 BuildStory uses three signals:
 
@@ -42,6 +42,14 @@ BuildStory uses three signals:
 3. **High-churn files:** files repeatedly receiving both additions and deletions. Medium confidence when the file has enough commits and change volume.
 
 High churn may mean central, valuable iteration rather than waste. The narrative must explain the evidence and ask the user when the distinction matters.
+
+For each high-change path that meets the evidence threshold, BuildStory groups the commits touching that path into one tentative journey insight:
+
+- **Direction change:** an explicit reversal or a replacement/switch/removal signal is present.
+- **Blocked loop:** fixes or refactors repeat without a visible direction change or validation closure.
+- **Necessary exploration:** repeated change exists, but the evidence does not show a repair-dominated loop; validation raises confidence that the exploration reached closure.
+
+These are deterministic hypotheses, not intent detection. Each insight must include the related commit chain, a plain-language judgment, an evidence summary, confidence, and one confirmation question. A user confirmation may override the classification and add the reason and lesson through `insight_confirmations` in local context.
 
 ## Project rhythm
 
@@ -82,6 +90,8 @@ Git and transcripts cannot prove personal responsibility, final impact, or the m
 3. the decision that best demonstrates the user's ability.
 
 Optional `summary` and `resume_bullets` fields let the user preserve exact wording. Context may contain separate `zh` and `en` objects and is included only in the locally generated report.
+
+`insight_confirmations` records the user's interpretation of a journey insight. The key is the stable insight id, such as `path:src/sync.py`; the value may contain `classification`, `reason`, `lesson`, and an optional human-readable `topic`. Agents should write this field after a confirmation conversation rather than asking users to edit it manually.
 
 ## Privacy
 
