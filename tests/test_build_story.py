@@ -198,6 +198,7 @@ class BuildStoryTests(unittest.TestCase):
         self.assertIn("Direction change", report)
         self.assertIn("Current judgment", report)
         self.assertIn("Needs your confirmation", report)
+        self.assertNotIn("max-width:1040px", report)
         self.assertLess(report.index('id="story-map"'), report.index('id="insights"'))
         self.assertLess(report.index('id="insights"'), report.index('id="rhythm"'))
         self.assertNotIn('id="communication"', report)
@@ -322,7 +323,77 @@ class BuildStoryTests(unittest.TestCase):
         self.assertEqual(len(insights), 1)
         self.assertEqual(insights[0]["attribution"], "user-expression-insufficient")
         self.assertEqual(insights[0]["gap_type"], "ambiguous-reference")
-        self.assertIn("完整要求", insights[0]["suggested_rewrite"])
+        self.assertIn("目标：", insights[0]["suggested_rewrite"])
+        self.assertIn("范围：", insights[0]["suggested_rewrite"])
+        self.assertNotIn("请按这个完整要求执行", insights[0]["suggested_rewrite"])
+
+    def test_communication_rewrite_synthesizes_guidance_and_splits_another_bug(self):
+        events = self.transcript_events(
+            [
+                ("user", "不要每次都弹出"),
+                ("assistant", "我已经调整应用的桌面通知，避免每次任务完成都重复显示。"),
+                (
+                    "user",
+                    "我说的桌面通知，不是说应用的桌面通知，而是说允许访问的桌面通知，"
+                    "另外我在 Mac 系统中将应用隐藏到托盘之后，就没办法打开了，这是为什么？检查一下",
+                ),
+            ]
+        )
+        insight = BUILD_STORY.build_communication_insights(events, [], {}, "zh")[0]
+        self.assertEqual(insight["attribution"], "term-meaning-mismatch")
+        self.assertEqual(insight["later_clarification"], "我说的桌面通知，不是说应用的桌面通知，而是说允许访问的桌面通知")
+        self.assertIn("系统通知权限请求", insight["analysis"])
+        self.assertIn("另一个问题", insight["analysis"])
+        self.assertIn("系统通知权限请求重复出现", insight["suggested_rewrite"])
+        self.assertIn("边界：不要改动“应用发出的通知”相关功能", insight["suggested_rewrite"])
+        self.assertIn("验收：", insight["suggested_rewrite"])
+        self.assertNotIn("托盘", insight["suggested_rewrite"])
+        self.assertNotIn("请按这个完整要求执行", insight["suggested_rewrite"])
+        self.assertTrue(any("拆成单独任务" in item for item in insight["missing_information"]))
+
+    def test_communication_review_recovers_requirement_before_short_approval(self):
+        events = self.transcript_events(
+            [
+                ("user", "读取真实会话，找出用户和 AI 说岔的地方，并给出真正改进后的表达。"),
+                ("assistant", "我会增加沟通复盘和改写。"),
+                ("user", "可以的，开始吧，完成后上传到github上"),
+                ("assistant", "已经完成。"),
+                ("user", "为什么我还是没有看到新加的功能？根本没有真正的改写。"),
+            ]
+        )
+        insights = BUILD_STORY.build_communication_insights(events, [], {}, "zh")
+        self.assertEqual(len(insights), 1)
+        self.assertEqual(insights[0]["attribution"], "ai-ignored-explicit-requirement")
+        self.assertEqual(
+            insights[0]["original_request"],
+            "读取真实会话，找出用户和 AI 说岔的地方，并给出真正改进后的表达。",
+        )
+        self.assertEqual(insights[0]["event_range"], [0, 4])
+
+    def test_communication_review_keeps_three_distinct_cases(self):
+        events = self.transcript_events(
+            [
+                ("user", "Make storage better for beginners"),
+                ("assistant", "I connected the task list to a hosted database."),
+                ("user", "I mean local JSON storage, not a hosted service. Keep all task data on the device."),
+                ("user", "Make sure the local data flow works"),
+                ("assistant", "I ran the CLI once and the command completed."),
+                ("user", "I mean add automated tests for local storage and JSON export. Do not add cloud dependencies."),
+                ("user", "Document it"),
+                ("assistant", "I added another usage example."),
+                ("user", "I mean document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI."),
+            ]
+        )
+        insights = BUILD_STORY.build_communication_insights(events, [], {}, "en")
+        self.assertEqual(len(insights), 3)
+        self.assertEqual(
+            {item["original_request"] for item in insights},
+            {
+                "Make storage better for beginners",
+                "Make sure the local data flow works",
+                "Document it",
+            },
+        )
 
     def test_communication_review_attributes_clear_requirement_miss_to_ai(self):
         events = self.transcript_events(
@@ -425,7 +496,7 @@ class BuildStoryTests(unittest.TestCase):
         )
         self.assertEqual(en[0]["attribution"], "term-meaning-mismatch")
         self.assertNotEqual(en[0]["original_request"], zh[0]["original_request"])
-        self.assertIn("导出也要保留在本地", zh[0]["later_clarification"])
+        self.assertNotIn("导出也要保留在本地", zh[0]["later_clarification"])
         self.assertNotIn("Keep exports local", zh[0]["later_clarification"])
 
     def test_communication_confirmation_rebuilds_guidance_after_attribution_override(self):
@@ -608,6 +679,7 @@ class BuildStoryTests(unittest.TestCase):
         report = BUILD_STORY.render_html(data)
         communication = report.split('id="communication"', 1)[1].split('id="rhythm"', 1)[0]
         self.assertIn("这不主要是用户表述问题", communication)
+        self.assertIn("列出必须完成、明确排除和需要验证的清单", communication)
         self.assertNotIn("当时缺少的信息", communication)
         self.assertNotIn("下次可以这样说", communication)
         self.assertNotIn("可以复用的表达方式", communication)
@@ -625,6 +697,46 @@ class BuildStoryTests(unittest.TestCase):
         communication = report.split('id="communication"', 1)[1].split('id="rhythm"', 1)[0]
         self.assertIn("现有证据不足以支持用户侧改写", communication)
         self.assertNotIn("这不主要是用户表述问题", communication)
+
+    def test_large_jsonl_transcript_is_not_skipped_when_it_can_be_streamed(self):
+        transcript = Path(self.temp.name) / "large-session.jsonl"
+        transcript.write_text("{}\n", encoding="utf-8")
+        with transcript.open("r+b") as handle:
+            handle.truncate(BUILD_STORY.MAX_TRANSCRIPT_BYTES + 1)
+
+        archive = Path(self.temp.name) / "large-session.json"
+        archive.write_text("{}", encoding="utf-8")
+        with archive.open("r+b") as handle:
+            handle.truncate(BUILD_STORY.MAX_TRANSCRIPT_BYTES + 1)
+
+        self.assertEqual(list(BUILD_STORY.iter_transcript_files([transcript])), [transcript.resolve()])
+        self.assertEqual(list(BUILD_STORY.iter_transcript_files([archive])), [])
+
+    def test_non_conversation_events_do_not_consume_the_transcript_event_cap(self):
+        first = Path(self.temp.name) / "first.jsonl"
+        second = Path(self.temp.name) / "second.jsonl"
+        first_rows = [
+            {"timestamp": f"2026-08-30T10:0{index}:00Z", "role": "system", "content": "tool output"}
+            for index in range(5)
+        ]
+        first_rows.append(
+            {"timestamp": "2026-08-30T10:06:00Z", "role": "user", "content": "First real request"}
+        )
+        second_rows = [
+            {"timestamp": "2026-08-30T10:07:00Z", "role": "assistant", "content": "Second real response"}
+        ]
+        first.write_text("\n".join(json.dumps(row) for row in first_rows), encoding="utf-8")
+        second.write_text("\n".join(json.dumps(row) for row in second_rows), encoding="utf-8")
+
+        original_cap = BUILD_STORY.MAX_TRANSCRIPT_EVENTS
+        BUILD_STORY.MAX_TRANSCRIPT_EVENTS = 2
+        try:
+            events, files = BUILD_STORY.read_transcript_events([first, second])
+        finally:
+            BUILD_STORY.MAX_TRANSCRIPT_EVENTS = original_cap
+
+        self.assertEqual(files, ["first.jsonl", "second.jsonl"])
+        self.assertEqual([event["canonical_role"] for event in events], ["user", "assistant"])
 
     def test_classifies_necessary_exploration_when_changes_reach_validation(self):
         self.commit(

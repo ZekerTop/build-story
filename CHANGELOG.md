@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Replaced boilerplate-wrapped communication corrections with structured rewrites that separate the target, scope, protected boundary, and verification step.
+- Split unrelated follow-up bugs from the current communication card instead of mixing multiple requests into one rewrite.
+- Recovered concrete requirements that appeared before short approval turns such as “可以，开始吧”.
+- Broadened high-confidence correction cues and added regression coverage for retaining up to three distinct communication cases.
+- Raised the JSONL-specific transcript limit so large Codex sessions are not silently omitted while keeping stricter limits for non-streaming formats.
+
 ## 0.4.0 - 2026-08-31
 
 - Added communication review from ordered `user → assistant → user correction` evidence chains, capped at three cards.

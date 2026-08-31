@@ -21,6 +21,10 @@ BuildStory helps a person see **how** a project was built, not only what was shi
 - Review the interaction, never score or diagnose the user's communication ability. Do not calculate a prompt-quality total score.
 - A repeated prompt is not evidence of unclear wording. Require a same-session `user → assistant → user correction` chain before creating a communication insight.
 - Keep AI execution misses, term-meaning mismatch, requirement evolution, and insufficient evidence distinct. Never default attribution to the user.
+- Never call a later correction plus boilerplate a rewrite. A useful rewrite must reorganize the evidence into a concrete target, scope, protected boundary, and verification step without inventing missing facts.
+- If one correction contains another bug or request, split it out before analysis. One communication card should explain one alignment problem.
+- Treat short approvals such as “可以，开始吧” as continuations of the preceding requirement when later evidence shows the delivered result missed that requirement.
+- Review all eligible chains before ranking them. Show up to three distinct, evidence-backed cases rather than stopping after the first match.
 - Treat Git commits near a clarification as nearby evidence, not proof that the clarification caused the commit.
 - Read only the current project by default. Ask before reading session files outside the authorized workspace.
 - Keep analysis local unless the user explicitly requests an external service.
@@ -115,6 +119,8 @@ Read `evidence.json` and verify:
 
 - `journey_insights` first: its topic, tentative classification, evidence chain, confidence, and confirmation question;
 - `communication_insights` when transcripts are authorized: no more than three cards, each grounded in an ordered user request, assistant response, and later user correction;
+- whether each proposed rewrite materially improves the request instead of wrapping or repeating the later correction;
+- whether unrelated follow-up bugs were removed from the current card and left for their own evidence chain;
 - every communication attribution remains distinct: information clarified later, AI ignored an explicit requirement, term meaning differed, requirement evolved, or evidence is insufficient;
 - data sources and stated limitations;
 - project dates, commit counts, authors, and file counts;
@@ -156,7 +162,7 @@ For career, portfolio, achievement, or interview output, do not leave these answ
 Use the evidence for one or more of these outputs:
 
 - **Project retrospective:** timeline, turning points, friction, lessons, next-run changes.
-- **Communication review:** original wording, assistant interpretation, later correction, neutral attribution, and, only when supported, a copy-ready rewrite and reusable pattern. Show at most three cards and never give a prompt score.
+- **Communication review:** original wording, assistant interpretation, later correction, neutral attribution, concrete improvement points, and, only when supported, a copy-ready rewrite that separates target, scope, protected boundaries, and verification. Show at most three distinct cards and never give a prompt score.
 - **Portfolio case study:** problem, constraints, decisions, implementation, validation, outcome.
 - **Resume bullets:** action + scope + method + verified result. Leave an explicit placeholder when impact is unknown.
 - **Interview story:** STAR structure grounded in commits, diffs, tests, releases, and user-confirmed context.

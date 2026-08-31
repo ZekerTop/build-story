@@ -418,23 +418,23 @@
   "communication_insights": [
     {
       "id": "communication:2ed6b4bb843b",
-      "topic": "Term meaning clarified later",
+      "topic": "The exact target became clear later",
       "gap_type": "term-definition",
       "gap_label": "Term meaning clarified later",
       "attribution": "term-meaning-mismatch",
-      "attribution_label": "The same term meant different things",
+      "attribution_label": "AI and user targeted different objects",
       "confidence": "high",
       "original_request": "Make storage better for beginners",
       "ai_response": "I connected the task list to a hosted database.",
       "later_clarification": "I mean local JSON storage, not a hosted service. Keep all task data on the device.",
-      "analysis": "Both sides kept using the same term, but the term referred to different things.",
+      "analysis": "AI acted on “a hosted service,” while the later clarification narrowed the real target to “local JSON storage.” The original request did not name the exact object.",
       "missing_information": [
-        "the exact meaning of the core term",
-        "the interpretation to exclude"
+        "Name “local JSON storage” as the exact target",
+        "Do not introduce a hosted service"
       ],
-      "suggested_rewrite": "Please follow this complete requirement: local JSON storage, not a hosted service. Keep all task data on the device. Before changing anything, restate the goal, scope, and what must remain unchanged.",
+      "suggested_rewrite": "Handle only the issue related to local JSON storage.\nDefinition: The target is local JSON storage, not a hosted service.\nCurrent goal: Keep all task data on the device.\nBoundary: Do not introduce a hosted service.\nAcceptance: State which object changed and verify it in the original scenario.",
       "reusable_pattern": "By [term], I mean [exact meaning], not [likely interpretation]; the expected result is [outcome].",
-      "question": "Was this mainly a case of both sides assigning different meanings to the same term?",
+      "question": "Was this mainly a case of AI and the user targeting different objects?",
       "observed_impact": "1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.",
       "related_commits": [
         {
@@ -464,10 +464,11 @@
       "later_clarification": "I mean add automated tests for local storage and JSON export. Do not add cloud dependencies.",
       "analysis": "The initial wording allowed multiple reasonable interpretations. The later clarification made the object, scope, or constraint unique.",
       "missing_information": [
-        "behavior that must remain",
-        "explicit non-goals"
+        "Separate behavior that must remain from behavior that is forbidden",
+        "State which constraint wins if they conflict",
+        "Add a verification method"
       ],
-      "suggested_rewrite": "Please follow this complete requirement: add automated tests for local storage and JSON export. Do not add cloud dependencies. Before changing anything, restate the goal, scope, and what must remain unchanged.",
+      "suggested_rewrite": "Use this structure for the request.\nGoal: add automated tests for local storage and JSON export. Do not add cloud dependencies.\nScope: List the exact objects to change before editing.\nBoundary: Leave anything not explicitly requested unchanged.\nAcceptance: Report each change and verify it in the original scenario.",
       "reusable_pattern": "Complete [goal], but do not change [boundary]; preserve [existing behavior].",
       "question": "Was this information missing at the start, or did the more specific judgment form only after you saw the result?",
       "observed_impact": "1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.",
@@ -499,10 +500,11 @@
       "later_clarification": "I mean document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI.",
       "analysis": "The initial wording allowed multiple reasonable interpretations. The later clarification made the object, scope, or constraint unique.",
       "missing_information": [
-        "the exact object",
-        "the change boundary"
+        "Replace references such as “this” or “it” with the exact page, area, or file",
+        "List every object that must be covered",
+        "State what remains unchanged"
       ],
-      "suggested_rewrite": "Please follow this complete requirement: document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI. Before changing anything, restate the goal, scope, and what must remain unchanged.",
+      "suggested_rewrite": "Use this structure for the request.\nGoal: document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI.\nScope: List the exact objects to change before editing.\nBoundary: Leave anything not explicitly requested unchanged.\nAcceptance: Report each change and verify it in the original scenario.",
       "reusable_pattern": "Change [specific part] of [specific object] to achieve [expected result]; do not change [boundary].",
       "question": "Was this information missing at the start, or did the more specific judgment form only after you saw the result?",
       "observed_impact": "1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.",

@@ -114,7 +114,9 @@ BuildStory does not automatically search private session directories.
 
 The parser accepts generic `.jsonl`, `.json`, `.txt`, and `.md` inputs and conservatively recognizes common nested `message`, `payload`, and conversation-archive structures. When one file contains multiple sessions, message runs that cannot be assigned safely are isolated rather than joined across sessions. Agent-specific field names may still differ; when timestamps or roles cannot be identified, BuildStory keeps the Git report and lowers confidence instead of inventing context.
 
-Communication cards require a same-session `user → assistant → user correction` chain and are capped at three. A repeated prompt is not automatically unclear wording. BuildStory distinguishes an AI miss of an explicit requirement, a term-meaning mismatch, and requirement evolution after seeing a result instead of assigning blame to the user by default. Candidates that still have insufficient evidence are omitted by default, and users can also confirm an existing candidate as insufficient evidence. BuildStory offers a rewrite only when the evidence supports user-side guidance.
+Large Codex `.jsonl` sessions are no longer discarded by the general file-size limit. JSONL input is accepted up to 128 MB and remains protected by the global event cap; non-streaming `.json`, `.txt`, and `.md` inputs keep the stricter 20 MB limit.
+
+Communication cards require a same-session `user → assistant → user correction` chain and are capped at three distinct cases. The analyzer can recover the real requirement before a short approval such as “go ahead,” and it separates a later “another bug” from the current correction chain instead of merging unrelated requests. A repeated prompt is not automatically unclear wording. BuildStory distinguishes an AI miss of an explicit requirement, a term-meaning mismatch, and requirement evolution after seeing a result instead of assigning blame to the user by default. Candidates that still have insufficient evidence are omitted by default, and users can also confirm an existing candidate as insufficient evidence. BuildStory offers a rewrite only when the evidence supports user-side guidance, and the rewrite must reorganize the target, scope, protected boundary, and verification rather than wrapping the user's later words in boilerplate.
 
 Temporal proximity between a clarification and a Git commit is only an inspectable clue; **it does not prove causation**. Reports keep only the short excerpts needed to support a conclusion. They do not upload or copy complete conversations.
 
@@ -244,7 +246,7 @@ Authorized timestamped transcripts improve coverage, but still miss offline thin
 
 ### Communication review
 
-Communication review only examines transcripts the user explicitly authorizes. It requires a same-session `user → assistant → user correction` chain and keeps at most three examples.
+Communication review only examines transcripts the user explicitly authorizes. It requires a same-session `user → assistant → user correction` chain and keeps at most three distinct examples. Short approvals are resolved back to the preceding requirement, while unrelated follow-up bugs are split out before analysis.
 
 Repeated prompts do not automatically mean unclear wording. An interpretation may be that information became clear later, AI ignored an explicit requirement, both sides used a term differently, the requirement evolved after seeing the result, or evidence is insufficient to attribute. These labels review human-AI alignment; they do not evaluate the user's communication ability.
 

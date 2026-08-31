@@ -25,6 +25,7 @@ from typing import Any, Iterable
 
 VERSION = "0.4.0"
 MAX_TRANSCRIPT_BYTES = 20 * 1024 * 1024
+MAX_JSONL_TRANSCRIPT_BYTES = 128 * 1024 * 1024
 MAX_TRANSCRIPT_EVENTS = 20_000
 SESSION_GAP_HOURS = 2.0
 TRANSCRIPT_ACTIVE_GAP_MINUTES = 30.0
@@ -77,13 +78,16 @@ COPY = {
         "later_correction": "What you clarified later",
         "communication_analysis": "Where the gap appeared",
         "communication_impact": "Observed project evidence",
-        "missing_information": "Information that was missing",
-        "next_time_say": "A clearer way to say it next time",
+        "missing_information": "Concrete improvements",
+        "next_time_say": "Improved version",
         "reusable_pattern": "Reusable pattern",
         "attribution": "Primary attribution",
         "no_communication_insights": "No correction chain met the evidence threshold. Short prompts are not treated as unclear by default.",
         "not_user_rewrite": "This is not primarily a user-wording problem, so BuildStory does not ask the user to make the prompt longer.",
+        "ai_miss_guidance": "This is not primarily a user-wording problem. A better safeguard is to have AI list the required, excluded, and verification items before editing, then check them one by one after the change.",
+        "requirement_evolution_guidance": "This is a new judgment formed after seeing the result. Keep it as a separate follow-up task rather than rewriting the original request as if it had been wrong.",
         "insufficient_rewrite": "The evidence is not strong enough to support user-side guidance, so no rewrite is offered.",
+        "rewrite_unavailable": "The evidence shows what should be clarified, but it is not strong enough to reconstruct a trustworthy copy-ready request.",
         "attention": "Attention map",
         "attention_intro": "Estimated from change density and activity timestamps. Invisible thinking time is not captured.",
         "profile": "Evidence-backed profile",
@@ -189,13 +193,16 @@ COPY = {
         "later_correction": "后来怎样补充",
         "communication_analysis": "偏差出现在哪里",
         "communication_impact": "观察到的项目证据",
-        "missing_information": "当时缺少的信息",
-        "next_time_say": "下次可以这样说",
+        "missing_information": "具体改进点",
+        "next_time_say": "改写后的版本",
         "reusable_pattern": "可以复用的表达方式",
         "attribution": "主要归因",
         "no_communication_insights": "没有达到证据门槛的沟通纠正链。BuildStory 不会因为一句话很短，就默认它表达不清。",
         "not_user_rewrite": "这不主要是用户表述问题，因此 BuildStory 不会要求用户把话说得更长。",
+        "ai_miss_guidance": "这不主要是用户表述问题，不需要把原话写得更长。更有效的做法是让 AI 在执行前列出必须完成、明确排除和需要验证的清单，完成后逐项对照。",
+        "requirement_evolution_guidance": "这是看到结果后形成的新判断。更合适的做法是把它作为一条独立的后续任务，而不是倒过来把最初要求改写成仿佛一开始就错了。",
         "insufficient_rewrite": "现有证据不足以支持用户侧改写，因此这里不提供“下次怎么说”。",
+        "rewrite_unavailable": "现有证据能说明需要补清楚什么，但不足以可靠还原成一条可以直接复制的完整要求。",
         "attention": "注意力地图",
         "attention_intro": "根据变更密度和活动时间估算，无法覆盖离线思考时间。",
         "profile": "基于证据的能力画像",
@@ -922,7 +929,12 @@ def iter_transcript_files(paths: list[Path]) -> Iterable[Path]:
             if resolved in seen or not resolved.is_file() or resolved.suffix.lower() not in allowed:
                 continue
             try:
-                if resolved.stat().st_size > MAX_TRANSCRIPT_BYTES:
+                size_limit = (
+                    MAX_JSONL_TRANSCRIPT_BYTES
+                    if resolved.suffix.lower() == ".jsonl"
+                    else MAX_TRANSCRIPT_BYTES
+                )
+                if resolved.stat().st_size > size_limit:
                     continue
             except OSError:
                 continue
@@ -1095,12 +1107,15 @@ def read_transcript_events(paths: list[Path]) -> tuple[list[dict[str, Any]], lis
             else:
                 default_session_id = path.name
             event = event_from_object(value, path.name, source_key, default_session_id)
-            if event:
-                event["event_index"] = source_event_index
-                source_event_index += 1
-                events.append(event)
-                if len(events) >= MAX_TRANSCRIPT_EVENTS:
-                    return events, files
+            if not event or event.get("canonical_role") not in {"user", "assistant"}:
+                continue
+            if is_injected_transcript_text(event.get("text", "")):
+                continue
+            event["event_index"] = source_event_index
+            source_event_index += 1
+            events.append(event)
+            if len(events) >= MAX_TRANSCRIPT_EVENTS:
+                return events, files
     return events, files
 
 
@@ -1198,7 +1213,237 @@ def communication_signature(text: str) -> set[str]:
             for index in range(len(run) - 1)
             if run[index : index + 2] not in ignored_bigrams
         )
+    concept_groups = {
+        "request-rewrite": ("改写", "表达", "表述", "说法", "怎么说", "wording", "rewrite", "rephrase", "prompt"),
+        "conversation-history": ("会话", "对话", "聊天", "session", "conversation", "chat history"),
+        "visible-result": ("看到", "显示", "出现", "可见", "看不到", "没有看到", "visible", "show", "display", "can't see", "cannot see"),
+    }
+    for concept, variants in concept_groups.items():
+        if any(variant in lower for variant in variants):
+            tokens.add(concept)
     return tokens
+
+
+def split_communication_request(text: str) -> tuple[str, list[str]]:
+    marker = re.search(
+        r"[，,；;。！？!?]\s*(?:另外(?:还|再)?|此外|另一个(?:问题|需求)|还有一个(?:问题|需求)|顺便(?:还|再)?|"
+        r"separately|on another issue|another issue|a separate issue)\s*[:：]?\s*",
+        text,
+        re.I,
+    )
+    if not marker:
+        return text.strip(), []
+    primary = text[: marker.start()].strip(" \t\r\n，,；;。.!！？?")
+    followup = text[marker.end() :].strip(" \t\r\n，,；;。.!！？?")
+    if not primary or not followup:
+        return text.strip(), []
+    return primary, [followup]
+
+
+def extract_communication_term_contrast(text: str) -> dict[str, str] | None:
+    patterns = [
+        re.compile(
+            r"(?:我说的|我指的|这里的)(?P<term>[^，,。；;]{1,40})[，,]?\s*"
+            r"不是(?:说)?(?P<excluded>[^，,。；;]{1,80})[，,]?\s*"
+            r"而是(?:说)?(?P<intended>[^，,。；;]{1,80})",
+            re.I,
+        ),
+        re.compile(
+            r"(?:我说的是|我指的是|我的意思是)(?P<intended>[^，,。；;]{1,100})[，,]?\s*"
+            r"不是(?P<excluded>[^，,。；;]{1,100})",
+            re.I,
+        ),
+        re.compile(
+            r"\bby\s+(?P<term>[^,.;]{1,40})\s*,?\s*i mean\s+"
+            r"(?P<intended>[^.;]{1,100}?)\s*,?\s*not\s+(?P<excluded>[^.;]{1,100})",
+            re.I,
+        ),
+        re.compile(
+            r"\bi mean\s+(?P<intended>[^.;]{1,100}?)\s*,?\s*not\s+(?P<excluded>[^.;]{1,100})",
+            re.I,
+        ),
+        re.compile(
+            r"\bnot\s+(?P<excluded>[^.;]{1,100}?)\s+but\s+(?P<intended>[^.;]{1,100})",
+            re.I,
+        ),
+    ]
+    for pattern in patterns:
+        match = pattern.search(text)
+        if not match:
+            continue
+        values = {
+            key: re.sub(r"\s+", " ", value).strip(" \t\r\n，,；;。.!！？?\"'“”")
+            for key, value in match.groupdict().items()
+            if value
+        }
+        if values.get("intended") and values.get("excluded"):
+            remainder = text[match.end() :].strip(" \t\r\n，,；;。.!！？?\"'“”")
+            if remainder:
+                values["remainder"] = re.sub(r"\s+", " ", remainder)
+            return values
+    return None
+
+
+def communication_target_label(text: str, language: str) -> str:
+    value = re.sub(r"\s+", " ", text).strip(" \t\r\n，,；;。.!！？?\"'“”")
+    lower = value.lower()
+    if language == "zh":
+        if "通知" in value and ("权限" in value or ("允许" in value and "访问" in value)):
+            return "系统通知权限请求"
+        if "通知" in value and "应用" in value:
+            return "应用发出的通知"
+    else:
+        if "notification" in lower and any(token in lower for token in ("permission", "allow", "access")):
+            return "the system notification-permission prompt"
+        if "notification" in lower and "app" in lower:
+            return "the app's own notification"
+    return value
+
+
+def build_communication_guidance(
+    original: str,
+    response: str,
+    correction: str,
+    gap_type: str,
+    base_analysis: str,
+    followups: list[str],
+    language: str,
+) -> tuple[str, list[str], str | None]:
+    followup = followups[0] if followups else None
+    followup_excerpt = f"{followup[:56]}…" if followup and len(followup) > 56 else followup
+    contrast = extract_communication_term_contrast(correction)
+    cleaned_correction = re.sub(
+        r"^(no[,.:\- ]*|not what i meant[,.:\- ]*|i mean(?: that)?[,.:\- ]*|i meant(?: that)?[,.:\- ]*|what i mean is[,.:\- ]*|"
+        r"不对[，,。 ]*|不是这个[，,。 ]*|我说的是[：:，, ]*|我的意思是[：:，, ]*|我指的是[：:，, ]*|等一下[，,。 ]*)",
+        "",
+        correction,
+        flags=re.I,
+    ).strip()
+
+    if gap_type == "term-definition" and contrast:
+        term = communication_target_label(contrast.get("term", ""), language)
+        intended = communication_target_label(contrast["intended"], language)
+        excluded = communication_target_label(contrast["excluded"], language)
+        clarified_goal = contrast.get("remainder") or original
+        original_mentions_term = bool(
+            term and communication_signature(term) & communication_signature(original)
+        )
+        repeated_popup = bool(
+            re.search(r"每次|反复|重复|总是|一直|every time|repeatedly|keeps?\s+(?:showing|appearing)|popup|pop up|弹出", original, re.I)
+        )
+
+        if language == "zh":
+            if original_mentions_term:
+                analysis = f"AI 把“{term}”理解为“{excluded}”，而后续澄清指的是“{intended}”。"
+            else:
+                missing_object = "具体弹出的对象" if repeated_popup else "具体要处理的对象"
+                analysis = f"AI 的处理落在“{excluded}”，而后续澄清把真正对象限定为“{intended}”。原句没有写出{missing_object}。"
+            excluded_is_external = any(token in excluded for token in ("托管", "云端", "云服务", "远程服务"))
+            excluded_boundary = f"不要引入“{excluded}”" if excluded_is_external else f"不要改动“{excluded}”相关功能"
+            improvements = [
+                f"直接写明要处理的是“{intended}”",
+                excluded_boundary,
+            ]
+            if repeated_popup:
+                improvements.insert(1, "说明什么操作会触发重复出现，以及允许出现一次的条件")
+            if followup_excerpt:
+                analysis += f" 后半段“{followup_excerpt}”属于另一个问题，已从这条改写中拆开。"
+                improvements.append(f"把“{followup_excerpt}”拆成单独任务")
+            if repeated_popup:
+                rewrite = (
+                    f"请只修复“{intended}重复出现”的问题。\n"
+                    f"目标：同一触发条件下，不要反复出现{intended}。\n"
+                    f"范围：只检查{intended}的触发与状态判断。\n"
+                    f"边界：{excluded_boundary}。\n"
+                    "验收：重复同一操作两次，说明第二次是否仍会出现，并报告验证结果。"
+                )
+            else:
+                definition = f"这里的“{term}”指{intended}，不是{excluded}。" if term else f"目标对象是{intended}，不是{excluded}。"
+                rewrite = (
+                    f"请只处理“{intended}”相关问题。\n"
+                    f"定义：{definition}\n"
+                    f"当前目标：{clarified_goal.rstrip('。！!')}。\n"
+                    f"边界：{excluded_boundary}。\n"
+                    "验收：完成后说明实际修改了哪个对象，并按原始场景验证。"
+                )
+        else:
+            if original_mentions_term:
+                analysis = f"AI interpreted “{term}” as “{excluded},” while the later clarification meant “{intended}.”"
+            else:
+                analysis = f"AI acted on “{excluded},” while the later clarification narrowed the real target to “{intended}.” The original request did not name the exact object."
+            excluded_is_external = any(token in excluded.lower() for token in ("hosted", "cloud", "remote service"))
+            excluded_boundary = f"Do not introduce {excluded}" if excluded_is_external else f"Do not change behavior related to {excluded}"
+            improvements = [
+                f"Name “{intended}” as the exact target",
+                excluded_boundary,
+            ]
+            if repeated_popup:
+                improvements.insert(1, "State which action triggers the repeat and when one appearance is allowed")
+            if followup_excerpt:
+                analysis += f" The later phrase “{followup_excerpt}” is a separate issue and was removed from this rewrite."
+                improvements.append(f"Move “{followup_excerpt}” into a separate task")
+            if repeated_popup:
+                rewrite = (
+                    f"Fix only the repeated appearance of {intended}.\n"
+                    f"Goal: Under the same trigger condition, {intended} must not appear repeatedly.\n"
+                    f"Scope: Inspect only the trigger and state handling for {intended}.\n"
+                    f"Boundary: {excluded_boundary}.\n"
+                    "Acceptance: Repeat the same action twice, report whether it appears the second time, and include the verification result."
+                )
+            else:
+                definition = f"Here, “{term}” means {intended}, not {excluded}." if term else f"The target is {intended}, not {excluded}."
+                rewrite = (
+                    f"Handle only the issue related to {intended}.\n"
+                    f"Definition: {definition}\n"
+                    f"Current goal: {clarified_goal.rstrip('.!')}.\n"
+                    f"Boundary: {excluded_boundary}.\n"
+                    "Acceptance: State which object changed and verify it in the original scenario."
+                )
+        return analysis, improvements, rewrite
+
+    if language == "zh":
+        improvements_by_type = {
+            "ambiguous-reference": ["把“这个、它、进去”等指代替换为具体页面、区域或文件", "列出本次必须覆盖的对象", "说明哪些部分保持不变"],
+            "vague-goal": ["把“更好、优化”等方向词改成可观察结果", "说明最优先处理的部分", "补充不需要增加的内容和验收方式"],
+            "missing-scope": ["把完整影响范围列成清单", "明确范围外保持不变", "完成后逐项核对"],
+            "missing-constraint": ["把必须保留和明确禁止的行为分别写出", "说明发生冲突时哪个约束优先", "补充验证方式"],
+            "missing-acceptance": ["补一条可以复现的完成标准", "指定测试、尺寸或操作步骤", "要求报告实际验证结果"],
+        }
+        improvements = list(improvements_by_type.get(gap_type, []))
+        analysis = base_analysis
+        if followup_excerpt:
+            analysis += f" 后半段“{followup_excerpt}”属于另一个问题，已从这条改写中拆开。"
+            improvements.append(f"把“{followup_excerpt}”拆成单独任务")
+        target = cleaned_correction.rstrip("。！!")
+        rewrite = (
+            "请按下面的结构执行这次需求。\n"
+            f"目标：{target}。\n"
+            "范围：开始前列出本次要修改的具体对象。\n"
+            "边界：没有明确要求的部分保持不变。\n"
+            "验收：完成后逐项说明改动，并按原始场景验证。"
+        ) if target else None
+    else:
+        improvements_by_type = {
+            "ambiguous-reference": ["Replace references such as “this” or “it” with the exact page, area, or file", "List every object that must be covered", "State what remains unchanged"],
+            "vague-goal": ["Replace direction words such as “better” with an observable result", "State the highest-priority aspect", "Add non-goals and a verification method"],
+            "missing-scope": ["Turn the complete scope into a checklist", "Keep everything outside the scope unchanged", "Verify each item after the change"],
+            "missing-constraint": ["Separate behavior that must remain from behavior that is forbidden", "State which constraint wins if they conflict", "Add a verification method"],
+            "missing-acceptance": ["Add a reproducible completion criterion", "Specify a test, viewport, or operation", "Require the actual verification result"],
+        }
+        improvements = list(improvements_by_type.get(gap_type, []))
+        analysis = base_analysis
+        if followup_excerpt:
+            analysis += f" The later phrase “{followup_excerpt}” is a separate issue and was removed from this rewrite."
+            improvements.append(f"Move “{followup_excerpt}” into a separate task")
+        target = cleaned_correction.rstrip(".!")
+        rewrite = (
+            "Use this structure for the request.\n"
+            f"Goal: {target}.\n"
+            "Scope: List the exact objects to change before editing.\n"
+            "Boundary: Leave anything not explicitly requested unchanged.\n"
+            "Acceptance: Report each change and verify it in the original scenario."
+        ) if target else None
+    return analysis, improvements, rewrite
 
 
 def conversation_segments(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1213,7 +1458,12 @@ def conversation_segments(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
             else None
         )
         same_turn = gap_seconds is None or 0 <= gap_seconds <= CONVERSATION_SEGMENT_GAP_MINUTES * 60
-        if segments and segments[-1]["canonical_role"] == role and same_turn:
+        if (
+            segments
+            and segments[-1]["canonical_role"] == role
+            and same_turn
+            and role == "assistant"
+        ):
             segment = segments[-1]
             segment["text"] = f"{segment['text']}\n{event['text']}"[:6000]
             segment["texts"].append(event["text"])
@@ -1256,31 +1506,32 @@ def build_communication_insights(
         confirmations = {}
 
     correction_pattern = re.compile(
-        r"\b(no|not what i meant|i mean|i meant|what i mean is|instead of|you missed|you ignored|still|again|as i said|also needs? to|should|don't|do not)\b|"
-        r"不是|不对|我说的是|我的意思是|我指的是|而不是|不要|别|你漏了|你没改|还是|又|我已经说了|也要|应该",
+        r"\b(no|not what i meant|i mean|i meant|what i mean is|instead of|you missed|you ignored|you misunderstood|still missing|still not|can't see|cannot see|not helpful|that's not|again|as i said|also needs? to|should|don't|do not)\b|"
+        r"不是|不对|我说的是|我的意思是|我指的是|而不是|不是我要的|不是这个意思|你理解错|先搞清楚|不要|别|你漏了|你没改|没有按|没按|没有看到|没看到|根本没有|还是没有|为什么.*(?:还|没)|怎么.*(?:还|没)|还是|又|我已经说了|也要|应该",
         re.I,
     )
     strong_clarification_pattern = re.compile(
-        r"\b(not what i meant|i mean|what i mean is|to be clear|specifically|you missed|you ignored|as i said|i already said)\b|"
-        r"我说的是|我的意思是|我指的是|具体包括|更具体地说|也就是说|你漏了|你没改|我已经说了|之前说过",
-        re.I,
-    )
-    blame_pattern = re.compile(
-        r"\b(you missed|you ignored|still|again|as i said|i already said)\b|"
-        r"你漏了|你没改|还是|又|我已经说了|之前说过",
+        r"\b(not what i meant|i mean|what i mean is|to be clear|specifically|you missed|you ignored|you misunderstood|still missing|still not|can't see|cannot see|as i said|i already said)\b|"
+        r"我说的是|我的意思是|我指的是|不是我要的|不是这个意思|你理解错|先搞清楚|具体包括|更具体地说|也就是说|你漏了|你没改|没有按|没按|没有看到|没看到|根本没有|还是没有|我已经说了|之前说过",
         re.I,
     )
     explicit_blame_pattern = re.compile(
-        r"\b(you missed|you ignored|as i said|i already said)\b|你漏了|你没改|我已经说了|之前说过",
+        r"\b(you missed|you ignored|you misunderstood|still missing|can't see|cannot see|as i said|i already said)\b|"
+        r"你漏了|你没改|你理解错|没有按|没按|没有看到|没看到|根本没有|还是没有|我已经说了|之前说过",
+        re.I,
+    )
+    approval_pattern = re.compile(
+        r"^(?:ok(?:ay)?|yes|sure|go ahead|proceed|do it|sounds good|that works|"
+        r"可以(?:的)?|好的?|行|确认|开始吧|就按.+来|按照.+来|没问题)"
+        r"(?:[。.!！,，\s]*(?:开始|执行|继续)(?:吧|即可|就好)?)?"
+        r"(?:[。.!！,，\s]*(?:就)?按照(?:你|上面|这个).{0,16}来)?"
+        r"(?:[。.!！,，\s]*(?:完成后|然后)?(?:上传|提交|推送)(?:到)?(?:\s*github|\s*仓库|\s*远端)?(?:\s*上)?)?"
+        r"[。.!！\s]*$",
         re.I,
     )
     evolution_pattern = re.compile(
         r"\b(after seeing|now i think|let's change|i'd rather|next|on top of that|also add)\b|"
         r"看了以后|看到.*后|现在我觉得|再加一个|接下来|在这个基础上|其实我更想|另外再|顺便",
-        re.I,
-    )
-    definition_pattern = re.compile(
-        r"\b(i mean|what i mean is|by .+ i mean|not .+ but|refers to)\b|我说的.+是|这里的.+指|不是.+而是",
         re.I,
     )
     vague_reference_pattern = re.compile(
@@ -1302,6 +1553,11 @@ def build_communication_insights(
     )
     acceptance_pattern = re.compile(
         r"\b(expected|verify|test|must pass|after clicking|at \d+px)\b|完成后|验收|测试|点击后|不能.*滚动|在\s*\d+\s*px",
+        re.I,
+    )
+    action_pattern = re.compile(
+        r"\b(add|implement|generate|provide|fix|read|review|find|check|create|change|update)\b|"
+        r"加入|增加|实现|给出|生成|修复|读取|回看|复盘|找出|检查|创建|改为|修改|更新",
         re.I,
     )
     clarification_pattern = re.compile(
@@ -1335,6 +1591,15 @@ def build_communication_insights(
                 "user",
             ]:
                 continue
+            if approval_pattern.fullmatch(original["text"].strip()):
+                for previous_index in range(index - 1, max(-1, index - 7), -1):
+                    candidate = segments[previous_index]
+                    if candidate["canonical_role"] != "user":
+                        continue
+                    if approval_pattern.fullmatch(candidate["text"].strip()):
+                        continue
+                    original = candidate
+                    break
             if clarification_pattern.search(response["text"]) or response["text"].strip().endswith(("?", "？")):
                 continue
             if original.get("timestamp") and correction.get("timestamp_end"):
@@ -1344,20 +1609,22 @@ def build_communication_insights(
 
             original_raw = original["text"][:400]
             response_raw = response["text"][:400]
-            correction_raw = correction["text"][:400]
+            correction_full_raw = correction["text"][:400]
+            correction_raw, correction_followups_raw = split_communication_request(correction_full_raw)
             if not (correction_pattern.search(correction_raw) or evolution_pattern.search(correction_raw)):
                 continue
 
             original_terms = communication_signature(original_raw)
             correction_terms = communication_signature(correction_raw)
             response_terms = communication_signature(response_raw)
+            term_contrast = extract_communication_term_contrast(correction_raw)
             shared_terms = original_terms & correction_terms
             new_terms = correction_terms - original_terms
             new_information_ratio = len(new_terms) / max(1, len(correction_terms))
             repeat_ratio = len(shared_terms) / max(1, len(original_terms))
             if (
                 not shared_terms
-                and not definition_pattern.search(correction_raw)
+                and not term_contrast
                 and not evolution_pattern.search(correction_raw)
             ):
                 continue
@@ -1365,7 +1632,13 @@ def build_communication_insights(
             original_has_constraint = bool(constraint_pattern.search(original_raw))
             original_has_scope = bool(scope_pattern.search(original_raw))
             original_has_acceptance = bool(acceptance_pattern.search(original_raw))
-            original_is_explicit = original_has_constraint or original_has_scope or original_has_acceptance
+            original_has_action = bool(action_pattern.search(original_raw)) and len(original_terms) >= 3
+            original_is_explicit = (
+                original_has_constraint
+                or original_has_scope
+                or original_has_acceptance
+                or original_has_action
+            )
             vague_reference = bool(vague_reference_pattern.search(original_raw))
             vague_goal = bool(vague_goal_pattern.search(original_raw))
             cleaned_correction_raw = re.sub(
@@ -1391,13 +1664,16 @@ def build_communication_insights(
             classification = "insufficient-evidence"
             if evolution_pattern.search(correction_raw) and not explicit_blame_pattern.search(correction_raw):
                 classification = "requirement-evolution"
-            elif definition_pattern.search(correction_raw) and response_terms & correction_terms:
+            elif term_contrast and response_terms & correction_terms:
                 classification = "term-meaning-mismatch"
             elif (
                 original_is_explicit
-                and blame_pattern.search(correction_raw)
-                and repeat_ratio >= 0.35
-                and new_information_ratio <= 0.45
+                and explicit_blame_pattern.search(correction_raw)
+                and (
+                    repeat_ratio >= 0.2
+                    or bool(shared_terms)
+                    or bool(response_terms & correction_terms)
+                )
             ):
                 classification = "ai-ignored-explicit-requirement"
             elif (
@@ -1424,17 +1700,6 @@ def build_communication_insights(
                 inferred_gap_type = "missing-scope"
 
             if language == "zh":
-                missing_by_type = {
-                    "ambiguous-reference": ["具体对象", "修改范围"],
-                    "vague-goal": ["可观察的目标", "优先级", "不需要改动的部分"],
-                    "missing-scope": ["完整影响范围", "不在范围内的内容"],
-                    "missing-constraint": ["必须保留的行为", "明确禁区"],
-                    "missing-acceptance": ["完成标准", "验证方式"],
-                    "term-definition": ["核心术语的具体含义", "不包含的解释"],
-                    "ai-execution-miss": [],
-                    "requirement-evolution": [],
-                    "insufficient-evidence": [],
-                }
                 pattern_by_type = {
                     "ambiguous-reference": "请修改[具体对象]中的[具体部分]，目标是[预期结果]；不要改动[边界]。",
                     "vague-goal": "我的目标是[用户可见结果]。请优先调整[具体方面]，不要增加[不需要的内容]；完成标准是[可检查结果]。",
@@ -1461,17 +1726,6 @@ def build_communication_insights(
                     "insufficient-evidence": "你能否确认这次更接近信息后补、AI 执行遗漏，还是需求自然变化？",
                 }
             else:
-                missing_by_type = {
-                    "ambiguous-reference": ["the exact object", "the change boundary"],
-                    "vague-goal": ["an observable goal", "the priority", "what should not change"],
-                    "missing-scope": ["the complete scope", "what remains out of scope"],
-                    "missing-constraint": ["behavior that must remain", "explicit non-goals"],
-                    "missing-acceptance": ["the acceptance criteria", "the verification method"],
-                    "term-definition": ["the exact meaning of the core term", "the interpretation to exclude"],
-                    "ai-execution-miss": [],
-                    "requirement-evolution": [],
-                    "insufficient-evidence": [],
-                }
                 pattern_by_type = {
                     "ambiguous-reference": "Change [specific part] of [specific object] to achieve [expected result]; do not change [boundary].",
                     "vague-goal": "My goal is [user-visible result]. Prioritize [specific aspect], avoid [unwanted change], and verify [observable outcome].",
@@ -1500,25 +1754,13 @@ def build_communication_insights(
 
             original_text = localized_conversation_segment(original, context, language)
             response_text = localized_conversation_segment(response, context, language)
-            correction_text = localized_conversation_segment(correction, context, language)
-            cleaned_correction = re.sub(
-                r"^(no[,.:\- ]*|not what i meant[,.:\- ]*|i mean(?: that)?[,.:\- ]*|i meant(?: that)?[,.:\- ]*|what i mean is[,.:\- ]*|"
-                r"不对[，,。 ]*|不是这个[，,。 ]*|我说的是[：:，, ]*|我的意思是[：:，, ]*|我指的是[：:，, ]*|等一下[，,。 ]*)",
-                "",
-                correction_text,
-                flags=re.I,
-            ).strip()
-            default_rewrite = None
-            if language == "zh" and len(cleaned_correction) >= 8:
-                default_rewrite = (
-                    f"请按这个完整要求执行：{cleaned_correction.rstrip('。！!')}。"
-                    "开始前先复述你理解的目标、范围和不改动的部分。"
-                )
-            elif language == "en" and len(cleaned_correction) >= 12:
-                default_rewrite = (
-                    f"Please follow this complete requirement: {cleaned_correction.rstrip('.!')}. "
-                    "Before changing anything, restate the goal, scope, and what must remain unchanged."
-                )
+            correction_text_full = localized_conversation_segment(correction, context, language)
+            correction_text, correction_followups = split_communication_request(correction_text_full)
+            if not correction_followups and correction_followups_raw:
+                correction_followups = [
+                    localized_dynamic_text(item, context, language)
+                    for item in correction_followups_raw
+                ]
 
             related_commits = []
             correction_time = correction.get("timestamp_end") or correction.get("timestamp")
@@ -1594,12 +1836,48 @@ def build_communication_insights(
                 "term-meaning-mismatch",
             }
             suggested_rewrite = None
+            generated_analysis = analysis_by_class[classification]
+            generated_missing: list[str] = []
             if user_guidance_allowed:
-                suggested_rewrite = confirmed_rewrite or default_rewrite
-            missing_information = missing_by_type[gap_type] if user_guidance_allowed else []
+                generated_analysis, generated_missing, generated_rewrite = build_communication_guidance(
+                    original_text,
+                    response_text,
+                    correction_text,
+                    gap_type,
+                    generated_analysis,
+                    correction_followups,
+                    language,
+                )
+                suggested_rewrite = confirmed_rewrite or generated_rewrite
+            missing_information = generated_missing if user_guidance_allowed else []
             reusable_pattern = pattern_by_type[gap_type] if user_guidance_allowed else None
             topic = confirmed_topic or COMMUNICATION_GAP_LABELS[language][gap_type]
-            analysis = confirmed_analysis or analysis_by_class[classification]
+            analysis = confirmed_analysis or generated_analysis
+            attribution_label = COMMUNICATION_ATTRIBUTION_LABELS[language][classification]
+            question = question_by_class[classification]
+            if classification == "term-meaning-mismatch":
+                display_contrast = extract_communication_term_contrast(correction_text)
+                display_term = communication_target_label(
+                    display_contrast.get("term", "") if display_contrast else "",
+                    language,
+                )
+                original_uses_term = bool(
+                    display_term
+                    and communication_signature(display_term) & communication_signature(original_text)
+                )
+                if not original_uses_term:
+                    attribution_label = (
+                        "AI 与用户锁定了不同对象"
+                        if language == "zh"
+                        else "AI and user targeted different objects"
+                    )
+                    if not confirmed_topic:
+                        topic = "具体对象在后续才明确" if language == "zh" else "The exact target became clear later"
+                    question = (
+                        "这里是否更像 AI 和你实际锁定了不同对象？"
+                        if language == "zh"
+                        else "Was this mainly a case of AI and the user targeting different objects?"
+                    )
 
             confidence = "confirmed" if confirmation else (
                 "high" if classification in {"ai-ignored-explicit-requirement", "term-meaning-mismatch"} else "medium"
@@ -1611,7 +1889,7 @@ def build_communication_insights(
                     "gap_type": gap_type,
                     "gap_label": COMMUNICATION_GAP_LABELS[language][gap_type],
                     "attribution": classification,
-                    "attribution_label": COMMUNICATION_ATTRIBUTION_LABELS[language][classification],
+                    "attribution_label": attribution_label,
                     "confidence": confidence,
                     "original_request": original_text,
                     "ai_response": response_text,
@@ -1620,7 +1898,7 @@ def build_communication_insights(
                     "missing_information": missing_information,
                     "suggested_rewrite": suggested_rewrite,
                     "reusable_pattern": reusable_pattern,
-                    "question": question_by_class[classification],
+                    "question": question,
                     "observed_impact": impact,
                     "related_commits": related_commits[:3],
                     "source": original.get("source"),
@@ -2654,17 +2932,23 @@ def render_markdown(data: dict[str, Any]) -> str:
                         else f"- **{c['missing_information']}:** {', '.join(insight['missing_information'])}"
                     )
                 if insight.get("suggested_rewrite"):
+                    formatted_rewrite = esc(str(insight["suggested_rewrite"])).replace("\n", "<br>")
                     lines.append(
-                        f"- **{c['next_time_say']}：** {insight['suggested_rewrite']}"
+                        f"- **{c['next_time_say']}：** {formatted_rewrite}"
                         if language == "zh"
-                        else f"- **{c['next_time_say']}:** {insight['suggested_rewrite']}"
+                        else f"- **{c['next_time_say']}:** {formatted_rewrite}"
                     )
                 else:
-                    no_rewrite = (
-                        c["insufficient_rewrite"]
-                        if insight["attribution"] == "insufficient-evidence"
-                        else c["not_user_rewrite"]
-                    )
+                    if insight["attribution"] == "insufficient-evidence":
+                        no_rewrite = c["insufficient_rewrite"]
+                    elif insight["attribution"] in {"user-expression-insufficient", "term-meaning-mismatch"}:
+                        no_rewrite = c["rewrite_unavailable"]
+                    elif insight["attribution"] == "ai-ignored-explicit-requirement":
+                        no_rewrite = c["ai_miss_guidance"]
+                    elif insight["attribution"] == "requirement-evolution":
+                        no_rewrite = c["requirement_evolution_guidance"]
+                    else:
+                        no_rewrite = c["not_user_rewrite"]
                     lines.append(f"- {no_rewrite}")
                 if insight.get("reusable_pattern"):
                     lines.append(
@@ -2856,13 +3140,23 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
             for item in insight["related_commits"]
         )
         if insight.get("suggested_rewrite"):
-            rewrite_html = f'''<div class="communication-rewrite"><b>{esc(c['next_time_say'])}</b><p>{esc(insight['suggested_rewrite'])}</p></div>'''
-        else:
-            no_rewrite = (
-                c["insufficient_rewrite"]
-                if insight["attribution"] == "insufficient-evidence"
-                else c["not_user_rewrite"]
+            rewrite_lines = "".join(
+                f"<p>{esc(line)}</p>"
+                for line in str(insight["suggested_rewrite"]).splitlines()
+                if line.strip()
             )
+            rewrite_html = f'''<div class="communication-rewrite"><b>{esc(c['next_time_say'])}</b>{rewrite_lines}</div>'''
+        else:
+            if insight["attribution"] == "insufficient-evidence":
+                no_rewrite = c["insufficient_rewrite"]
+            elif insight["attribution"] in {"user-expression-insufficient", "term-meaning-mismatch"}:
+                no_rewrite = c["rewrite_unavailable"]
+            elif insight["attribution"] == "ai-ignored-explicit-requirement":
+                no_rewrite = c["ai_miss_guidance"]
+            elif insight["attribution"] == "requirement-evolution":
+                no_rewrite = c["requirement_evolution_guidance"]
+            else:
+                no_rewrite = c["not_user_rewrite"]
             rewrite_html = f'''<div class="communication-not-user"><p>{esc(no_rewrite)}</p></div>'''
         pattern_html = (
             f'''<div class="communication-pattern"><b>{esc(c['reusable_pattern'])}</b><code>{esc(insight['reusable_pattern'])}</code></div>'''
@@ -3104,7 +3398,7 @@ main {{ background:var(--surface); }}
 .story-map-label {{ position:sticky; top:24px; color:var(--muted); }}
 .story-map-label p {{ margin:14px 0 0; font-size:14px; line-height:1.6; }}
 .story-map-line {{ width:1px; height:170px; margin:28px 0 0 4px; background:linear-gradient(to bottom,var(--accent),transparent); }}
-.insight-list {{ display:grid; gap:26px; max-width:1040px; }}
+.insight-list {{ display:grid; gap:26px; width:100%; }}
 .insight-card {{ padding:30px; border-radius:var(--radius); background:var(--paper); border-top:3px solid var(--accent); }}
 .insight-head {{ display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }}
 .insight-head h3 {{ margin:10px 0 0; font-size:clamp(25px,4vw,40px); line-height:1; letter-spacing:-.045em; }}
@@ -3125,8 +3419,8 @@ main {{ background:var(--surface); }}
 .supporting-path {{ margin-top:14px; color:var(--muted); font-size:12px; }}
 .supporting-path summary {{ cursor:pointer; }}
 .supporting-path code {{ display:block; margin-top:8px; color:var(--ink); }}
-.raw-evidence {{ max-width:1040px; }}
-.communication-list {{ display:grid; gap:26px; max-width:1040px; }}
+.raw-evidence {{ width:100%; }}
+.communication-list {{ display:grid; gap:26px; width:100%; }}
 .communication-card {{ padding:30px; border-radius:var(--radius); background:var(--paper); border-top:3px solid var(--ink); }}
 .communication-head {{ display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }}
 .communication-head>div,.communication-dialogue>div,.communication-grid>div {{ min-width:0; }}
@@ -3145,6 +3439,7 @@ main {{ background:var(--surface); }}
 .communication-rewrite b,.communication-question b,.communication-confirmation b {{ display:block; margin-bottom:8px; color:var(--accent); font-size:12px; }}
 .communication-rewrite p,.communication-question p,.communication-confirmation p,.communication-not-user p {{ margin:0; line-height:1.65; }}
 .communication-rewrite p {{ color:var(--ink); font-size:17px; }}
+.communication-rewrite p+p {{ margin-top:8px; }}
 .communication-pattern {{ margin-top:18px; }}
 .communication-pattern b {{ display:block; margin-bottom:8px; color:var(--muted); font-size:12px; }}
 .communication-pattern code {{ display:block; padding:14px; border-radius:9px; background:var(--ink); color:white; line-height:1.55; overflow-wrap:anywhere; }}

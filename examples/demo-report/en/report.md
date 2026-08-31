@@ -89,16 +89,16 @@
 
 > See which details became clear only after AI had already acted. This reviews how the human and AI aligned; it never scores the user's communication ability.
 
-### Term meaning clarified later · The same term meant different things
+### The exact target became clear later · AI and user targeted different objects
 
 - **What you said:** Make storage better for beginners
 - **What you clarified later:** I mean local JSON storage, not a hosted service. Keep all task data on the device.
-- **Where the gap appeared:** Both sides kept using the same term, but the term referred to different things.
+- **Where the gap appeared:** AI acted on “a hosted service,” while the later clarification narrowed the real target to “local JSON storage.” The original request did not name the exact object.
 - **Observed project evidence:** 1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.
-- **Information that was missing:** the exact meaning of the core term, the interpretation to exclude
-- **A clearer way to say it next time:** Please follow this complete requirement: local JSON storage, not a hosted service. Keep all task data on the device. Before changing anything, restate the goal, scope, and what must remain unchanged.
+- **Concrete improvements:** Name “local JSON storage” as the exact target, Do not introduce a hosted service
+- **Improved version:** Handle only the issue related to local JSON storage.<br>Definition: The target is local JSON storage, not a hosted service.<br>Current goal: Keep all task data on the device.<br>Boundary: Do not introduce a hosted service.<br>Acceptance: State which object changed and verify it in the original scenario.
 - **Reusable pattern:** By [term], I mean [exact meaning], not [likely interpretation]; the expected result is [outcome].
-- **Needs your confirmation:** Was this mainly a case of both sides assigning different meanings to the same term?
+- **Needs your confirmation:** Was this mainly a case of AI and the user targeting different objects?
 
 <details>
 <summary>Evidence</summary>
@@ -114,8 +114,8 @@
 - **What you clarified later:** I mean add automated tests for local storage and JSON export. Do not add cloud dependencies.
 - **Where the gap appeared:** The initial wording allowed multiple reasonable interpretations. The later clarification made the object, scope, or constraint unique.
 - **Observed project evidence:** 1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.
-- **Information that was missing:** behavior that must remain, explicit non-goals
-- **A clearer way to say it next time:** Please follow this complete requirement: add automated tests for local storage and JSON export. Do not add cloud dependencies. Before changing anything, restate the goal, scope, and what must remain unchanged.
+- **Concrete improvements:** Separate behavior that must remain from behavior that is forbidden, State which constraint wins if they conflict, Add a verification method
+- **Improved version:** Use this structure for the request.<br>Goal: add automated tests for local storage and JSON export. Do not add cloud dependencies.<br>Scope: List the exact objects to change before editing.<br>Boundary: Leave anything not explicitly requested unchanged.<br>Acceptance: Report each change and verify it in the original scenario.
 - **Reusable pattern:** Complete [goal], but do not change [boundary]; preserve [existing behavior].
 - **Needs your confirmation:** Was this information missing at the start, or did the more specific judgment form only after you saw the result?
 
@@ -133,8 +133,8 @@
 - **What you clarified later:** I mean document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI.
 - **Where the gap appeared:** The initial wording allowed multiple reasonable interpretations. The later clarification made the object, scope, or constraint unique.
 - **Observed project evidence:** 1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.
-- **Information that was missing:** the exact object, the change boundary
-- **A clearer way to say it next time:** Please follow this complete requirement: document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI. Before changing anything, restate the goal, scope, and what must remain unchanged.
+- **Concrete improvements:** Replace references such as “this” or “it” with the exact page, area, or file, List every object that must be covered, State what remains unchanged
+- **Improved version:** Use this structure for the request.<br>Goal: document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI.<br>Scope: List the exact objects to change before editing.<br>Boundary: Leave anything not explicitly requested unchanged.<br>Acceptance: Report each change and verify it in the original scenario.
 - **Reusable pattern:** Change [specific part] of [specific object] to achieve [expected result]; do not change [boundary].
 - **Needs your confirmation:** Was this information missing at the start, or did the more specific judgment form only after you saw the result?
 
