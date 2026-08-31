@@ -512,6 +512,40 @@ def localized_dynamic_text(text: str, context: dict[str, Any], language: str) ->
     return text
 
 
+def redact_local_paths(text: str) -> str:
+    text = re.sub(r"file:///(?:Users|home)/[^/\s<>\"']+", "~", text, flags=re.I)
+    text = re.sub(r"(?<![\w])/(?:Users|home)/[^/\s<>\"']+", "~", text)
+    text = re.sub(r"\b[A-Za-z]:\\Users\\[^\\\s<>\"']+", "~", text, flags=re.I)
+    text = re.sub(
+        r"(?<![\w])/(?:private/var|var/folders|tmp)/[^\s<>\"']+",
+        "<local-path>",
+        text,
+    )
+    return text
+
+
+def sanitize_report_value(value: Any) -> Any:
+    if isinstance(value, str):
+        return redact_local_paths(value)
+    if isinstance(value, list):
+        return [sanitize_report_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: sanitize_report_value(item) for key, item in value.items()}
+    return value
+
+
+def is_injected_transcript_text(text: str) -> bool:
+    return bool(
+        re.search(
+            r"<system-reminder>|<environment_context>|<in-app-browser-context>|<app-context>|"
+            r"<skills_instructions>|<permissions instructions>|<collaboration_mode>|"
+            r"^# AGENTS\.md instructions(?:\s+for\s+[^\n]+)?",
+            text.strip(),
+            re.I,
+        )
+    )
+
+
 def count_text(value: int, noun: str, language: str) -> str:
     if language == "zh":
         units = {"commit": "次提交", "file": "个文件", "day": "个自然日", "loop": "个循环候选"}
@@ -992,11 +1026,11 @@ def event_from_object(
         canonical_role = "system"
     else:
         canonical_role = "other"
-    text = re.sub(r"\s+", " ", flatten_text(value)).strip()
+    text = redact_local_paths(re.sub(r"\s+", " ", flatten_text(value)).strip())
     if not timestamp and not text:
         return None
     session_id = transcript_session_id(value) or default_session_id or source
-    return {
+    result = {
         "timestamp": timestamp,
         "role": lower_role,
         "canonical_role": canonical_role,
@@ -1005,6 +1039,7 @@ def event_from_object(
         "source_key": source_key or source,
         "session_id": session_id,
     }
+    return result
 
 
 def read_transcript_events(paths: list[Path]) -> tuple[list[dict[str, Any]], list[str]]:
@@ -1075,7 +1110,16 @@ def text_signature(text: str) -> set[str]:
 
 
 def analyze_transcripts(events: list[dict[str, Any]], files: list[str], language: str) -> dict[str, Any]:
-    timestamped = sorted((event for event in events if event["timestamp"]), key=lambda event: event["timestamp"])
+    conversation_events = [
+        event
+        for event in events
+        if event.get("canonical_role") in {"user", "assistant"}
+        and not is_injected_transcript_text(event.get("text", ""))
+    ]
+    timestamped = sorted(
+        (event for event in conversation_events if event["timestamp"]),
+        key=lambda event: event["timestamp"],
+    )
     active_seconds = 0.0
     for previous, current in zip(timestamped, timestamped[1:]):
         gap = max(0.0, (current["timestamp"] - previous["timestamp"]).total_seconds())
@@ -1083,8 +1127,8 @@ def analyze_transcripts(events: list[dict[str, Any]], files: list[str], language
 
     user_events = [
         event
-        for event in events
-        if any(token in event["role"] for token in ("user", "human", "prompt")) and len(event["text"]) >= 24
+        for event in conversation_events
+        if event.get("canonical_role") == "user" and len(event["text"]) >= 24
     ]
     repeats: list[dict[str, Any]] = []
     used: set[int] = set()
@@ -1111,12 +1155,12 @@ def analyze_transcripts(events: list[dict[str, Any]], files: list[str], language
 
     error_events = sum(
         1
-        for event in events
+        for event in conversation_events
         if re.search(r"\b(error|failed|failure|exception|denied|timeout)\b|错误|失败|异常|拒绝|超时", event["text"], re.I)
     )
     return {
         "files": files,
-        "events": len(events),
+        "events": len(conversation_events),
         "timestamped_events": len(timestamped),
         "estimated_active_hours": round(active_seconds / 3600, 1),
         "confidence": "medium" if len(timestamped) >= 10 else "low",
@@ -1271,12 +1315,7 @@ def build_communication_insights(
         if event.get("canonical_role") not in {"user", "assistant"} or not event.get("text"):
             continue
         text = event["text"]
-        if re.search(
-            r"<system-reminder>|<environment_context>|<in-app-browser-context>|<app-context>|"
-            r"<skills_instructions>|<permissions instructions>|<collaboration_mode>|# AGENTS\.md instructions",
-            text,
-            re.I,
-        ):
+        if is_injected_transcript_text(text):
             continue
         grouped[
             (
@@ -1897,12 +1936,18 @@ def build_activity_history(
 
     for event in transcript_events:
         timestamp = event.get("timestamp")
-        if timestamp is None or timestamp.date() < start or timestamp.date() > end:
+        if (
+            event.get("canonical_role") not in {"user", "assistant"}
+            or is_injected_transcript_text(event.get("text", ""))
+            or timestamp is None
+            or timestamp.date() < start
+            or timestamp.date() > end
+        ):
             continue
         day = timestamp.date().isoformat()
         row = rows[day]
         row["transcript_events"] += 1
-        if any(token in event["role"] for token in ("user", "human", "prompt")) and event.get("text"):
+        if event.get("canonical_role") == "user" and event.get("text"):
             row["prompts"].append(localized_dynamic_text(event["text"][:180], context, language))
 
     total_days = (end - start).days + 1
@@ -2138,18 +2183,25 @@ def attach_dialogue_to_turning_points(
     language: str,
 ) -> list[dict[str, Any]]:
     timestamped = sorted(
-        (event for event in transcript_events if event.get("timestamp") and event.get("text")),
+        (
+            event
+            for event in transcript_events
+            if event.get("timestamp")
+            and event.get("text")
+            and event.get("canonical_role") in {"user", "assistant"}
+            and not is_injected_transcript_text(event.get("text", ""))
+        ),
         key=lambda event: event["timestamp"],
     )
     users = [
         event
         for event in timestamped
-        if any(token in event["role"] for token in ("user", "human", "prompt"))
+        if event.get("canonical_role") == "user"
     ]
     assistants = [
         event
         for event in timestamped
-        if any(token in event["role"] for token in ("assistant", "agent", "ai"))
+        if event.get("canonical_role") == "assistant"
     ]
     results = []
     for point in turning_points:
@@ -2419,7 +2471,7 @@ def build_evidence(
     )
     career_material = build_career_material(name, story, localized_context, turning_points, language)
     source_list = ["git"] + (["transcripts"] if transcript_files else [])
-    return {
+    result = {
         "schema_version": "1.5",
         "generator_version": VERSION,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -2466,6 +2518,7 @@ def build_evidence(
         "evidence_cards": evidence_cards(name, commits, files, signals, attention, language, localized_context),
         "career_material": career_material,
     }
+    return sanitize_report_value(result)
 
 
 def confidence_label(value: str, language: str) -> str:

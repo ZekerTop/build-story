@@ -286,6 +286,7 @@ python3 scripts/create_demo_report.py
 - Absolute local paths are not included in generated reports.
 - Full transcripts are not copied into reports.
 - Communication review retains only short excerpts needed to support a conclusion and never uploads transcripts.
+- Injected environment or AGENTS instruction events are excluded, and local home or temporary paths are redacted.
 - Resume and portfolio output must not invent impact metrics.
 
 See [SECURITY.md](SECURITY.md) for responsible reporting.

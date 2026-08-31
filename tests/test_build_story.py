@@ -554,6 +554,28 @@ class BuildStoryTests(unittest.TestCase):
             ids.append(BUILD_STORY.build_communication_insights(events, [], {}, "en")[0]["id"])
         self.assertEqual(ids[0], ids[1])
 
+    def test_transcript_injections_are_excluded_and_local_paths_are_redacted(self):
+        transcript = Path(self.temp.name) / "session.jsonl"
+        rows = [
+            {"timestamp": "2026-08-30T09:59:00Z", "role": "user", "content": "<environment_context><cwd>/Users/zt/Desktop/private-project</cwd></environment_context>"},
+            {"timestamp": "2026-08-30T10:00:00Z", "role": "user", "content": "Document it"},
+            {"timestamp": "2026-08-30T10:01:00Z", "role": "assistant", "content": "I updated /Users/zt/Desktop/private-project/README.md with another usage example."},
+            {"timestamp": "2026-08-30T10:02:00Z", "role": "user", "content": "I mean document the architecture decision, not only CLI usage."},
+        ]
+        transcript.write_text("\n".join(json.dumps(row) for row in rows), encoding="utf-8")
+        events, files = BUILD_STORY.read_transcript_events([transcript])
+        analysis = BUILD_STORY.analyze_transcripts(events, files, "en")
+        self.assertEqual(analysis["events"], 3)
+        self.assertFalse(analysis["repeated_prompts"])
+        insight = BUILD_STORY.build_communication_insights(events, [], {}, "en")[0]
+        self.assertNotIn("/Users/", insight["ai_response"])
+        self.assertIn("~/Desktop/private-project/README.md", insight["ai_response"])
+        sanitized = BUILD_STORY.sanitize_report_value(
+            {"home": "/Users/zt/Desktop/private-project", "temp": "/tmp/build-story-secret.txt"}
+        )
+        self.assertEqual(sanitized["home"], "~/Desktop/private-project")
+        self.assertEqual(sanitized["temp"], "<local-path>")
+
     def test_communication_html_hides_user_guidance_for_ai_miss(self):
         self.make_history()
         data = BUILD_STORY.build_evidence(self.repo, [], "zh", None, {})

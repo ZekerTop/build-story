@@ -136,4 +136,4 @@ Optional `summary` and `resume_bullets` fields let the user preserve exact wordi
 
 ## Privacy
 
-Transcript parsing is local. The analyzer makes no upload and stores only short excerpts needed to explain a turning point, repeated-prompt candidate, or communication correction chain. It does not intentionally copy complete conversations into the report.
+Transcript parsing is local. The analyzer makes no upload and stores only short excerpts needed to explain a turning point, repeated-prompt candidate, or communication correction chain. It excludes injected environment and AGENTS instruction events, redacts local home and temporary paths, and does not intentionally copy complete conversations into the report.

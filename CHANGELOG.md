@@ -10,6 +10,7 @@
 - Clarified that repeated prompts do not prove unclear wording and that nearby Git commits do not prove causation.
 - Kept communication analysis local and limited reports to short supporting excerpts rather than complete transcripts.
 - Added conservative parsing for common nested `message` / `payload` exports, isolated ambiguous runs in multi-session files, and made communication confirmation IDs independent of absolute transcript paths.
+- Filtered injected environment and AGENTS instruction events from transcript analysis and redacted local home or temporary paths from generated evidence.
 - Updated structured evidence to schema `1.5` and aligned documentation with generator version `0.4.0`.
 - Added an EN / 中文 switch to visual reports.
 - Every analysis now generates default, English, and Chinese JSON, Markdown, and HTML outputs.
