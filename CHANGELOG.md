@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.4.0 - 2026-08-31
+
+- Added communication review from ordered `user → assistant → user correction` evidence chains, capped at three cards.
+- Added neutral attribution for information clarified later, AI misses of explicit requirements, term-meaning mismatches, requirement evolution, and insufficient evidence.
+- Added evidence-gated request rewrites, reusable communication patterns, and local `communication_confirmations` without prompt scoring or judgments of user ability.
+- Clarified that repeated prompts do not prove unclear wording and that nearby Git commits do not prove causation.
+- Kept communication analysis local and limited reports to short supporting excerpts rather than complete transcripts.
+- Added conservative parsing for common nested `message` / `payload` exports, isolated ambiguous runs in multi-session files, and made communication confirmation IDs independent of absolute transcript paths.
+- Updated structured evidence to schema `1.5` and aligned documentation with generator version `0.4.0`.
 - Added an EN / 中文 switch to visual reports.
 - Every analysis now generates default, English, and Chinese JSON, Markdown, and HTML outputs.
 - Made Chinese the default report language and the repository's primary README language.

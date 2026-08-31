@@ -1,4 +1,5 @@
 import json
+import importlib.util
 import os
 import subprocess
 import sys
@@ -9,6 +10,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "build_story.py"
+SPEC = importlib.util.spec_from_file_location("build_story_module", SCRIPT)
+BUILD_STORY = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = BUILD_STORY
+SPEC.loader.exec_module(BUILD_STORY)
 
 
 def run(command, cwd, env=None):
@@ -47,6 +52,23 @@ class BuildStoryTests(unittest.TestCase):
         env["GIT_AUTHOR_DATE"] = date
         env["GIT_COMMITTER_DATE"] = date
         run(["git", "commit", "-m", message], self.repo, env=env)
+
+    def transcript_events(self, messages, source="session.jsonl", session_id=None, source_key=None):
+        events = []
+        for index, (role, text) in enumerate(messages):
+            events.append(
+                {
+                    "timestamp": BUILD_STORY.parse_datetime(f"2026-08-30T10:{index:02d}:00Z"),
+                    "role": role,
+                    "canonical_role": role,
+                    "text": text,
+                    "source": source,
+                    "source_key": source_key or source,
+                    "session_id": session_id or source,
+                    "event_index": index,
+                }
+            )
+        return events
 
     def make_history(self):
         self.commit(
@@ -131,8 +153,8 @@ class BuildStoryTests(unittest.TestCase):
         self.assertTrue((output / "report.en.html").exists())
         self.assertTrue((output / "report.zh.html").exists())
         data = json.loads((output / "evidence.json").read_text(encoding="utf-8"))
-        self.assertEqual(data["schema_version"], "1.4")
-        self.assertEqual(data["generator_version"], "0.3.0")
+        self.assertEqual(data["schema_version"], "1.5")
+        self.assertEqual(data["generator_version"], "0.4.0")
         self.assertEqual(data["metrics"]["commits"], 7)
         self.assertEqual(data["project"]["path"], "sample-project")
         self.assertEqual(data["activity"]["calendar_days"], 4)
@@ -178,6 +200,8 @@ class BuildStoryTests(unittest.TestCase):
         self.assertIn("Needs your confirmation", report)
         self.assertLess(report.index('id="story-map"'), report.index('id="insights"'))
         self.assertLess(report.index('id="insights"'), report.index('id="rhythm"'))
+        self.assertNotIn('id="communication"', report)
+        self.assertNotIn("## Communication review", (output / "report.md").read_text(encoding="utf-8"))
         self.assertIn('class="activity-cell', report)
         self.assertIn("View every commit", report)
         self.assertIn("Turn evidence into a story", report)
@@ -241,6 +265,7 @@ class BuildStoryTests(unittest.TestCase):
         self.assertTrue(data["transcripts"]["repeated_prompts"])
         self.assertEqual(data["activity"]["busiest_day"]["date"], "2026-08-03")
         self.assertEqual(data["activity"]["busiest_day"]["transcript_events"], 4)
+        self.assertEqual(data["communication_insights"], [])
         validation_point = next(item for item in data["turning_points"] if item["category"] == "validation")
         self.assertEqual(validation_point["subject"], "为问候行为补充测试")
         self.assertEqual(validation_point["original_subject"], "Add tests for greeting behavior")
@@ -271,6 +296,12 @@ class BuildStoryTests(unittest.TestCase):
         self.assertIn("修复同一任务重复执行时的缓存失效问题。", visible)
         self.assertIn("你的确认", visible)
         self.assertIn("沉淀的经验", visible)
+        self.assertIn('id="communication"', report)
+        self.assertIn("沟通复盘", visible)
+        self.assertIn("没有达到证据门槛的沟通纠正链", visible)
+        self.assertIn("## 沟通复盘", (output / "report.md").read_text(encoding="utf-8"))
+        self.assertLess(report.index('id="insights"'), report.index('id="communication"'))
+        self.assertLess(report.index('id="communication"'), report.index('id="rhythm"'))
         self.assertNotIn("Add tests for greeting behavior", visible)
         self.assertNotIn(" files ·", visible)
         self.assertNotIn(" commits ·", visible)
@@ -278,6 +309,300 @@ class BuildStoryTests(unittest.TestCase):
         self.assertNotIn("explicit reversal", visible)
         self.assertNotIn("test files", visible)
         self.assertNotIn("CI workflow", visible)
+
+    def test_communication_review_finds_information_clarified_later(self):
+        events = self.transcript_events(
+            [
+                ("user", "GitHub 上进去应该是中文为主。"),
+                ("assistant", "README 和 About 已改为中文。"),
+                ("user", "我说的是动态标题和用户与 AI 的对话历程也要中文。"),
+            ]
+        )
+        insights = BUILD_STORY.build_communication_insights(events, [], {}, "zh")
+        self.assertEqual(len(insights), 1)
+        self.assertEqual(insights[0]["attribution"], "user-expression-insufficient")
+        self.assertEqual(insights[0]["gap_type"], "ambiguous-reference")
+        self.assertIn("完整要求", insights[0]["suggested_rewrite"])
+
+    def test_communication_review_attributes_clear_requirement_miss_to_ai(self):
+        events = self.transcript_events(
+            [
+                ("user", "README、GitHub About、动态标题和对话摘录都要中文；英文版继续保留英文。"),
+                ("assistant", "README 和 About 已经改完。"),
+                ("user", "动态标题和对话摘录还是英文，我已经说了它们也要中文。"),
+            ]
+        )
+        insights = BUILD_STORY.build_communication_insights(events, [], {}, "zh")
+        self.assertEqual(len(insights), 1)
+        self.assertEqual(insights[0]["attribution"], "ai-ignored-explicit-requirement")
+        self.assertIsNone(insights[0]["suggested_rewrite"])
+        self.assertEqual(insights[0]["missing_information"], [])
+        self.assertIsNone(insights[0]["reusable_pattern"])
+
+    def test_communication_review_preserves_requirement_evolution(self):
+        events = self.transcript_events(
+            [
+                ("user", "先做中文版本就可以。"),
+                ("assistant", "中文报告已经生成。"),
+                ("user", "看了以后，我觉得还是加上中英文切换比较好。"),
+            ]
+        )
+        insights = BUILD_STORY.build_communication_insights(events, [], {}, "zh")
+        self.assertEqual(len(insights), 1)
+        self.assertEqual(insights[0]["attribution"], "requirement-evolution")
+        self.assertIsNone(insights[0]["suggested_rewrite"])
+        self.assertEqual(insights[0]["missing_information"], [])
+        self.assertIsNone(insights[0]["reusable_pattern"])
+
+    def test_communication_review_skips_successful_clarification_and_cross_session_chain(self):
+        clarification = self.transcript_events(
+            [
+                ("user", "页面更有记忆点一点。"),
+                ("assistant", "你更想加强叙事结构、视觉风格，还是交互动效？"),
+                ("user", "加强叙事结构，不要增加复杂动画。"),
+            ]
+        )
+        self.assertEqual(BUILD_STORY.build_communication_insights(clarification, [], {}, "zh"), [])
+
+        cross_session = self.transcript_events(
+            [("user", "报告需要中文。"), ("assistant", "好的。")],
+            source="session-a.jsonl",
+        )
+        cross_session.extend(
+            self.transcript_events(
+                [("user", "动态标题也要中文。")],
+                source="session-b.jsonl",
+            )
+        )
+        self.assertEqual(BUILD_STORY.build_communication_insights(cross_session, [], {}, "zh"), [])
+
+    def test_communication_review_handles_segmented_assistant_response(self):
+        events = self.transcript_events(
+            [
+                ("user", "GitHub 上进去应该是中文为主。"),
+                ("assistant", "我先检查 README。"),
+                ("assistant", "README 和 About 已改为中文。"),
+                ("user", "我说的是动态标题和用户与 AI 的对话历程也要中文。"),
+            ]
+        )
+        insights = BUILD_STORY.build_communication_insights(events, [], {}, "zh")
+        self.assertEqual(len(insights), 1)
+        self.assertIn("README 和 About", insights[0]["ai_response"])
+        self.assertEqual(insights[0]["event_range"], [0, 3])
+
+    def test_communication_review_skips_normal_bug_followup(self):
+        events = self.transcript_events(
+            [
+                ("user", "Fix automatic cloud sync because duplicate tasks are appearing in the queue"),
+                ("assistant", "I added duplicate prevention."),
+                ("user", "Fix the automatic cloud sync queue again and make retries easier to understand"),
+            ]
+        )
+        self.assertEqual(BUILD_STORY.build_communication_insights(events, [], {}, "en"), [])
+
+    def test_communication_review_is_language_neutral(self):
+        events = self.transcript_events(
+            [
+                ("user", "Make storage better for beginners"),
+                ("assistant", "I connected the task list to a hosted database."),
+                ("user", "I mean local JSON storage, not a hosted service. Keep all task data on the device."),
+                ("user", "Keep exports local too."),
+            ]
+        )
+        zh_context = {
+            "translations": {
+                "Make storage better for beginners": "让存储体验对新手更友好。",
+                "I connected the task list to a hosted database.": "我把任务列表连接到了托管数据库。",
+                "I mean local JSON storage, not a hosted service. Keep all task data on the device.": "我说的是本地 JSON 存储，不是托管服务。所有任务数据都保留在设备上。",
+                "Keep exports local too.": "导出也要保留在本地。",
+            }
+        }
+        en = BUILD_STORY.build_communication_insights(events, [], {}, "en")
+        zh = BUILD_STORY.build_communication_insights(events, [], zh_context, "zh")
+        self.assertEqual(
+            [(item["id"], item["attribution"], item["gap_type"]) for item in en],
+            [(item["id"], item["attribution"], item["gap_type"]) for item in zh],
+        )
+        self.assertEqual(en[0]["attribution"], "term-meaning-mismatch")
+        self.assertNotEqual(en[0]["original_request"], zh[0]["original_request"])
+        self.assertIn("导出也要保留在本地", zh[0]["later_clarification"])
+        self.assertNotIn("Keep exports local", zh[0]["later_clarification"])
+
+    def test_communication_confirmation_rebuilds_guidance_after_attribution_override(self):
+        events = self.transcript_events(
+            [
+                ("user", "GitHub 上进去应该是中文为主。"),
+                ("assistant", "README 和 About 已改为中文。"),
+                ("user", "我说的是动态标题和用户与 AI 的对话历程也要中文。"),
+            ]
+        )
+        initial = BUILD_STORY.build_communication_insights(events, [], {}, "zh")[0]
+        context = {
+            "communication_confirmations": {
+                initial["id"]: {
+                    "attribution": "ai-ignored-explicit-requirement",
+                    "reason": "原始要求已经足够明确，是执行时遗漏。",
+                }
+            }
+        }
+        confirmed = BUILD_STORY.build_communication_insights(events, [], context, "zh")[0]
+        self.assertEqual(confirmed["attribution"], "ai-ignored-explicit-requirement")
+        self.assertEqual(confirmed["gap_type"], "ai-execution-miss")
+        self.assertIsNone(confirmed["suggested_rewrite"])
+        self.assertEqual(confirmed["missing_information"], [])
+        self.assertIsNone(confirmed["reusable_pattern"])
+
+        context["communication_confirmations"][initial["id"]]["attribution"] = "insufficient-evidence"
+        insufficient = BUILD_STORY.build_communication_insights(events, [], context, "zh")[0]
+        self.assertEqual(insufficient["attribution"], "insufficient-evidence")
+        self.assertEqual(insufficient["gap_type"], "insufficient-evidence")
+        self.assertIsNone(insufficient["suggested_rewrite"])
+
+    def test_transcript_reader_separates_same_named_files_and_propagates_session_id(self):
+        transcript_root = Path(self.temp.name) / "transcripts"
+        first = transcript_root / "a" / "session.jsonl"
+        second = transcript_root / "b" / "session.jsonl"
+        first.parent.mkdir(parents=True)
+        second.parent.mkdir(parents=True)
+        first.write_text(
+            "\n".join(
+                json.dumps(row)
+                for row in [
+                    {"timestamp": "2026-08-30T10:00:00Z", "sessionId": "thread-a", "role": "user", "content": "报告需要中文。"},
+                    {"timestamp": "2026-08-30T10:01:00Z", "role": "assistant", "content": "好的。"},
+                ]
+            ),
+            encoding="utf-8",
+        )
+        second.write_text(
+            json.dumps(
+                {"timestamp": "2026-08-30T10:02:00Z", "role": "user", "content": "我说的是动态标题也要中文。"},
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        events, files = BUILD_STORY.read_transcript_events([transcript_root])
+        self.assertEqual(files.count("session.jsonl"), 2)
+        self.assertEqual(len({event["source_key"] for event in events}), 2)
+        first_source = events[0]["source_key"]
+        self.assertTrue(all(event["session_id"] == "thread-a" for event in events if event["source_key"] == first_source))
+        self.assertEqual(BUILD_STORY.build_communication_insights(events, [], {}, "zh"), [])
+
+    def test_codex_nested_events_are_parsed_and_multi_session_runs_stay_isolated(self):
+        codex = Path(self.temp.name) / "codex.jsonl"
+        codex_rows = [
+            {"timestamp": "2026-08-30T10:00:00Z", "type": "session_meta", "payload": {"id": "codex-a"}},
+            {"timestamp": "2026-08-30T10:01:00Z", "type": "response_item", "payload": {"role": "user", "content": [{"type": "input_text", "text": "Make storage better for beginners"}]}},
+            {"timestamp": "2026-08-30T10:02:00Z", "type": "response_item", "payload": {"role": "assistant", "content": [{"type": "output_text", "text": "I connected the task list to a hosted database."}]}},
+            {"timestamp": "2026-08-30T10:03:00Z", "type": "response_item", "payload": {"role": "user", "content": [{"type": "input_text", "text": "I mean local JSON storage, not a hosted service. Keep all task data on the device."}]}},
+        ]
+        codex.write_text("\n".join(json.dumps(row) for row in codex_rows), encoding="utf-8")
+        events, _ = BUILD_STORY.read_transcript_events([codex])
+        messages = [event for event in events if event["canonical_role"] in {"user", "assistant"}]
+        self.assertEqual([event["canonical_role"] for event in messages], ["user", "assistant", "user"])
+        self.assertTrue(all(event["session_id"] == "codex-a" for event in messages))
+        self.assertEqual(len(BUILD_STORY.build_communication_insights(events, [], {}, "en")), 1)
+
+        archive = Path(self.temp.name) / "archive.json"
+        archive.write_text(
+            json.dumps(
+                {
+                    "conversations": [
+                        {
+                            "id": "archive-a",
+                            "messages": [
+                                {"timestamp": "2026-08-30T10:10:00Z", "role": "user", "content": "Document it"},
+                                {"timestamp": "2026-08-30T10:11:00Z", "role": "assistant", "content": "I added another usage example."},
+                                {"timestamp": "2026-08-30T10:12:00Z", "role": "user", "content": "I mean document the architecture decision, not only CLI usage."},
+                            ],
+                        }
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        events, _ = BUILD_STORY.read_transcript_events([archive])
+        self.assertTrue(all(event["session_id"] == "archive-a" for event in events))
+        self.assertEqual(len(BUILD_STORY.build_communication_insights(events, [], {}, "en")), 1)
+
+        multi = Path(self.temp.name) / "multi-session.jsonl"
+        multi_rows = [
+            {"timestamp": "2026-08-30T11:00:00Z", "type": "session_meta", "payload": {"id": "session-a"}},
+            {"timestamp": "2026-08-30T11:01:00Z", "type": "response_item", "payload": {"role": "user", "content": [{"text": "报告需要中文。"}]}},
+            {"timestamp": "2026-08-30T11:02:00Z", "type": "response_item", "payload": {"role": "assistant", "content": [{"text": "好的。"}]}},
+            {"timestamp": "2026-08-30T11:03:00Z", "type": "session_meta", "payload": {"id": "session-b"}},
+            {"timestamp": "2026-08-30T11:04:00Z", "type": "response_item", "payload": {"role": "user", "content": [{"text": "我说的是动态标题也要中文。"}]}},
+        ]
+        multi.write_text("\n".join(json.dumps(row, ensure_ascii=False) for row in multi_rows), encoding="utf-8")
+        events, _ = BUILD_STORY.read_transcript_events([multi])
+        user_sessions = [event["session_id"] for event in events if event["canonical_role"] == "user"]
+        self.assertEqual(len(set(user_sessions)), 2)
+        self.assertEqual(BUILD_STORY.build_communication_insights(events, [], {}, "zh"), [])
+
+    def test_communication_id_survives_moving_the_same_transcript(self):
+        rows = [
+            {"timestamp": "2026-08-30T10:00:00Z", "role": "user", "content": "Make storage better for beginners"},
+            {"timestamp": "2026-08-30T10:01:00Z", "role": "assistant", "content": "I connected the task list to a hosted database."},
+            {"timestamp": "2026-08-30T10:02:00Z", "role": "user", "content": "I mean local JSON storage, not a hosted service. Keep all task data on the device."},
+        ]
+        ids = []
+        for directory in ("move-a", "move-b"):
+            transcript = Path(self.temp.name) / directory / "session.jsonl"
+            transcript.parent.mkdir()
+            transcript.write_text("\n".join(json.dumps(row) for row in rows), encoding="utf-8")
+            events, _ = BUILD_STORY.read_transcript_events([transcript])
+            ids.append(BUILD_STORY.build_communication_insights(events, [], {}, "en")[0]["id"])
+        self.assertEqual(ids[0], ids[1])
+
+    def test_communication_html_hides_user_guidance_for_ai_miss(self):
+        self.make_history()
+        data = BUILD_STORY.build_evidence(self.repo, [], "zh", None, {})
+        data["coverage"]["sources"].append("transcripts")
+        data["communication_insights"] = [
+            {
+                "id": "communication:test",
+                "topic": "明确要求在执行中被遗漏",
+                "gap_type": "ai-execution-miss",
+                "gap_label": "明确要求在执行中被遗漏",
+                "attribution": "ai-ignored-explicit-requirement",
+                "attribution_label": "AI 忽略了明确要求",
+                "confidence": "high",
+                "original_request": "README、动态标题和对话摘录都要中文。",
+                "ai_response": "README 已改为中文。",
+                "later_clarification": "动态标题和对话摘录还是英文，我已经说了它们也要中文。",
+                "analysis": "原要求已经明确，主要问题是执行遗漏。",
+                "missing_information": [],
+                "suggested_rewrite": None,
+                "reusable_pattern": None,
+                "question": "原始要求是否已经足够明确？",
+                "observed_impact": "没有找到足够接近的 Git 提交。",
+                "related_commits": [],
+                "source": "session.jsonl",
+                "event_range": [0, 2],
+                "confirmation": None,
+                "lesson": None,
+            }
+        ]
+        report = BUILD_STORY.render_html(data)
+        communication = report.split('id="communication"', 1)[1].split('id="rhythm"', 1)[0]
+        self.assertIn("这不主要是用户表述问题", communication)
+        self.assertNotIn("当时缺少的信息", communication)
+        self.assertNotIn("下次可以这样说", communication)
+        self.assertNotIn("可以复用的表达方式", communication)
+
+        data["communication_insights"][0].update(
+            {
+                "topic": "证据不足，暂不归因",
+                "gap_type": "insufficient-evidence",
+                "gap_label": "证据不足，暂不归因",
+                "attribution": "insufficient-evidence",
+                "attribution_label": "证据不足，无法归因",
+            }
+        )
+        report = BUILD_STORY.render_html(data)
+        communication = report.split('id="communication"', 1)[1].split('id="rhythm"', 1)[0]
+        self.assertIn("现有证据不足以支持用户侧改写", communication)
+        self.assertNotIn("这不主要是用户表述问题", communication)
 
     def test_classifies_necessary_exploration_when_changes_reach_validation(self):
         self.commit(

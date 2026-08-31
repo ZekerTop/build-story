@@ -1,11 +1,11 @@
 ---
 name: build-story
-description: Reconstruct and review how a software project was built. Use when someone wants a project retrospective, development timeline, rework and rollback analysis, time-sink analysis, evidence-backed process scoring, lessons learned, portfolio case study, achievement summary, resume bullets, or interview stories from a Git repository and optional AI coding-session transcripts.
+description: Reconstruct and review how a software project was built. Use when someone wants a project retrospective, development timeline, rework and rollback analysis, time-sink analysis, communication review, recurring clarification patterns, AI-misunderstanding candidates, copy-ready prompt rewrites, lessons learned, portfolio material, resume bullets, or interview stories from a Git repository and optional authorized AI coding-session transcripts.
 ---
 
 # BuildStory
 
-BuildStory helps a person see **how** a project was built, not only what was shipped. It reconstructs a small set of turning points, surfaces repeated rework and likely time sinks, builds an evidence-backed capability profile, and turns the evidence into lessons and career material.
+BuildStory helps a person see **how** a project was built, not only what was shipped. It reconstructs a small set of turning points, surfaces repeated rework and likely time sinks, reviews evidence-backed human-AI alignment when transcripts are authorized, and turns the evidence into lessons and career material.
 
 ## Non-negotiable principles
 
@@ -18,8 +18,13 @@ BuildStory helps a person see **how** a project was built, not only what was shi
 - Prefer a theme-level journey insight over a file-level statistic. A path and churn ratio are evidence; they are not the conclusion.
 - Classify repeated work only as a tentative `blocked-loop`, `necessary-exploration`, or `direction-change`, then ask the user to confirm the cause.
 - Do not invent business impact, ownership, team size, performance gains, or resume metrics.
+- Review the interaction, never score or diagnose the user's communication ability. Do not calculate a prompt-quality total score.
+- A repeated prompt is not evidence of unclear wording. Require a same-session `user → assistant → user correction` chain before creating a communication insight.
+- Keep AI execution misses, term-meaning mismatch, requirement evolution, and insufficient evidence distinct. Never default attribution to the user.
+- Treat Git commits near a clarification as nearby evidence, not proof that the clarification caused the commit.
 - Read only the current project by default. Ask before reading session files outside the authorized workspace.
 - Keep analysis local unless the user explicitly requests an external service.
+- Never upload or reproduce a complete transcript. Keep only the short excerpts required to explain a conclusion.
 - Do not modify project source files. Write results to a dedicated output directory.
 
 ## Default workflow
@@ -66,6 +71,14 @@ When user-confirmed context is available, save it in the report output directory
         "lesson": "当一个功能持续引入恢复机制时，先重新判断它是否值得存在。"
       }
     },
+    "communication_confirmations": {
+      "communication:example-id": {
+        "attribution": "ai-ignored-explicit-requirement",
+        "reason": "原始要求已经明确说明必须保留语言切换。",
+        "analysis": "这次更像 AI 执行遗漏，而不是用户需要把话说得更长。",
+        "lesson": "明确边界仍被遗漏时，先检查 AI 执行。"
+      }
+    },
     "translations": {
       "Initialize project": "初始化项目",
       "Add the requested feature": "加入用户要求的功能"
@@ -101,6 +114,8 @@ The script generates a default report plus English and Chinese variants:
 Read `evidence.json` and verify:
 
 - `journey_insights` first: its topic, tentative classification, evidence chain, confidence, and confirmation question;
+- `communication_insights` when transcripts are authorized: no more than three cards, each grounded in an ordered user request, assistant response, and later user correction;
+- every communication attribution remains distinct: information clarified later, AI ignored an explicit requirement, term meaning differed, requirement evolved, or evidence is insufficient;
 - data sources and stated limitations;
 - project dates, commit counts, authors, and file counts;
 - whether the first-screen story is supported by the selected turning points;
@@ -124,7 +139,7 @@ When authorized transcripts exist, use the short user request and AI response at
 
 ### 4. Confirm the journey before writing the achievement
 
-Ask no more than three questions, chosen from the highest-confidence unconfirmed `journey_insights`. Do not ask the user to edit `insight_confirmations` manually. After the user answers, write the confirmation and lesson into `context.json`, rerun the analyzer, and verify that the report shows the confirmed interpretation.
+Ask no more than three confirmation questions in total. Choose them from the highest-confidence unconfirmed `journey_insights` and, only when the user requested communication review, one or two `communication_insights`. Do not ask the user to edit either confirmation object manually. After the user answers, write journey confirmation to `insight_confirmations` or communication confirmation to `communication_confirmations`, rerun the analyzer, and verify that the report shows the confirmed interpretation.
 
 Only after the journey is confirmed, ask for any remaining career context. Do not turn the workflow into an interview. The usual missing facts are:
 
@@ -141,6 +156,7 @@ For career, portfolio, achievement, or interview output, do not leave these answ
 Use the evidence for one or more of these outputs:
 
 - **Project retrospective:** timeline, turning points, friction, lessons, next-run changes.
+- **Communication review:** original wording, assistant interpretation, later correction, neutral attribution, and, only when supported, a copy-ready rewrite and reusable pattern. Show at most three cards and never give a prompt score.
 - **Portfolio case study:** problem, constraints, decisions, implementation, validation, outcome.
 - **Resume bullets:** action + scope + method + verified result. Leave an explicit placeholder when impact is unknown.
 - **Interview story:** STAR structure grounded in commits, diffs, tests, releases, and user-confirmed context.
@@ -160,5 +176,6 @@ A finished BuildStory report should let the user answer:
 6. Which areas absorbed the most attention, and how confident is that estimate?
 7. What did the user demonstrably learn or improve?
 8. What credible achievement can be reused in a resume, portfolio, interview, or personal record?
+9. Which details became clear only after AI had already acted, how should the cause be attributed, and what could be said earlier next time?
 
 If the available evidence cannot answer one of these, state what is missing. A smaller honest story is better than an impressive fictional one.

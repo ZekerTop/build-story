@@ -2,7 +2,7 @@
 
 **See how you built it, not just what you built.**
 
-BuildStory is a local-first Agent Skill and report generator that reconstructs a software project's development history. It turns Git history and optional AI coding-session transcripts into a project story, a small set of turning points, rework and rollback signals, attention estimates, an evidence-backed process profile, and material for retrospectives, portfolios, resumes, and interviews.
+BuildStory is a local-first Agent Skill and report generator that reconstructs how a software project was built. It turns Git history and explicitly authorized AI coding-session transcripts into a project story, turning points, rework and rollback signals, and evidence-backed career material. With authorized transcripts, it can also review which details became clear only after AI had acted and, when the evidence supports it, produce copy-ready rewrites for the next conversation.
 
 [简体中文](README.md)
 
@@ -60,11 +60,14 @@ The report includes:
 6. a project-scoped activity pulse that reveals what happened on a selected day;
 7. estimated attention areas and active time;
 8. evidence levels and actions for delivery, validation, traceability, iteration, and learning capture;
-9. evidence cards for portfolios, resume bullets, achievement records, and STAR interview stories.
+9. a communication review based on a `user → assistant → user correction` evidence chain, capped at three cards;
+10. evidence cards for portfolios, resume bullets, achievement records, and STAR interview stories.
 
 The activity pulse describes observable Git and conversation evidence. It does not turn commit volume into a judgment of effort or productivity.
 
-The complete commit log and numeric calculations remain available as collapsed evidence. BuildStory deliberately does **not** calculate one overall score.
+The complete commit log and numeric calculations remain available as collapsed evidence. BuildStory deliberately does **not** calculate an overall project or prompt score, and it does not judge the user's communication ability.
+
+The current generator version is **0.4.0** and the structured evidence schema is **1.5**.
 
 ## Quick start
 
@@ -109,7 +112,17 @@ Repeat `--session` to add more authorized files or directories.
 
 BuildStory does not automatically search private session directories.
 
-The parser accepts generic `.jsonl`, `.json`, `.txt`, and `.md` inputs. Agent-specific field names may differ; when timestamps or roles cannot be identified, BuildStory keeps the Git report and lowers confidence instead of inventing context.
+The parser accepts generic `.jsonl`, `.json`, `.txt`, and `.md` inputs and conservatively recognizes common nested `message`, `payload`, and conversation-archive structures. When one file contains multiple sessions, message runs that cannot be assigned safely are isolated rather than joined across sessions. Agent-specific field names may still differ; when timestamps or roles cannot be identified, BuildStory keeps the Git report and lowers confidence instead of inventing context.
+
+Communication cards require a same-session `user → assistant → user correction` chain and are capped at three. A repeated prompt is not automatically unclear wording. BuildStory distinguishes an AI miss of an explicit requirement, a term-meaning mismatch, and requirement evolution after seeing a result instead of assigning blame to the user by default. Candidates that still have insufficient evidence are omitted by default, and users can also confirm an existing candidate as insufficient evidence. BuildStory offers a rewrite only when the evidence supports user-side guidance.
+
+Temporal proximity between a clarification and a Git commit is only an inspectable clue; **it does not prove causation**. Reports keep only the short excerpts needed to support a conclusion. They do not upload or copy complete conversations.
+
+As an Agent Skill, you can ask:
+
+```text
+Use $build-story to review this project and the authorized sessions. Show at most three cases where important information became clear only after AI had acted, and provide a copy-ready version only when the evidence supports one. Do not score my prompts.
+```
 
 ### Confirm the journey, then add three career facts
 
@@ -136,6 +149,14 @@ Create `context.json`:
         "classification": "direction-change",
         "reason": "Automatic sync conflicted with a beginner-friendly product.",
         "lesson": "When a feature keeps adding recovery machinery, reconsider whether it deserves to exist."
+      }
+    },
+    "communication_confirmations": {
+      "communication:example-id": {
+        "attribution": "ai-ignored-explicit-requirement",
+        "reason": "The original request already said to preserve the language switch, so this was an AI execution miss.",
+        "analysis": "The user did not need a longer prompt. The AI should restate the protected boundary before editing.",
+        "lesson": "When a clear boundary is still missed, inspect AI execution before blaming user wording."
       }
     }
   }
@@ -188,6 +209,10 @@ Use $build-story to identify repeated loops, likely time sinks, and the most def
 Use $build-story to turn this project's evidence into a portfolio case study and three truthful resume bullets. Ask me only for impact that cannot be verified from the repository.
 ```
 
+```text
+Use $build-story to review correction chains in the authorized sessions. Distinguish AI misses, term-meaning mismatches, requirement evolution, and insufficient evidence. Show at most three cases, and provide a copy-ready rewrite only when the evidence supports one.
+```
+
 ## Evidence model
 
 BuildStory keeps three things separate:
@@ -216,6 +241,12 @@ High churn can mean productive iteration. BuildStory combines reversal, replacem
 Git does not record thinking time. A Git-only estimate groups nearby commits into work sessions and is labeled low confidence.
 
 Authorized timestamped transcripts improve coverage, but still miss offline thinking, meetings, research, and unrecorded experiments.
+
+### Communication review
+
+Communication review only examines transcripts the user explicitly authorizes. It requires a same-session `user → assistant → user correction` chain and keeps at most three examples.
+
+Repeated prompts do not automatically mean unclear wording. An interpretation may be that information became clear later, AI ignored an explicit requirement, both sides used a term differently, the requirement evolved after seeing the result, or evidence is insufficient to attribute. These labels review human-AI alignment; they do not evaluate the user's communication ability.
 
 ## Evidence-backed profile
 
@@ -254,6 +285,7 @@ python3 scripts/create_demo_report.py
 - Output is written only to the selected directory.
 - Absolute local paths are not included in generated reports.
 - Full transcripts are not copied into reports.
+- Communication review retains only short excerpts needed to support a conclusion and never uploads transcripts.
 - Resume and portfolio output must not invent impact metrics.
 
 See [SECURITY.md](SECURITY.md) for responsible reporting.
@@ -263,7 +295,9 @@ See [SECURITY.md](SECURITY.md) for responsible reporting.
 - Git-only analysis cannot see uncommitted experiments or invisible thinking.
 - Commit-message classification is heuristic.
 - High churn is not automatically waste.
-- Transcript formats vary across tools; the v0.1 parser intentionally uses a conservative generic schema.
+- Transcript formats vary across tools; v0.4.0 still uses a conservative generic parser.
+- A communication correction chain shows how alignment changed; it cannot by itself prove whether responsibility belongs to the user or AI.
+- Temporal proximity between a conversation and a Git commit does not prove causation.
 - Career outcomes require the user's verified role and result.
 
 ## Development

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import collections
 import datetime as dt
+import hashlib
 import html
 import json
 import math
@@ -22,11 +23,12 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 MAX_TRANSCRIPT_BYTES = 20 * 1024 * 1024
 MAX_TRANSCRIPT_EVENTS = 20_000
 SESSION_GAP_HOURS = 2.0
 TRANSCRIPT_ACTIVE_GAP_MINUTES = 30.0
+CONVERSATION_SEGMENT_GAP_MINUTES = 15.0
 
 
 COPY = {
@@ -68,6 +70,20 @@ COPY = {
         "captured_lesson": "Lesson captured",
         "raw_change_evidence": "View file-level evidence",
         "no_journey_insights": "No theme-level rework story met the evidence threshold.",
+        "communication_review": "Communication review",
+        "communication_review_intro": "See which details became clear only after AI had already acted. This reviews how the human and AI aligned; it never scores the user's communication ability.",
+        "original_request": "What you said",
+        "ai_interpretation": "How AI responded",
+        "later_correction": "What you clarified later",
+        "communication_analysis": "Where the gap appeared",
+        "communication_impact": "Observed project evidence",
+        "missing_information": "Information that was missing",
+        "next_time_say": "A clearer way to say it next time",
+        "reusable_pattern": "Reusable pattern",
+        "attribution": "Primary attribution",
+        "no_communication_insights": "No correction chain met the evidence threshold. Short prompts are not treated as unclear by default.",
+        "not_user_rewrite": "This is not primarily a user-wording problem, so BuildStory does not ask the user to make the prompt longer.",
+        "insufficient_rewrite": "The evidence is not strong enough to support user-side guidance, so no rewrite is offered.",
         "attention": "Attention map",
         "attention_intro": "Estimated from change density and activity timestamps. Invisible thinking time is not captured.",
         "profile": "Evidence-backed profile",
@@ -107,7 +123,7 @@ COPY = {
         "source_git": "Git history",
         "source_sessions": "authorized session transcripts",
         "git_limit": "Git records saved changes, not all thinking, experiments, or uncommitted work.",
-        "session_limit": "Transcript analysis stores only short excerpts used to explain repeated-prompt candidates.",
+        "session_limit": "Transcript analysis keeps only short excerpts needed for review; it never copies the full conversation.",
         "resume_prompt": "Add the verified user or business outcome before using this as a resume bullet.",
         "evidence": "Evidence",
         "calculation": "View calculation",
@@ -166,6 +182,20 @@ COPY = {
         "captured_lesson": "沉淀的经验",
         "raw_change_evidence": "查看文件级证据",
         "no_journey_insights": "没有达到证据门槛的主题级反复故事。",
+        "communication_review": "沟通复盘",
+        "communication_review_intro": "看看哪些信息是在 AI 已经行动后才变清楚的。这里复盘的是人与 AI 如何对齐，不评价用户的表达能力。",
+        "original_request": "当时怎么说",
+        "ai_interpretation": "AI 当时怎么回应",
+        "later_correction": "后来怎样补充",
+        "communication_analysis": "偏差出现在哪里",
+        "communication_impact": "观察到的项目证据",
+        "missing_information": "当时缺少的信息",
+        "next_time_say": "下次可以这样说",
+        "reusable_pattern": "可以复用的表达方式",
+        "attribution": "主要归因",
+        "no_communication_insights": "没有达到证据门槛的沟通纠正链。BuildStory 不会因为一句话很短，就默认它表达不清。",
+        "not_user_rewrite": "这不主要是用户表述问题，因此 BuildStory 不会要求用户把话说得更长。",
+        "insufficient_rewrite": "现有证据不足以支持用户侧改写，因此这里不提供“下次怎么说”。",
         "attention": "注意力地图",
         "attention_intro": "根据变更密度和活动时间估算，无法覆盖离线思考时间。",
         "profile": "基于证据的能力画像",
@@ -205,7 +235,7 @@ COPY = {
         "source_git": "Git 历史",
         "source_sessions": "已授权的会话记录",
         "git_limit": "Git 只记录已保存的变更，无法覆盖全部思考、实验和未提交工作。",
-        "session_limit": "会话分析只保存用于解释重复提示候选的短摘录，不复制完整对话。",
+        "session_limit": "会话分析只保留复盘所需的短摘录，不复制完整对话。",
         "resume_prompt": "用于简历前，请补充经过验证的用户结果或业务结果。",
         "evidence": "证据",
         "calculation": "查看计算方法",
@@ -263,6 +293,50 @@ JOURNEY_CLASSIFICATION_LABELS = {
         "blocked-loop": "失败循环",
         "necessary-exploration": "必要探索",
         "direction-change": "方向转变",
+    },
+}
+
+
+COMMUNICATION_ATTRIBUTION_LABELS = {
+    "en": {
+        "user-expression-insufficient": "Information became clear later",
+        "ai-ignored-explicit-requirement": "AI missed an explicit requirement",
+        "term-meaning-mismatch": "The same term meant different things",
+        "requirement-evolution": "The requirement evolved after seeing the result",
+        "insufficient-evidence": "Not enough evidence to attribute",
+    },
+    "zh": {
+        "user-expression-insufficient": "信息后来才补全",
+        "ai-ignored-explicit-requirement": "AI 忽略了明确要求",
+        "term-meaning-mismatch": "双方对同一个词理解不同",
+        "requirement-evolution": "需求在看到结果后演化",
+        "insufficient-evidence": "证据不足，无法归因",
+    },
+}
+
+
+COMMUNICATION_GAP_LABELS = {
+    "en": {
+        "ambiguous-reference": "Ambiguous reference",
+        "vague-goal": "Abstract goal",
+        "missing-scope": "Scope clarified later",
+        "missing-constraint": "Constraint clarified later",
+        "missing-acceptance": "Acceptance criteria clarified later",
+        "term-definition": "Term meaning clarified later",
+        "ai-execution-miss": "Explicit requirement was missed",
+        "requirement-evolution": "Requirement evolved after feedback",
+        "insufficient-evidence": "Evidence is insufficient to attribute",
+    },
+    "zh": {
+        "ambiguous-reference": "指代不够明确",
+        "vague-goal": "目标比较抽象",
+        "missing-scope": "范围在后续才明确",
+        "missing-constraint": "约束在后续才明确",
+        "missing-acceptance": "验收标准在后续才明确",
+        "term-definition": "术语含义在后续才明确",
+        "ai-execution-miss": "明确要求在执行中被遗漏",
+        "requirement-evolution": "需求在看到结果后演化",
+        "insufficient-evidence": "证据不足，暂不归因",
     },
 }
 
@@ -390,6 +464,7 @@ def context_for_language(context: dict[str, Any], language: str) -> dict[str, An
         "resume_bullets",
         "translations",
         "insight_confirmations",
+        "communication_confirmations",
     }
     result = {key: value[key] for key in allowed if key in value}
     if "resume_bullets" in result and not isinstance(result["resume_bullets"], list):
@@ -398,6 +473,8 @@ def context_for_language(context: dict[str, Any], language: str) -> dict[str, An
         result["translations"] = {}
     if "insight_confirmations" in result and not isinstance(result["insight_confirmations"], dict):
         result["insight_confirmations"] = {}
+    if "communication_confirmations" in result and not isinstance(result["communication_confirmations"], dict):
+        result["communication_confirmations"] = {}
     return result
 
 
@@ -828,7 +905,7 @@ def flatten_text(value: Any, depth: int = 0) -> str:
         parts = [flatten_text(item, depth + 1) for item in value]
         return " ".join(part for part in parts if part)
     if isinstance(value, dict):
-        for key in ("text", "content", "message", "prompt", "input", "output"):
+        for key in ("text", "content", "message", "payload", "data", "prompt", "input", "output"):
             if key in value:
                 text = flatten_text(value[key], depth + 1)
                 if text:
@@ -836,7 +913,61 @@ def flatten_text(value: Any, depth: int = 0) -> str:
     return ""
 
 
-def event_from_object(value: Any, source: str) -> dict[str, Any] | None:
+def transcript_session_id(value: Any) -> str | None:
+    if not isinstance(value, dict):
+        return None
+    for container in (
+        value,
+        value.get("message"),
+        value.get("payload"),
+        value.get("data"),
+    ):
+        if not isinstance(container, dict):
+            continue
+        session_id = (
+            container.get("session_id")
+            or container.get("sessionId")
+            or container.get("conversation_id")
+            or container.get("conversationId")
+            or container.get("thread_id")
+            or container.get("threadId")
+        )
+        if session_id:
+            return str(session_id)[:160]
+    payload = value.get("payload")
+    if str(value.get("type") or "").lower() == "session_meta" and isinstance(payload, dict) and payload.get("id"):
+        return str(payload["id"])[:160]
+    if value.get("id") and any(
+        isinstance(value.get(key), list)
+        for key in ("messages", "events", "conversation", "conversations", "chat_messages")
+    ):
+        return str(value["id"])[:160]
+    return None
+
+
+def expand_transcript_values(value: Any) -> list[Any]:
+    if not isinstance(value, dict):
+        return [value]
+    for key in ("messages", "events", "items", "conversation", "conversations", "chat_messages"):
+        nested = value.get(key)
+        if not isinstance(nested, list):
+            continue
+        inherited_session = transcript_session_id(value)
+        expanded = []
+        for item in nested:
+            if inherited_session and isinstance(item, dict) and not transcript_session_id(item):
+                item = {**item, "session_id": inherited_session}
+            expanded.extend(expand_transcript_values(item))
+        return expanded
+    return [value]
+
+
+def event_from_object(
+    value: Any,
+    source: str,
+    source_key: str | None = None,
+    default_session_id: str | None = None,
+) -> dict[str, Any] | None:
     if not isinstance(value, dict):
         return None
     timestamp = None
@@ -845,11 +976,35 @@ def event_from_object(value: Any, source: str) -> dict[str, Any] | None:
             timestamp = parse_datetime(value[key])
             if timestamp:
                 break
-    role = str(value.get("role") or value.get("type") or value.get("kind") or "unknown")
+    nested_role = None
+    for key in ("message", "payload", "data"):
+        nested = value.get(key)
+        if isinstance(nested, dict) and nested.get("role"):
+            nested_role = nested["role"]
+            break
+    role = str(value.get("role") or nested_role or value.get("type") or value.get("kind") or "unknown")
+    lower_role = role.lower()
+    if any(token in lower_role for token in ("assistant", "agent", "ai")):
+        canonical_role = "assistant"
+    elif any(token in lower_role for token in ("user", "human", "prompt")):
+        canonical_role = "user"
+    elif "system" in lower_role:
+        canonical_role = "system"
+    else:
+        canonical_role = "other"
     text = re.sub(r"\s+", " ", flatten_text(value)).strip()
     if not timestamp and not text:
         return None
-    return {"timestamp": timestamp, "role": role.lower(), "text": text[:2000], "source": source}
+    session_id = transcript_session_id(value) or default_session_id or source
+    return {
+        "timestamp": timestamp,
+        "role": lower_role,
+        "canonical_role": canonical_role,
+        "text": text[:2000],
+        "source": source,
+        "source_key": source_key or source,
+        "session_id": session_id,
+    }
 
 
 def read_transcript_events(paths: list[Path]) -> tuple[list[dict[str, Any]], list[str]]:
@@ -857,6 +1012,8 @@ def read_transcript_events(paths: list[Path]) -> tuple[list[dict[str, Any]], lis
     files: list[str] = []
     for path in iter_transcript_files(paths):
         files.append(path.name)
+        source_key = hashlib.sha256(str(path).encode("utf-8")).hexdigest()[:16]
+        source_event_index = 0
         try:
             if path.suffix.lower() == ".jsonl":
                 values = []
@@ -876,9 +1033,36 @@ def read_transcript_events(paths: list[Path]) -> tuple[list[dict[str, Any]], lis
                 values = [{"text": line} for line in path.read_text(encoding="utf-8", errors="replace").splitlines()]
         except (OSError, json.JSONDecodeError):
             continue
+        expanded_values = []
         for value in values:
-            event = event_from_object(value, path.name)
+            expanded_values.extend(expand_transcript_values(value))
+        values = expanded_values
+        explicit_session_ids = {
+            session_id
+            for value in values
+            if (session_id := transcript_session_id(value))
+        }
+        only_session_id = next(iter(explicit_session_ids)) if len(explicit_session_ids) == 1 else None
+        orphan_run = 0
+        inside_orphan_run = False
+        for value in values:
+            explicit_session_id = transcript_session_id(value)
+            if explicit_session_id:
+                default_session_id = explicit_session_id
+                inside_orphan_run = False
+            elif only_session_id:
+                default_session_id = only_session_id
+            elif len(explicit_session_ids) > 1:
+                if not inside_orphan_run:
+                    orphan_run += 1
+                    inside_orphan_run = True
+                default_session_id = f"{path.name}:orphan:{orphan_run}"
+            else:
+                default_session_id = path.name
+            event = event_from_object(value, path.name, source_key, default_session_id)
             if event:
+                event["event_index"] = source_event_index
+                source_event_index += 1
                 events.append(event)
                 if len(events) >= MAX_TRANSCRIPT_EVENTS:
                     return events, files
@@ -939,6 +1123,491 @@ def analyze_transcripts(events: list[dict[str, Any]], files: list[str], language
         "repeated_prompts": repeats[:10],
         "error_signals": error_events,
     }
+
+
+def communication_signature(text: str) -> set[str]:
+    lower = text.lower()
+    tokens = {
+        token
+        for token in re.findall(r"[a-z0-9_]+", lower)
+        if token not in STOPWORDS and len(token) > 1
+    }
+    ignored_bigrams = {
+        "这个",
+        "这些",
+        "那个",
+        "一下",
+        "可以",
+        "还是",
+        "就是",
+        "我的",
+        "的是",
+        "已经",
+        "需要",
+        "应该",
+    }
+    for run in re.findall(r"[\u4e00-\u9fff]{2,}", lower):
+        if len(run) <= 6:
+            tokens.add(run)
+        tokens.update(
+            run[index : index + 2]
+            for index in range(len(run) - 1)
+            if run[index : index + 2] not in ignored_bigrams
+        )
+    return tokens
+
+
+def conversation_segments(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    segments: list[dict[str, Any]] = []
+    for event in sorted(events, key=lambda item: item.get("event_index", 0)):
+        role = event["canonical_role"]
+        previous_time = segments[-1].get("timestamp_end") if segments else None
+        current_time = event.get("timestamp")
+        gap_seconds = (
+            (current_time - previous_time).total_seconds()
+            if previous_time is not None and current_time is not None
+            else None
+        )
+        same_turn = gap_seconds is None or 0 <= gap_seconds <= CONVERSATION_SEGMENT_GAP_MINUTES * 60
+        if segments and segments[-1]["canonical_role"] == role and same_turn:
+            segment = segments[-1]
+            segment["text"] = f"{segment['text']}\n{event['text']}"[:6000]
+            segment["texts"].append(event["text"])
+            segment["timestamp_end"] = event.get("timestamp") or segment.get("timestamp_end")
+            segment["event_index_end"] = event.get("event_index", segment["event_index_end"])
+            continue
+        segments.append(
+            {
+                **event,
+                "texts": [event["text"]],
+                "timestamp_end": event.get("timestamp"),
+                "event_index_end": event.get("event_index"),
+            }
+        )
+    return segments
+
+
+def localized_conversation_segment(
+    segment: dict[str, Any], context: dict[str, Any], language: str
+) -> str:
+    texts = segment.get("texts") or [segment.get("text", "")]
+    return "\n".join(
+        localized_dynamic_text(str(text), context, language)
+        for text in texts
+        if str(text).strip()
+    )[:400]
+
+
+def build_communication_insights(
+    events: list[dict[str, Any]],
+    timeline: list[dict[str, Any]],
+    context: dict[str, Any],
+    language: str,
+) -> list[dict[str, Any]]:
+    if not events:
+        return []
+
+    confirmations = context.get("communication_confirmations", {})
+    if not isinstance(confirmations, dict):
+        confirmations = {}
+
+    correction_pattern = re.compile(
+        r"\b(no|not what i meant|i mean|i meant|what i mean is|instead of|you missed|you ignored|still|again|as i said|also needs? to|should|don't|do not)\b|"
+        r"不是|不对|我说的是|我的意思是|我指的是|而不是|不要|别|你漏了|你没改|还是|又|我已经说了|也要|应该",
+        re.I,
+    )
+    strong_clarification_pattern = re.compile(
+        r"\b(not what i meant|i mean|what i mean is|to be clear|specifically|you missed|you ignored|as i said|i already said)\b|"
+        r"我说的是|我的意思是|我指的是|具体包括|更具体地说|也就是说|你漏了|你没改|我已经说了|之前说过",
+        re.I,
+    )
+    blame_pattern = re.compile(
+        r"\b(you missed|you ignored|still|again|as i said|i already said)\b|"
+        r"你漏了|你没改|还是|又|我已经说了|之前说过",
+        re.I,
+    )
+    explicit_blame_pattern = re.compile(
+        r"\b(you missed|you ignored|as i said|i already said)\b|你漏了|你没改|我已经说了|之前说过",
+        re.I,
+    )
+    evolution_pattern = re.compile(
+        r"\b(after seeing|now i think|let's change|i'd rather|next|on top of that|also add)\b|"
+        r"看了以后|看到.*后|现在我觉得|再加一个|接下来|在这个基础上|其实我更想|另外再|顺便",
+        re.I,
+    )
+    definition_pattern = re.compile(
+        r"\b(i mean|what i mean is|by .+ i mean|not .+ but|refers to)\b|我说的.+是|这里的.+指|不是.+而是",
+        re.I,
+    )
+    vague_reference_pattern = re.compile(
+        r"\b(this|that|it|these|those|here|above|same as above)\b|这个|这些|那个|那里|这里|上面|进去|它",
+        re.I,
+    )
+    vague_goal_pattern = re.compile(
+        r"\b(make it better|improve it|clean it up|make it nicer|make it cooler|optimize it|fix it)\b|"
+        r"优化一下|好看一点|更好看|更炫酷|简单一点|处理一下|弄一下|改一下|还是不对|再改一下",
+        re.I,
+    )
+    constraint_pattern = re.compile(
+        r"\b(only|do not|don't|keep|must|without changing|leave .+ unchanged)\b|只|不要|别|保留|必须|仅|不能|不要动",
+        re.I,
+    )
+    scope_pattern = re.compile(
+        r"\b(both|including|all|also|not only|every)\b|包括|以及|也要|全部|所有|不只是|同时|都要",
+        re.I,
+    )
+    acceptance_pattern = re.compile(
+        r"\b(expected|verify|test|must pass|after clicking|at \d+px)\b|完成后|验收|测试|点击后|不能.*滚动|在\s*\d+\s*px",
+        re.I,
+    )
+    clarification_pattern = re.compile(
+        r"\b(which|do you mean|would you like|should i|can you clarify|could you clarify)\b|"
+        r"你更想|请确认|是指|需要我|能否说明",
+        re.I,
+    )
+
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = collections.defaultdict(list)
+    for event in events:
+        if event.get("canonical_role") not in {"user", "assistant"} or not event.get("text"):
+            continue
+        text = event["text"]
+        if re.search(
+            r"<system-reminder>|<environment_context>|<in-app-browser-context>|<app-context>|"
+            r"<skills_instructions>|<permissions instructions>|<collaboration_mode>|# AGENTS\.md instructions",
+            text,
+            re.I,
+        ):
+            continue
+        grouped[
+            (
+                event.get("source_key", event.get("source", "session")),
+                event.get("session_id", event.get("source_key", event.get("source", "session"))),
+            )
+        ].append(event)
+
+    results: list[dict[str, Any]] = []
+    for _group_key, group in grouped.items():
+        segments = conversation_segments(group)
+        for index in range(len(segments) - 2):
+            original, response, correction = segments[index : index + 3]
+            if [original["canonical_role"], response["canonical_role"], correction["canonical_role"]] != [
+                "user",
+                "assistant",
+                "user",
+            ]:
+                continue
+            if clarification_pattern.search(response["text"]) or response["text"].strip().endswith(("?", "？")):
+                continue
+            if original.get("timestamp") and correction.get("timestamp_end"):
+                gap = (correction["timestamp_end"] - original["timestamp"]).total_seconds()
+                if gap < 0 or gap > 24 * 3600:
+                    continue
+
+            original_raw = original["text"][:400]
+            response_raw = response["text"][:400]
+            correction_raw = correction["text"][:400]
+            if not (correction_pattern.search(correction_raw) or evolution_pattern.search(correction_raw)):
+                continue
+
+            original_terms = communication_signature(original_raw)
+            correction_terms = communication_signature(correction_raw)
+            response_terms = communication_signature(response_raw)
+            shared_terms = original_terms & correction_terms
+            new_terms = correction_terms - original_terms
+            new_information_ratio = len(new_terms) / max(1, len(correction_terms))
+            repeat_ratio = len(shared_terms) / max(1, len(original_terms))
+            if (
+                not shared_terms
+                and not definition_pattern.search(correction_raw)
+                and not evolution_pattern.search(correction_raw)
+            ):
+                continue
+
+            original_has_constraint = bool(constraint_pattern.search(original_raw))
+            original_has_scope = bool(scope_pattern.search(original_raw))
+            original_has_acceptance = bool(acceptance_pattern.search(original_raw))
+            original_is_explicit = original_has_constraint or original_has_scope or original_has_acceptance
+            vague_reference = bool(vague_reference_pattern.search(original_raw))
+            vague_goal = bool(vague_goal_pattern.search(original_raw))
+            cleaned_correction_raw = re.sub(
+                r"^(no[,.:\- ]*|not what i meant[,.:\- ]*|i mean(?: that)?[,.:\- ]*|i meant(?: that)?[,.:\- ]*|what i mean is[,.:\- ]*|"
+                r"不对[，,。 ]*|不是这个[，,。 ]*|我说的是[：:，, ]*|我的意思是[：:，, ]*|我指的是[：:，, ]*|等一下[，,。 ]*)",
+                "",
+                correction_raw,
+                flags=re.I,
+            ).strip()
+            correction_has_constraint = bool(constraint_pattern.search(correction_raw))
+            correction_has_scope = bool(scope_pattern.search(correction_raw))
+            correction_has_acceptance = bool(acceptance_pattern.search(correction_raw))
+            later_adds_dimension = (
+                (correction_has_constraint and not original_has_constraint)
+                or (correction_has_scope and not original_has_scope)
+                or (correction_has_acceptance and not original_has_acceptance)
+            )
+            meaningful_length = 12 if re.search(r"[\u4e00-\u9fff]", cleaned_correction_raw) else 28
+            later_adds_specificity = (
+                len(cleaned_correction_raw) >= meaningful_length and len(new_terms) >= 3
+            )
+
+            classification = "insufficient-evidence"
+            if evolution_pattern.search(correction_raw) and not explicit_blame_pattern.search(correction_raw):
+                classification = "requirement-evolution"
+            elif definition_pattern.search(correction_raw) and response_terms & correction_terms:
+                classification = "term-meaning-mismatch"
+            elif (
+                original_is_explicit
+                and blame_pattern.search(correction_raw)
+                and repeat_ratio >= 0.35
+                and new_information_ratio <= 0.45
+            ):
+                classification = "ai-ignored-explicit-requirement"
+            elif (
+                strong_clarification_pattern.search(correction_raw)
+                and new_information_ratio >= 0.35
+                and (
+                    ((vague_reference or vague_goal) and (later_adds_dimension or later_adds_specificity))
+                    or (not original_is_explicit and later_adds_dimension)
+                )
+            ):
+                classification = "user-expression-insufficient"
+            if classification == "insufficient-evidence":
+                continue
+
+            if vague_reference:
+                inferred_gap_type = "ambiguous-reference"
+            elif vague_goal:
+                inferred_gap_type = "vague-goal"
+            elif correction_has_constraint and not original_has_constraint:
+                inferred_gap_type = "missing-constraint"
+            elif correction_has_acceptance and not original_has_acceptance:
+                inferred_gap_type = "missing-acceptance"
+            else:
+                inferred_gap_type = "missing-scope"
+
+            if language == "zh":
+                missing_by_type = {
+                    "ambiguous-reference": ["具体对象", "修改范围"],
+                    "vague-goal": ["可观察的目标", "优先级", "不需要改动的部分"],
+                    "missing-scope": ["完整影响范围", "不在范围内的内容"],
+                    "missing-constraint": ["必须保留的行为", "明确禁区"],
+                    "missing-acceptance": ["完成标准", "验证方式"],
+                    "term-definition": ["核心术语的具体含义", "不包含的解释"],
+                    "ai-execution-miss": [],
+                    "requirement-evolution": [],
+                    "insufficient-evidence": [],
+                }
+                pattern_by_type = {
+                    "ambiguous-reference": "请修改[具体对象]中的[具体部分]，目标是[预期结果]；不要改动[边界]。",
+                    "vague-goal": "我的目标是[用户可见结果]。请优先调整[具体方面]，不要增加[不需要的内容]；完成标准是[可检查结果]。",
+                    "missing-scope": "请把[明确范围]都改为[目标状态]；保留[不变部分]；范围外不要修改。",
+                    "missing-constraint": "请完成[目标]，但不要修改[边界]；必须保留[已有行为]。",
+                    "missing-acceptance": "请完成[目标]；完成后用[测试、尺寸或操作步骤]验证，并告诉我结果。",
+                    "term-definition": "我说的[术语]是[具体含义]，不是[容易混淆的解释]；目标是[预期结果]。",
+                    "ai-execution-miss": None,
+                    "requirement-evolution": None,
+                    "insufficient-evidence": None,
+                }
+                analysis_by_class = {
+                    "user-expression-insufficient": "最初的说法给 AI 留出了多个合理解释，后续补充才把对象、范围或约束变得唯一。",
+                    "ai-ignored-explicit-requirement": "最初要求已经包含明确边界，后续仍需重复。主要问题更像 AI 执行遗漏，而不是用户需要把话说得更长。",
+                    "term-meaning-mismatch": "双方围绕同一个词继续对话，但这个词指向的对象并不相同。",
+                    "requirement-evolution": "这是看到结果后形成的新判断，更像正常需求演化，不应倒推为最初表达失败。",
+                    "insufficient-evidence": "现有链只能说明后来发生了澄清，无法公平判断是信息缺失、执行遗漏还是需求变化。",
+                }
+                question_by_class = {
+                    "user-expression-insufficient": "这次是信息一开始没有说完整，还是你看到结果后才形成更具体的判断？",
+                    "ai-ignored-explicit-requirement": "原始要求是否已经足够明确，只是 AI 执行时遗漏了它？",
+                    "term-meaning-mismatch": "这里是否更像双方对同一个词的理解不同？",
+                    "requirement-evolution": "这是看到结果后自然形成的新判断吗？",
+                    "insufficient-evidence": "你能否确认这次更接近信息后补、AI 执行遗漏，还是需求自然变化？",
+                }
+            else:
+                missing_by_type = {
+                    "ambiguous-reference": ["the exact object", "the change boundary"],
+                    "vague-goal": ["an observable goal", "the priority", "what should not change"],
+                    "missing-scope": ["the complete scope", "what remains out of scope"],
+                    "missing-constraint": ["behavior that must remain", "explicit non-goals"],
+                    "missing-acceptance": ["the acceptance criteria", "the verification method"],
+                    "term-definition": ["the exact meaning of the core term", "the interpretation to exclude"],
+                    "ai-execution-miss": [],
+                    "requirement-evolution": [],
+                    "insufficient-evidence": [],
+                }
+                pattern_by_type = {
+                    "ambiguous-reference": "Change [specific part] of [specific object] to achieve [expected result]; do not change [boundary].",
+                    "vague-goal": "My goal is [user-visible result]. Prioritize [specific aspect], avoid [unwanted change], and verify [observable outcome].",
+                    "missing-scope": "Apply [target state] to [complete scope]; preserve [unchanged part], and leave everything else untouched.",
+                    "missing-constraint": "Complete [goal], but do not change [boundary]; preserve [existing behavior].",
+                    "missing-acceptance": "Complete [goal], then verify it with [test, viewport, or reproduction steps] and report the result.",
+                    "term-definition": "By [term], I mean [exact meaning], not [likely interpretation]; the expected result is [outcome].",
+                    "ai-execution-miss": None,
+                    "requirement-evolution": None,
+                    "insufficient-evidence": None,
+                }
+                analysis_by_class = {
+                    "user-expression-insufficient": "The initial wording allowed multiple reasonable interpretations. The later clarification made the object, scope, or constraint unique.",
+                    "ai-ignored-explicit-requirement": "The initial request already contained a clear boundary, yet it had to be repeated. This looks more like an AI execution miss than a need for a longer prompt.",
+                    "term-meaning-mismatch": "Both sides kept using the same term, but the term referred to different things.",
+                    "requirement-evolution": "This judgment formed after seeing the result. It is normal requirement evolution, not evidence that the initial request was defective.",
+                    "insufficient-evidence": "The visible chain shows that clarification happened, but it cannot fairly distinguish missing information, an AI execution miss, or normal requirement change.",
+                }
+                question_by_class = {
+                    "user-expression-insufficient": "Was this information missing at the start, or did the more specific judgment form only after you saw the result?",
+                    "ai-ignored-explicit-requirement": "Was the original request already clear enough, with AI simply missing the requirement during execution?",
+                    "term-meaning-mismatch": "Was this mainly a case of both sides assigning different meanings to the same term?",
+                    "requirement-evolution": "Did this judgment naturally form only after you saw the result?",
+                    "insufficient-evidence": "Can you confirm whether this was information added later, an AI execution miss, or a normal requirement change?",
+                }
+
+            original_text = localized_conversation_segment(original, context, language)
+            response_text = localized_conversation_segment(response, context, language)
+            correction_text = localized_conversation_segment(correction, context, language)
+            cleaned_correction = re.sub(
+                r"^(no[,.:\- ]*|not what i meant[,.:\- ]*|i mean(?: that)?[,.:\- ]*|i meant(?: that)?[,.:\- ]*|what i mean is[,.:\- ]*|"
+                r"不对[，,。 ]*|不是这个[，,。 ]*|我说的是[：:，, ]*|我的意思是[：:，, ]*|我指的是[：:，, ]*|等一下[，,。 ]*)",
+                "",
+                correction_text,
+                flags=re.I,
+            ).strip()
+            default_rewrite = None
+            if language == "zh" and len(cleaned_correction) >= 8:
+                default_rewrite = (
+                    f"请按这个完整要求执行：{cleaned_correction.rstrip('。！!')}。"
+                    "开始前先复述你理解的目标、范围和不改动的部分。"
+                )
+            elif language == "en" and len(cleaned_correction) >= 12:
+                default_rewrite = (
+                    f"Please follow this complete requirement: {cleaned_correction.rstrip('.!')}. "
+                    "Before changing anything, restate the goal, scope, and what must remain unchanged."
+                )
+
+            related_commits = []
+            correction_time = correction.get("timestamp_end") or correction.get("timestamp")
+            if correction_time:
+                for commit in timeline:
+                    commit_time = parse_datetime(commit.get("timestamp"))
+                    if commit_time is None:
+                        continue
+                    seconds = (commit_time - correction_time).total_seconds()
+                    commit_terms = communication_signature(
+                        str(commit.get("original_subject") or commit.get("subject") or "")
+                    )
+                    if 0 <= seconds <= 24 * 3600 and commit_terms & (original_terms | correction_terms):
+                        related_commits.append(
+                            {
+                                "date": commit["date"],
+                                "subject": commit["subject"],
+                                "hash": commit["short_hash"],
+                            }
+                        )
+            if related_commits:
+                impact = (
+                    f"澄清后 24 小时内观察到 {len(related_commits)} 次主题相关提交；时间接近不等同于因果。"
+                    if language == "zh"
+                    else f"{len(related_commits)} topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation."
+                )
+            else:
+                impact = (
+                    "没有找到足够接近的 Git 提交，影响目前只由对话证据支持。"
+                    if language == "zh"
+                    else "No sufficiently close Git commit was found, so the impact is supported only by conversation evidence."
+                )
+
+            digest = hashlib.sha256(
+                (
+                    f"{original.get('source')}\0{original.get('session_id')}\0"
+                    f"{original.get('event_index')}\0{original.get('timestamp')}\0"
+                    f"{original['text']}\0{correction['text']}"
+                ).encode("utf-8")
+            ).hexdigest()[:12]
+            insight_id = f"communication:{digest}"
+            confirmation_entry = confirmations.get(insight_id)
+            confirmation = None
+            lesson = None
+            confirmed_rewrite = None
+            confirmed_topic = None
+            confirmed_analysis = None
+            if isinstance(confirmation_entry, dict):
+                confirmed_attribution = confirmation_entry.get("attribution")
+                if confirmed_attribution in COMMUNICATION_ATTRIBUTION_LABELS[language]:
+                    classification = confirmed_attribution
+                confirmation = str(
+                    confirmation_entry.get("reason") or confirmation_entry.get("confirmation") or ""
+                ).strip() or None
+                confirmed_analysis = str(confirmation_entry.get("analysis") or "").strip() or None
+                confirmed_rewrite = str(confirmation_entry.get("improved_request") or "").strip() or None
+                lesson = str(confirmation_entry.get("lesson") or "").strip() or None
+                confirmed_topic = str(confirmation_entry.get("topic") or "").strip() or None
+
+            if classification == "term-meaning-mismatch":
+                gap_type = "term-definition"
+            elif classification == "ai-ignored-explicit-requirement":
+                gap_type = "ai-execution-miss"
+            elif classification == "requirement-evolution":
+                gap_type = "requirement-evolution"
+            elif classification == "insufficient-evidence":
+                gap_type = "insufficient-evidence"
+            else:
+                gap_type = inferred_gap_type
+
+            user_guidance_allowed = classification in {
+                "user-expression-insufficient",
+                "term-meaning-mismatch",
+            }
+            suggested_rewrite = None
+            if user_guidance_allowed:
+                suggested_rewrite = confirmed_rewrite or default_rewrite
+            missing_information = missing_by_type[gap_type] if user_guidance_allowed else []
+            reusable_pattern = pattern_by_type[gap_type] if user_guidance_allowed else None
+            topic = confirmed_topic or COMMUNICATION_GAP_LABELS[language][gap_type]
+            analysis = confirmed_analysis or analysis_by_class[classification]
+
+            confidence = "confirmed" if confirmation else (
+                "high" if classification in {"ai-ignored-explicit-requirement", "term-meaning-mismatch"} else "medium"
+            )
+            results.append(
+                {
+                    "id": insight_id,
+                    "topic": topic,
+                    "gap_type": gap_type,
+                    "gap_label": COMMUNICATION_GAP_LABELS[language][gap_type],
+                    "attribution": classification,
+                    "attribution_label": COMMUNICATION_ATTRIBUTION_LABELS[language][classification],
+                    "confidence": confidence,
+                    "original_request": original_text,
+                    "ai_response": response_text,
+                    "later_clarification": correction_text,
+                    "analysis": analysis,
+                    "missing_information": missing_information,
+                    "suggested_rewrite": suggested_rewrite,
+                    "reusable_pattern": reusable_pattern,
+                    "question": question_by_class[classification],
+                    "observed_impact": impact,
+                    "related_commits": related_commits[:3],
+                    "source": original.get("source"),
+                    "event_range": [original.get("event_index"), correction.get("event_index_end")],
+                    "confirmation": confirmation,
+                    "lesson": lesson,
+                }
+            )
+
+    priority = {
+        "ai-ignored-explicit-requirement": 0,
+        "term-meaning-mismatch": 1,
+        "requirement-evolution": 2,
+        "user-expression-insufficient": 3,
+        "insufficient-evidence": 4,
+    }
+    confidence_priority = {"confirmed": 0, "high": 1, "medium": 2, "low": 3}
+    results.sort(
+        key=lambda item: (
+            confidence_priority.get(item["confidence"], 9),
+            priority.get(item["attribution"], 9),
+            item["source"] or "",
+            item["event_range"][0] or 0,
+        )
+    )
+    return results[:3]
 
 
 def tracked_files(repo: Path) -> list[str]:
@@ -1518,6 +2187,7 @@ def build_story_summary(
     timeline: list[dict[str, Any]],
     loops: list[dict[str, Any]],
     journey_insights: list[dict[str, Any]],
+    communication_insights: list[dict[str, Any]],
     signals: dict[str, Any],
     attention: list[dict[str, Any]],
     context: dict[str, Any],
@@ -1563,6 +2233,21 @@ def build_story_summary(
             if language == "en"
             else f"{review_insights} 个有证据的问题需要复盘"
         )
+    if communication_insights:
+        confirmed_communication = sum(bool(item.get("confirmation")) for item in communication_insights)
+        highlights.append(
+            (
+                f"{confirmed_communication} confirmed communication {'example' if confirmed_communication == 1 else 'examples'}"
+                if confirmed_communication
+                else f"{len(communication_insights)} communication {'example' if len(communication_insights) == 1 else 'examples'} to review"
+            )
+            if language == "en"
+            else (
+                f"{confirmed_communication} 个已确认的沟通案例"
+                if confirmed_communication
+                else f"{len(communication_insights)} 个沟通案例需要复盘"
+            )
+        )
     if attention:
         highlights.append(
             f"Most visible attention: {attention[0]['label']}"
@@ -1584,7 +2269,14 @@ def build_story_summary(
         )
     confirmed_story_context = any(
         context.get(key)
-        for key in ("role", "outcome", "key_decision", "summary", "insight_confirmations")
+        for key in (
+            "role",
+            "outcome",
+            "key_decision",
+            "summary",
+            "insight_confirmations",
+            "communication_confirmations",
+        )
     )
     return {"headline": headline, "highlights": highlights[:3], "context_confirmed": confirmed_story_context}
 
@@ -1705,6 +2397,11 @@ def build_evidence(
         }
         for commit in commits
     ]
+    communication_insights = build_communication_insights(
+        transcript_events, timeline, localized_context, language
+    )
+    if transcript_analysis is not None:
+        transcript_analysis["communication_insights"] = len(communication_insights)
     turning_points = select_turning_points(timeline, language)
     turning_points = attach_dialogue_to_turning_points(
         turning_points, transcript_events, localized_context, language
@@ -1714,6 +2411,7 @@ def build_evidence(
         timeline,
         localized_loops,
         journey_insights,
+        communication_insights,
         signals,
         attention,
         localized_context,
@@ -1722,7 +2420,7 @@ def build_evidence(
     career_material = build_career_material(name, story, localized_context, turning_points, language)
     source_list = ["git"] + (["transcripts"] if transcript_files else [])
     return {
-        "schema_version": "1.4",
+        "schema_version": "1.5",
         "generator_version": VERSION,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "language": language,
@@ -1757,6 +2455,7 @@ def build_evidence(
         "activity": activity,
         "turning_points": turning_points,
         "journey_insights": journey_insights,
+        "communication_insights": communication_insights,
         "timeline": timeline,
         "friction_zones": friction,
         "loop_candidates": localized_loops[:15],
@@ -1881,6 +2580,71 @@ def render_markdown(data: dict[str, Any]) -> str:
     else:
         lines.append(f"- {c['none']}")
     lines.extend(["", "</details>"])
+    if "transcripts" in data["coverage"]["sources"]:
+        lines.extend(["", f"## {c['communication_review']}", "", f"> {c['communication_review_intro']}", ""])
+        if data["communication_insights"]:
+            for insight in data["communication_insights"]:
+                lines.extend(
+                    [
+                        f"### {insight['topic']} · {insight['attribution_label']}",
+                        "",
+                        f"- **{c['original_request']}：** {insight['original_request']}" if language == "zh" else f"- **{c['original_request']}:** {insight['original_request']}",
+                        f"- **{c['later_correction']}：** {insight['later_clarification']}" if language == "zh" else f"- **{c['later_correction']}:** {insight['later_clarification']}",
+                        f"- **{c['communication_analysis']}：** {insight['analysis']}" if language == "zh" else f"- **{c['communication_analysis']}:** {insight['analysis']}",
+                        f"- **{c['communication_impact']}：** {insight['observed_impact']}" if language == "zh" else f"- **{c['communication_impact']}:** {insight['observed_impact']}",
+                    ]
+                )
+                if insight.get("missing_information"):
+                    lines.append(
+                        f"- **{c['missing_information']}：** {'、'.join(insight['missing_information'])}"
+                        if language == "zh"
+                        else f"- **{c['missing_information']}:** {', '.join(insight['missing_information'])}"
+                    )
+                if insight.get("suggested_rewrite"):
+                    lines.append(
+                        f"- **{c['next_time_say']}：** {insight['suggested_rewrite']}"
+                        if language == "zh"
+                        else f"- **{c['next_time_say']}:** {insight['suggested_rewrite']}"
+                    )
+                else:
+                    no_rewrite = (
+                        c["insufficient_rewrite"]
+                        if insight["attribution"] == "insufficient-evidence"
+                        else c["not_user_rewrite"]
+                    )
+                    lines.append(f"- {no_rewrite}")
+                if insight.get("reusable_pattern"):
+                    lines.append(
+                        f"- **{c['reusable_pattern']}：** {insight['reusable_pattern']}"
+                        if language == "zh"
+                        else f"- **{c['reusable_pattern']}:** {insight['reusable_pattern']}"
+                    )
+                if insight.get("confirmation"):
+                    lines.append(
+                        f"- **{c['confirmed_context']}：** {insight['confirmation']}"
+                        if language == "zh"
+                        else f"- **{c['confirmed_context']}:** {insight['confirmation']}"
+                    )
+                else:
+                    lines.append(
+                        f"- **{c['needs_confirmation']}：** {insight['question']}"
+                        if language == "zh"
+                        else f"- **{c['needs_confirmation']}:** {insight['question']}"
+                    )
+                lines.extend(
+                    [
+                        "",
+                        "<details>",
+                        f"<summary>{c['evidence']}</summary>",
+                        "",
+                        f"- **{c['ai_interpretation']}：** {insight['ai_response']}" if language == "zh" else f"- **{c['ai_interpretation']}:** {insight['ai_response']}",
+                    ]
+                )
+                for commit in insight["related_commits"]:
+                    lines.append(f"- `{commit['date']}` {commit['subject']} (`{commit['hash']}`)")
+                lines.extend(["", "</details>", ""])
+        else:
+            lines.extend([f"- {c['no_communication_insights']}", ""])
     lines.extend(
         [
             "",
@@ -2026,6 +2790,47 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
     if not insight_rows:
         insight_rows.append(f'<p class="empty">{esc(c["no_journey_insights"])}</p>')
 
+    communication_rows = []
+    for insight in data["communication_insights"]:
+        missing_items = "".join(f"<li>{esc(item)}</li>" for item in insight["missing_information"])
+        missing_html = (
+            f'''<h4>{esc(c['missing_information'])}</h4><ul class="missing-list">{missing_items}</ul>'''
+            if missing_items
+            else ""
+        )
+        related_items = "".join(
+            f"<li><time>{esc(item['date'])}</time><span>{esc(item['subject'])}</span><code>{esc(item['hash'])}</code></li>"
+            for item in insight["related_commits"]
+        )
+        if insight.get("suggested_rewrite"):
+            rewrite_html = f'''<div class="communication-rewrite"><b>{esc(c['next_time_say'])}</b><p>{esc(insight['suggested_rewrite'])}</p></div>'''
+        else:
+            no_rewrite = (
+                c["insufficient_rewrite"]
+                if insight["attribution"] == "insufficient-evidence"
+                else c["not_user_rewrite"]
+            )
+            rewrite_html = f'''<div class="communication-not-user"><p>{esc(no_rewrite)}</p></div>'''
+        pattern_html = (
+            f'''<div class="communication-pattern"><b>{esc(c['reusable_pattern'])}</b><code>{esc(insight['reusable_pattern'])}</code></div>'''
+            if insight.get("reusable_pattern")
+            else ""
+        )
+        if insight.get("confirmation"):
+            confirmation_html = f'''<div class="communication-confirmation"><b>{esc(c['confirmed_context'])}</b><p>{esc(insight['confirmation'])}</p></div>'''
+        else:
+            confirmation_html = f'''<div class="communication-question"><b>{esc(c['needs_confirmation'])}</b><p>{esc(insight['question'])}</p></div>'''
+        evidence_commits = f'''<ol class="communication-commits">{related_items}</ol>''' if related_items else ""
+        communication_rows.append(
+            f'''<article class="communication-card">
+  <div class="communication-head"><div><span class="communication-kind">{esc(insight['attribution_label'])}</span><h3>{esc(insight['topic'])}</h3></div><span class="confidence {esc(insight['confidence'])}">{esc(confidence_label(insight['confidence'], language))}</span></div>
+  <div class="communication-dialogue"><div><h4>{esc(c['original_request'])}</h4><blockquote>{esc(insight['original_request'])}</blockquote></div><div><h4>{esc(c['later_correction'])}</h4><blockquote>{esc(insight['later_clarification'])}</blockquote></div></div>
+  <div class="communication-grid"><div><h4>{esc(c['communication_analysis'])}</h4><p class="communication-analysis">{esc(insight['analysis'])}</p>{missing_html}{confirmation_html}</div><div>{rewrite_html}{pattern_html}<details class="communication-evidence"><summary>{esc(c['evidence'])}</summary><p><b>{esc(c['ai_interpretation'])}</b>{'：' if language == 'zh' else ': '}{esc(insight['ai_response'])}</p><p>{esc(insight['observed_impact'])}</p>{evidence_commits}</details></div></div>
+</article>'''
+        )
+    if not communication_rows:
+        communication_rows.append(f'<p class="empty">{esc(c["no_communication_insights"])}</p>')
+
     activity = data["activity"]
     busiest = activity["busiest_day"]
     activity_is_strip = activity["calendar_days"] <= 45
@@ -2140,9 +2945,21 @@ def render_html(data: dict[str, Any], language_links: dict[str, str] | None = No
     date_connector = "to" if language == "en" else "至"
     html_lang = "en" if language == "en" else "zh-CN"
     kicker = "PROJECT RETROSPECTIVE" if language == "en" else "项目复盘"
+    has_transcripts = "transcripts" in data["coverage"]["sources"]
+    section_total = 9 if has_transcripts else 8
+    communication_nav = (
+        f'<a href="#communication">{esc(c["communication_review"])}</a>' if has_transcripts else ""
+    )
+    communication_section = (
+        f'''<section class="section" id="communication"><div class="shell"><div class="section-head"><span class="section-index">03 / {section_total:02d}</span><h2>{esc(c['communication_review'])}</h2><p>{esc(c['communication_review_intro'])}</p></div><div class="communication-list">{''.join(communication_rows)}</div></div></section>'''
+        if has_transcripts
+        else ""
+    )
+    rhythm_index = 4 if has_transcripts else 3
     section_navigation = f'''<nav class="section-nav" aria-label="{esc(c['chapter_navigation'])}">
   <a href="#story-map">{esc(c['story_map'])}</a>
   <a href="#insights">{esc(c['journey_insights'])}</a>
+  {communication_nav}
   <a href="#rhythm">{esc(c['rhythm'])}</a>
   <a href="#career">{esc(c['career_material'])}</a>
 </nav>'''
@@ -2256,6 +3073,33 @@ main {{ background:var(--surface); }}
 .supporting-path summary {{ cursor:pointer; }}
 .supporting-path code {{ display:block; margin-top:8px; color:var(--ink); }}
 .raw-evidence {{ max-width:1040px; }}
+.communication-list {{ display:grid; gap:26px; max-width:1040px; }}
+.communication-card {{ padding:30px; border-radius:var(--radius); background:var(--paper); border-top:3px solid var(--ink); }}
+.communication-head {{ display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }}
+.communication-head>div,.communication-dialogue>div,.communication-grid>div {{ min-width:0; }}
+.communication-head h3 {{ margin:10px 0 0; font-size:clamp(25px,4vw,40px); line-height:1; letter-spacing:-.045em; }}
+.communication-kind {{ color:var(--accent); font:700 11px ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.09em; text-transform:uppercase; overflow-wrap:anywhere; }}
+.communication-dialogue {{ display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:30px; }}
+.communication-dialogue>div {{ padding:20px; border:1px solid var(--line); border-radius:12px; }}
+.communication-card h4 {{ margin:0 0 9px; color:var(--muted); font:700 11px ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.08em; text-transform:uppercase; }}
+.communication-dialogue blockquote {{ margin:0; font-size:16px; line-height:1.6; overflow-wrap:anywhere; }}
+.communication-grid {{ display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,.9fr); gap:56px; margin-top:30px; }}
+.communication-grid h4:not(:first-child) {{ margin-top:24px; }}
+.communication-analysis {{ margin:0; font-size:18px; line-height:1.65; }}
+.missing-list {{ margin:0; padding-left:18px; color:var(--muted); }}
+.missing-list li {{ margin:7px 0; }}
+.communication-rewrite,.communication-question,.communication-confirmation,.communication-not-user {{ padding:20px; background:var(--surface); border-left:3px solid var(--accent); }}
+.communication-rewrite b,.communication-question b,.communication-confirmation b {{ display:block; margin-bottom:8px; color:var(--accent); font-size:12px; }}
+.communication-rewrite p,.communication-question p,.communication-confirmation p,.communication-not-user p {{ margin:0; line-height:1.65; }}
+.communication-rewrite p {{ color:var(--ink); font-size:17px; }}
+.communication-pattern {{ margin-top:18px; }}
+.communication-pattern b {{ display:block; margin-bottom:8px; color:var(--muted); font-size:12px; }}
+.communication-pattern code {{ display:block; padding:14px; border-radius:9px; background:var(--ink); color:white; line-height:1.55; overflow-wrap:anywhere; }}
+.communication-evidence {{ margin-top:18px; color:var(--muted); font-size:12px; }}
+.communication-evidence summary {{ cursor:pointer; }}
+.communication-evidence p {{ line-height:1.6; }}
+.communication-commits {{ margin:12px 0 0; padding:0; list-style:none; border-top:1px solid var(--line); }}
+.communication-commits li {{ display:grid; grid-template-columns:90px 1fr auto; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); }}
 .turns {{ max-width:960px; border-top:1px solid var(--line); }}
 .turn {{ position:relative; display:grid; grid-template-columns:84px 1fr; gap:24px; padding:30px 0 30px 14px; border-bottom:1px solid var(--line); transition:background .24s ease, padding-left .24s ease; }}
 .turn::before {{ content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:transparent; }}
@@ -2355,14 +3199,14 @@ footer .shell {{ display:flex; justify-content:space-between; gap:30px; }}
 footer span {{ color:#aaa; }}
 @media (max-width:800px) {{
   .shell {{ width:min(100% - 28px,1180px); }} .nav {{ align-items:flex-start; }} .nav-right {{ flex-direction:column-reverse; align-items:flex-end; gap:8px; }} .nav-meta {{ max-width:230px; text-align:right; }}
-  .masthead {{ min-height:auto; padding-bottom:26px; }} .hero,.rhythm-layout,.friction-layout,.attention-grid,.method,.context-callout,.story-map-layout,.insight-grid {{ grid-template-columns:1fr; gap:34px; }} .hero {{ padding:64px 0 34px; }} .hero-foot {{ align-items:flex-start; flex-direction:column; gap:12px; }} .section-nav {{ gap:8px 14px; }} h1 {{ font-size:clamp(52px,17vw,86px); }} .coverage {{ max-width:440px; }} .section {{ padding:68px 0; }} .story-map-label {{ position:static; }} .story-map-line {{ height:56px; margin-top:18px; }}
+  .masthead {{ min-height:auto; padding-bottom:26px; }} .hero,.rhythm-layout,.friction-layout,.attention-grid,.method,.context-callout,.story-map-layout,.insight-grid,.communication-dialogue,.communication-grid {{ grid-template-columns:1fr; gap:34px; }} .hero {{ padding:64px 0 34px; }} .hero-foot {{ align-items:flex-start; flex-direction:column; gap:12px; }} .section-nav {{ gap:8px 14px; }} h1 {{ font-size:clamp(52px,17vw,86px); }} .coverage {{ max-width:440px; }} .section {{ padding:68px 0; }} .story-map-label {{ position:static; }} .story-map-line {{ height:56px; margin-top:18px; }}
   .turn {{ grid-template-columns:44px 1fr; gap:14px; }} .turn-meta {{ align-items:flex-start; flex-direction:column; gap:5px; }} .event {{ grid-template-columns:84px 14px 1fr; gap:12px; }} .friction-row {{ grid-template-columns:34px 1fr; }} .ratio {{ grid-column:2; text-align:left; display:flex; align-items:baseline; gap:8px; }}
   .dimensions,.proof-list,.career-grid {{ grid-template-columns:1fr; }} .attention-row {{ grid-template-columns:100px 1fr; }} .attention-row span {{ grid-column:2; text-align:left; }}
 }}
 @media (max-width:420px) {{
   .shell {{ width:min(100% - 22px,1180px); }} .nav-meta {{ display:none; }} .story-statement {{ font-size:25px; }} .story-highlights {{ display:grid; }} .full-history {{ padding:16px; }} .masthead {{ padding-bottom:10px; }} .rhythm-section {{ padding-top:26px; }}
   .rhythm-stats {{ gap:8px; }} .rhythm-stat strong {{ font-size:26px; }} .activity-panel {{ padding:18px; }} .activity-focus {{ grid-template-columns:1fr; gap:10px; }}
-  .event {{ grid-template-columns:1fr; min-height:auto; padding:16px 0; border-bottom:1px solid var(--line); }} .event-mark {{ display:none; }} .event-body {{ padding:0; }} .turn {{ padding-left:10px; }} .turn.is-match {{ padding-left:16px; }} .insight-card {{ padding:22px 18px; }} .insight-head {{ gap:12px; }} .evidence-chain li {{ grid-template-columns:82px 1fr; }} .evidence-chain code {{ grid-column:2; }}
+  .event {{ grid-template-columns:1fr; min-height:auto; padding:16px 0; border-bottom:1px solid var(--line); }} .event-mark {{ display:none; }} .event-body {{ padding:0; }} .turn {{ padding-left:10px; }} .turn.is-match {{ padding-left:16px; }} .insight-card,.communication-card {{ padding:22px 18px; }} .insight-head {{ gap:12px; }} .communication-head {{ flex-direction:column; gap:12px; }} .evidence-chain li,.communication-commits li {{ grid-template-columns:82px 1fr; }} .evidence-chain code,.communication-commits code {{ grid-column:2; }}
   .attention-row {{ grid-template-columns:1fr; gap:8px; }} .attention-row span {{ grid-column:1; }}
 }}
 @media (prefers-reduced-motion:reduce) {{ * {{ scroll-behavior:auto!important; transition:none!important; animation:none!important; }} }}
@@ -2381,10 +3225,11 @@ footer span {{ color:#aaa; }}
   <div class="shell hero-foot">{section_navigation}<span class="hero-scroll-note">{'Scroll to trace the build' if language == 'en' else '向下查看项目如何转向'}</span></div>
 </header>
 <main>
-  <section class="section story-map-section" id="story-map"><div class="shell"><div class="section-head"><span class="section-index">01 / 08</span><h2>{esc(c['turning_points'])}</h2><p>{esc(c['story_map_intro'])}</p></div><div class="story-map-layout"><aside class="story-map-label"><span class="eyebrow">{esc(c['story_map'])}</span><p>{esc(c['turning_points_intro'])}</p><div class="story-map-line" aria-hidden="true"></div></aside><div class="turns">{''.join(turning_rows)}</div></div><details class="full-history"><summary>{esc(c['full_timeline'])} · {esc(count_text(len(data['timeline']), 'commit', language))}</summary><p>{esc(c['full_timeline_intro'])}</p><div class="filters">{''.join(filters)}</div><div class="timeline">{''.join(timeline_rows)}</div></details></div></section>
-  <section class="section" id="insights"><div class="shell"><div class="section-head"><span class="section-index">02 / 08</span><h2>{esc(c['journey_insights'])}</h2><p>{esc(c['journey_insights_intro'])}</p></div><div class="insight-list">{''.join(insight_rows)}</div><details class="full-history raw-evidence"><summary>{esc(c['raw_change_evidence'])}</summary><p>{esc(c['friction_intro'])}</p><div class="friction-layout"><div>{''.join(friction_rows)}</div><aside class="loops"><h3>{esc(c['loop_candidates'])}</h3>{''.join(loop_rows)}</aside></div></details></div></section>
+  <section class="section story-map-section" id="story-map"><div class="shell"><div class="section-head"><span class="section-index">01 / {section_total:02d}</span><h2>{esc(c['turning_points'])}</h2><p>{esc(c['story_map_intro'])}</p></div><div class="story-map-layout"><aside class="story-map-label"><span class="eyebrow">{esc(c['story_map'])}</span><p>{esc(c['turning_points_intro'])}</p><div class="story-map-line" aria-hidden="true"></div></aside><div class="turns">{''.join(turning_rows)}</div></div><details class="full-history"><summary>{esc(c['full_timeline'])} · {esc(count_text(len(data['timeline']), 'commit', language))}</summary><p>{esc(c['full_timeline_intro'])}</p><div class="filters">{''.join(filters)}</div><div class="timeline">{''.join(timeline_rows)}</div></details></div></section>
+  <section class="section" id="insights"><div class="shell"><div class="section-head"><span class="section-index">02 / {section_total:02d}</span><h2>{esc(c['journey_insights'])}</h2><p>{esc(c['journey_insights_intro'])}</p></div><div class="insight-list">{''.join(insight_rows)}</div><details class="full-history raw-evidence"><summary>{esc(c['raw_change_evidence'])}</summary><p>{esc(c['friction_intro'])}</p><div class="friction-layout"><div>{''.join(friction_rows)}</div><aside class="loops"><h3>{esc(c['loop_candidates'])}</h3>{''.join(loop_rows)}</aside></div></details></div></section>
+  {communication_section}
   <section class="section rhythm-section" id="rhythm"><div class="shell rhythm-layout">
-    <div><div class="section-head"><span class="section-index">03 / 08</span><h2>{esc(c['rhythm'])}</h2><p>{esc(c['rhythm_intro'])}</p></div><div class="rhythm-stats">
+    <div><div class="section-head"><span class="section-index">{rhythm_index:02d} / {section_total:02d}</span><h2>{esc(c['rhythm'])}</h2><p>{esc(c['rhythm_intro'])}</p></div><div class="rhythm-stats">
       <div class="rhythm-stat"><strong>{activity['calendar_days']}</strong><span>{esc(c['project_span'])}</span></div>
       <div class="rhythm-stat"><strong>{activity['active_days']}</strong><span>{esc(c['active_days'])}</span></div>
       <div class="rhythm-stat"><strong>{activity['longest_streak']}</strong><span>{esc(c['longest_streak'])}</span></div>

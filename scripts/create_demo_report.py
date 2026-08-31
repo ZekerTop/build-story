@@ -127,6 +127,9 @@ def build_demo_repository(repo: Path) -> Path:
 
     transcript = repo.parent / "pockettasks-session.jsonl"
     transcript_rows = [
+        {"timestamp": "2026-07-02T08:45:00Z", "role": "user", "content": "Make storage better for beginners"},
+        {"timestamp": "2026-07-02T08:50:00Z", "role": "assistant", "content": "I connected the task list to a hosted database."},
+        {"timestamp": "2026-07-02T09:00:00Z", "role": "user", "content": "I mean local JSON storage, not a hosted service. Keep all task data on the device."},
         {"timestamp": "2026-07-03T10:00:00Z", "role": "user", "content": "Add automatic cloud sync but keep the task manager simple for beginners"},
         {"timestamp": "2026-07-03T10:06:00Z", "role": "assistant", "content": "I added a queue and background push."},
         {"timestamp": "2026-07-03T11:20:00Z", "role": "user", "content": "Fix automatic cloud sync because duplicate tasks are appearing in the queue"},
@@ -137,8 +140,13 @@ def build_demo_repository(repo: Path) -> Path:
         {"timestamp": "2026-07-05T09:00:00Z", "role": "assistant", "content": "I removed the automatic sync path."},
         {"timestamp": "2026-07-06T09:40:00Z", "role": "user", "content": "Add an explicit JSON export so users control when data leaves the app"},
         {"timestamp": "2026-07-06T09:50:00Z", "role": "assistant", "content": "Export is implemented and remains local."},
-        {"timestamp": "2026-07-08T08:45:00Z", "role": "user", "content": "Add tests for the local store and JSON export"},
-        {"timestamp": "2026-07-08T08:55:00Z", "role": "assistant", "content": "The storage and export paths now have tests."},
+        {"timestamp": "2026-07-08T08:20:00Z", "role": "user", "content": "Make sure the local data flow works"},
+        {"timestamp": "2026-07-08T08:25:00Z", "role": "assistant", "content": "I ran the CLI once and the command completed."},
+        {"timestamp": "2026-07-08T08:35:00Z", "role": "user", "content": "I mean add automated tests for local storage and JSON export. Do not add cloud dependencies."},
+        {"timestamp": "2026-07-08T08:45:00Z", "role": "assistant", "content": "The storage and export paths now have tests."},
+        {"timestamp": "2026-07-12T08:20:00Z", "role": "user", "content": "Document it"},
+        {"timestamp": "2026-07-12T08:25:00Z", "role": "assistant", "content": "I added another usage example."},
+        {"timestamp": "2026-07-12T08:35:00Z", "role": "user", "content": "I mean document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI."},
     ]
     transcript.write_text("\n".join(json.dumps(row) for row in transcript_rows), encoding="utf-8")
     return transcript
@@ -185,8 +193,16 @@ def main() -> int:
                 "I removed the automatic sync path.": "已经移除自动同步路径。",
                 "Add an explicit JSON export so users control when data leaves the app": "加入显式 JSON 导出，让用户决定数据何时离开应用。",
                 "Export is implemented and remains local.": "导出功能已经完成，并保持本地运行。",
-                "Add tests for the local store and JSON export": "为本地存储和 JSON 导出补充测试。",
                 "The storage and export paths now have tests.": "存储与导出路径现在都有测试覆盖。",
+                "Make storage better for beginners": "让存储体验对新手更友好。",
+                "I connected the task list to a hosted database.": "我把任务列表连接到了托管数据库。",
+                "I mean local JSON storage, not a hosted service. Keep all task data on the device.": "我说的是本地 JSON 存储，不是托管服务。所有任务数据都保留在设备上。",
+                "Make sure the local data flow works": "确保本地数据流程可以工作。",
+                "I ran the CLI once and the command completed.": "我运行了一次命令行，命令可以完成。",
+                "I mean add automated tests for local storage and JSON export. Do not add cloud dependencies.": "我说的是为本地存储和 JSON 导出增加自动化测试，不要增加云端依赖。",
+                "Document it": "把它记录下来。",
+                "I added another usage example.": "我又增加了一个使用示例。",
+                "I mean document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI.": "我说的是记录为什么选择本地优先导出而不是隐藏云同步，不只是说明命令行怎么用。",
             },
         },
         "en": {
@@ -214,7 +230,7 @@ def main() -> int:
         datasets = {}
         for language in ("en", "zh"):
             data = build_story.build_evidence(repo, [transcript], language, "PocketTasks", context)
-            data["generated_at"] = "2026-08-30T00:00:00+00:00"
+            data["generated_at"] = "2026-08-31T00:00:00+00:00"
             datasets[language] = data
         build_story.write_outputs(
             datasets["en"],

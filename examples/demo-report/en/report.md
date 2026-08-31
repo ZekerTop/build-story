@@ -3,8 +3,8 @@
 > **From complex automatic cloud sync back to a user-controlled local-first product.**
 
 - 1 confirmed direction change
+- 3 communication examples to review
 - Most visible attention: Core code
-- Finished with tests, CI, a tagged release
 
 <details>
 <summary>View supporting evidence</summary>
@@ -12,7 +12,7 @@
 - 12 commits
 - 11 files
 - 18 calendar days
-- 3.4 estimated active hours (confidence: medium)
+- 5.1 estimated active hours (confidence: medium)
 
 </details>
 
@@ -32,7 +32,7 @@
   - **User:** Add an explicit JSON export so users control when data leaves the app
   - **AI:** Export is implemented and remains local.
 - `2026-07-08` **Validation established** · Add tests for storage and export (`ea9798bf`)
-  - **User:** Add tests for the local store and JSON export
+  - **User:** I mean add automated tests for local storage and JSON export. Do not add cloud dependencies.
   - **AI:** The storage and export paths now have tests.
 - `2026-07-18` **Delivery milestone** · Release PocketTasks 1.0 (`5e5bebe5`)
 
@@ -84,6 +84,68 @@
 - **src/sync.py** · Changed in 5 commits with 86% bidirectional churn. (confidence: medium)
 
 </details>
+
+## Communication review
+
+> See which details became clear only after AI had already acted. This reviews how the human and AI aligned; it never scores the user's communication ability.
+
+### Term meaning clarified later · The same term meant different things
+
+- **What you said:** Make storage better for beginners
+- **What you clarified later:** I mean local JSON storage, not a hosted service. Keep all task data on the device.
+- **Where the gap appeared:** Both sides kept using the same term, but the term referred to different things.
+- **Observed project evidence:** 1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.
+- **Information that was missing:** the exact meaning of the core term, the interpretation to exclude
+- **A clearer way to say it next time:** Please follow this complete requirement: local JSON storage, not a hosted service. Keep all task data on the device. Before changing anything, restate the goal, scope, and what must remain unchanged.
+- **Reusable pattern:** By [term], I mean [exact meaning], not [likely interpretation]; the expected result is [outcome].
+- **Needs your confirmation:** Was this mainly a case of both sides assigning different meanings to the same term?
+
+<details>
+<summary>Evidence</summary>
+
+- **How AI responded:** I connected the task list to a hosted database.
+- `2026-07-02` Add JSON task storage (`9acce59f`)
+
+</details>
+
+### Constraint clarified later · Information became clear later
+
+- **What you said:** Make sure the local data flow works
+- **What you clarified later:** I mean add automated tests for local storage and JSON export. Do not add cloud dependencies.
+- **Where the gap appeared:** The initial wording allowed multiple reasonable interpretations. The later clarification made the object, scope, or constraint unique.
+- **Observed project evidence:** 1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.
+- **Information that was missing:** behavior that must remain, explicit non-goals
+- **A clearer way to say it next time:** Please follow this complete requirement: add automated tests for local storage and JSON export. Do not add cloud dependencies. Before changing anything, restate the goal, scope, and what must remain unchanged.
+- **Reusable pattern:** Complete [goal], but do not change [boundary]; preserve [existing behavior].
+- **Needs your confirmation:** Was this information missing at the start, or did the more specific judgment form only after you saw the result?
+
+<details>
+<summary>Evidence</summary>
+
+- **How AI responded:** I ran the CLI once and the command completed.
+- `2026-07-08` Add tests for storage and export (`ea9798bf`)
+
+</details>
+
+### Ambiguous reference · Information became clear later
+
+- **What you said:** Document it
+- **What you clarified later:** I mean document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI.
+- **Where the gap appeared:** The initial wording allowed multiple reasonable interpretations. The later clarification made the object, scope, or constraint unique.
+- **Observed project evidence:** 1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.
+- **Information that was missing:** the exact object, the change boundary
+- **A clearer way to say it next time:** Please follow this complete requirement: document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI. Before changing anything, restate the goal, scope, and what must remain unchanged.
+- **Reusable pattern:** Change [specific part] of [specific object] to achieve [expected result]; do not change [boundary].
+- **Needs your confirmation:** Was this information missing at the start, or did the more specific judgment form only after you saw the result?
+
+<details>
+<summary>Evidence</summary>
+
+- **How AI responded:** I added another usage example.
+- `2026-07-12` Document local-first architecture decision (`684b02c3`)
+
+</details>
+
 
 ## Project rhythm
 
@@ -220,4 +282,4 @@ From complex automatic cloud sync back to a user-controlled local-first product.
 ## Method and limits
 
 - Git records saved changes, not all thinking, experiments, or uncommitted work.
-- Transcript analysis stores only short excerpts used to explain repeated-prompt candidates.
+- Transcript analysis keeps only short excerpts needed for review; it never copies the full conversation.

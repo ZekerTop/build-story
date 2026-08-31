@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.4",
-  "generator_version": "0.3.0",
-  "generated_at": "2026-08-30T00:00:00+00:00",
+  "schema_version": "1.5",
+  "generator_version": "0.4.0",
+  "generated_at": "2026-08-31T00:00:00+00:00",
   "language": "en",
   "project": {
     "name": "PocketTasks",
@@ -26,7 +26,7 @@
     ],
     "limitations": [
       "Git records saved changes, not all thinking, experiments, or uncommitted work.",
-      "Transcript analysis stores only short excerpts used to explain repeated-prompt candidates."
+      "Transcript analysis keeps only short excerpts needed for review; it never copies the full conversation."
     ]
   },
   "metrics": {
@@ -46,7 +46,7 @@
       "delivery": 2
     },
     "time_estimate": {
-      "hours": 3.4,
+      "hours": 5.1,
       "sessions": null,
       "source": "transcripts",
       "confidence": "medium"
@@ -56,8 +56,8 @@
     "headline": "From complex automatic cloud sync back to a user-controlled local-first product.",
     "highlights": [
       "1 confirmed direction change",
-      "Most visible attention: Core code",
-      "Finished with tests, CI, a tagged release"
+      "3 communication examples to review",
+      "Most visible attention: Core code"
     ],
     "context_confirmed": true
   },
@@ -91,10 +91,10 @@
       {
         "date": "2026-07-02",
         "commits": 1,
-        "transcript_events": 0,
+        "transcript_events": 3,
         "lines_changed": 4,
-        "observed_events": 1,
-        "level": 1,
+        "observed_events": 4,
+        "level": 3,
         "summary": "Add JSON task storage"
       },
       {
@@ -145,10 +145,10 @@
       {
         "date": "2026-07-08",
         "commits": 1,
-        "transcript_events": 2,
+        "transcript_events": 4,
         "lines_changed": 4,
-        "observed_events": 3,
-        "level": 2,
+        "observed_events": 5,
+        "level": 4,
         "summary": "Add tests for storage and export"
       },
       {
@@ -181,10 +181,10 @@
       {
         "date": "2026-07-12",
         "commits": 1,
-        "transcript_events": 0,
+        "transcript_events": 3,
         "lines_changed": 3,
-        "observed_events": 1,
-        "level": 1,
+        "observed_events": 4,
+        "level": 3,
         "summary": "Document local-first architecture decision"
       },
       {
@@ -344,7 +344,7 @@
       "deleted": 0,
       "turning_point_reason": "Validation established",
       "dialogue": {
-        "user": "Add tests for the local store and JSON export",
+        "user": "I mean add automated tests for local storage and JSON export. Do not add cloud dependencies.",
         "ai": "The storage and export paths now have tests."
       }
     },
@@ -413,6 +413,113 @@
       "confirmation": "The queue and retry complexity of automatic sync conflicted with a beginner-friendly product.",
       "lesson": "When a feature keeps adding recovery machinery, reconsider whether the feature deserves to exist.",
       "supporting_path": "src/sync.py"
+    }
+  ],
+  "communication_insights": [
+    {
+      "id": "communication:2ed6b4bb843b",
+      "topic": "Term meaning clarified later",
+      "gap_type": "term-definition",
+      "gap_label": "Term meaning clarified later",
+      "attribution": "term-meaning-mismatch",
+      "attribution_label": "The same term meant different things",
+      "confidence": "high",
+      "original_request": "Make storage better for beginners",
+      "ai_response": "I connected the task list to a hosted database.",
+      "later_clarification": "I mean local JSON storage, not a hosted service. Keep all task data on the device.",
+      "analysis": "Both sides kept using the same term, but the term referred to different things.",
+      "missing_information": [
+        "the exact meaning of the core term",
+        "the interpretation to exclude"
+      ],
+      "suggested_rewrite": "Please follow this complete requirement: local JSON storage, not a hosted service. Keep all task data on the device. Before changing anything, restate the goal, scope, and what must remain unchanged.",
+      "reusable_pattern": "By [term], I mean [exact meaning], not [likely interpretation]; the expected result is [outcome].",
+      "question": "Was this mainly a case of both sides assigning different meanings to the same term?",
+      "observed_impact": "1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.",
+      "related_commits": [
+        {
+          "date": "2026-07-02",
+          "subject": "Add JSON task storage",
+          "hash": "9acce59f"
+        }
+      ],
+      "source": "pockettasks-session.jsonl",
+      "event_range": [
+        0,
+        2
+      ],
+      "confirmation": null,
+      "lesson": null
+    },
+    {
+      "id": "communication:a59baa9b5679",
+      "topic": "Constraint clarified later",
+      "gap_type": "missing-constraint",
+      "gap_label": "Constraint clarified later",
+      "attribution": "user-expression-insufficient",
+      "attribution_label": "Information became clear later",
+      "confidence": "medium",
+      "original_request": "Make sure the local data flow works",
+      "ai_response": "I ran the CLI once and the command completed.",
+      "later_clarification": "I mean add automated tests for local storage and JSON export. Do not add cloud dependencies.",
+      "analysis": "The initial wording allowed multiple reasonable interpretations. The later clarification made the object, scope, or constraint unique.",
+      "missing_information": [
+        "behavior that must remain",
+        "explicit non-goals"
+      ],
+      "suggested_rewrite": "Please follow this complete requirement: add automated tests for local storage and JSON export. Do not add cloud dependencies. Before changing anything, restate the goal, scope, and what must remain unchanged.",
+      "reusable_pattern": "Complete [goal], but do not change [boundary]; preserve [existing behavior].",
+      "question": "Was this information missing at the start, or did the more specific judgment form only after you saw the result?",
+      "observed_impact": "1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.",
+      "related_commits": [
+        {
+          "date": "2026-07-08",
+          "subject": "Add tests for storage and export",
+          "hash": "ea9798bf"
+        }
+      ],
+      "source": "pockettasks-session.jsonl",
+      "event_range": [
+        13,
+        15
+      ],
+      "confirmation": null,
+      "lesson": null
+    },
+    {
+      "id": "communication:ceddef41dbba",
+      "topic": "Ambiguous reference",
+      "gap_type": "ambiguous-reference",
+      "gap_label": "Ambiguous reference",
+      "attribution": "user-expression-insufficient",
+      "attribution_label": "Information became clear later",
+      "confidence": "medium",
+      "original_request": "Document it",
+      "ai_response": "I added another usage example.",
+      "later_clarification": "I mean document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI.",
+      "analysis": "The initial wording allowed multiple reasonable interpretations. The later clarification made the object, scope, or constraint unique.",
+      "missing_information": [
+        "the exact object",
+        "the change boundary"
+      ],
+      "suggested_rewrite": "Please follow this complete requirement: document why we chose local-first export instead of hidden cloud sync, not only how to use the CLI. Before changing anything, restate the goal, scope, and what must remain unchanged.",
+      "reusable_pattern": "Change [specific part] of [specific object] to achieve [expected result]; do not change [boundary].",
+      "question": "Was this information missing at the start, or did the more specific judgment form only after you saw the result?",
+      "observed_impact": "1 topic-overlapping commit(s) appeared within 24 hours of the clarification; timing alone does not prove causation.",
+      "related_commits": [
+        {
+          "date": "2026-07-12",
+          "subject": "Document local-first architecture decision",
+          "hash": "684b02c3"
+        }
+      ],
+      "source": "pockettasks-session.jsonl",
+      "event_range": [
+        17,
+        19
+      ],
+      "confirmation": null,
+      "lesson": null
     }
   ],
   "timeline": [
@@ -736,12 +843,13 @@
     "files": [
       "pockettasks-session.jsonl"
     ],
-    "events": 12,
-    "timestamped_events": 12,
-    "estimated_active_hours": 3.4,
+    "events": 20,
+    "timestamped_events": 20,
+    "estimated_active_hours": 5.1,
     "confidence": "medium",
     "repeated_prompts": [],
-    "error_signals": 0
+    "error_signals": 0,
+    "communication_insights": 3
   },
   "evidence_cards": [
     {

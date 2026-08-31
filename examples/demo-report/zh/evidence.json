@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.4",
-  "generator_version": "0.3.0",
-  "generated_at": "2026-08-30T00:00:00+00:00",
+  "schema_version": "1.5",
+  "generator_version": "0.4.0",
+  "generated_at": "2026-08-31T00:00:00+00:00",
   "language": "zh",
   "project": {
     "name": "PocketTasks",
@@ -26,7 +26,7 @@
     ],
     "limitations": [
       "Git 只记录已保存的变更，无法覆盖全部思考、实验和未提交工作。",
-      "会话分析只保存用于解释重复提示候选的短摘录，不复制完整对话。"
+      "会话分析只保留复盘所需的短摘录，不复制完整对话。"
     ]
   },
   "metrics": {
@@ -46,7 +46,7 @@
       "delivery": 2
     },
     "time_estimate": {
-      "hours": 3.4,
+      "hours": 5.1,
       "sessions": null,
       "source": "transcripts",
       "confidence": "medium"
@@ -56,8 +56,8 @@
     "headline": "从复杂的自动云同步，回到用户可控的本地优先。",
     "highlights": [
       "1 次已确认的方向转变",
-      "注意力最集中：核心代码",
-      "最终完成测试、CI、版本发布"
+      "3 个沟通案例需要复盘",
+      "注意力最集中：核心代码"
     ],
     "context_confirmed": true
   },
@@ -91,10 +91,10 @@
       {
         "date": "2026-07-02",
         "commits": 1,
-        "transcript_events": 0,
+        "transcript_events": 3,
         "lines_changed": 4,
-        "observed_events": 1,
-        "level": 1,
+        "observed_events": 4,
+        "level": 3,
         "summary": "新增 JSON 任务存储"
       },
       {
@@ -145,10 +145,10 @@
       {
         "date": "2026-07-08",
         "commits": 1,
-        "transcript_events": 2,
+        "transcript_events": 4,
         "lines_changed": 4,
-        "observed_events": 3,
-        "level": 2,
+        "observed_events": 5,
+        "level": 4,
         "summary": "为任务存储与导出补充测试"
       },
       {
@@ -181,10 +181,10 @@
       {
         "date": "2026-07-12",
         "commits": 1,
-        "transcript_events": 0,
+        "transcript_events": 3,
         "lines_changed": 3,
-        "observed_events": 1,
-        "level": 1,
+        "observed_events": 4,
+        "level": 3,
         "summary": "记录本地优先架构决策"
       },
       {
@@ -344,7 +344,7 @@
       "deleted": 0,
       "turning_point_reason": "建立验证",
       "dialogue": {
-        "user": "为本地存储和 JSON 导出补充测试。",
+        "user": "我说的是为本地存储和 JSON 导出增加自动化测试，不要增加云端依赖。",
         "ai": "存储与导出路径现在都有测试覆盖。"
       }
     },
@@ -413,6 +413,113 @@
       "confirmation": "自动同步引入的队列与重试复杂度违背了面向小白的简单性。",
       "lesson": "当一个功能持续引入恢复机制时，先重新判断它是否值得存在。",
       "supporting_path": "src/sync.py"
+    }
+  ],
+  "communication_insights": [
+    {
+      "id": "communication:2ed6b4bb843b",
+      "topic": "术语含义在后续才明确",
+      "gap_type": "term-definition",
+      "gap_label": "术语含义在后续才明确",
+      "attribution": "term-meaning-mismatch",
+      "attribution_label": "双方对同一个词理解不同",
+      "confidence": "high",
+      "original_request": "让存储体验对新手更友好。",
+      "ai_response": "我把任务列表连接到了托管数据库。",
+      "later_clarification": "我说的是本地 JSON 存储，不是托管服务。所有任务数据都保留在设备上。",
+      "analysis": "双方围绕同一个词继续对话，但这个词指向的对象并不相同。",
+      "missing_information": [
+        "核心术语的具体含义",
+        "不包含的解释"
+      ],
+      "suggested_rewrite": "请按这个完整要求执行：本地 JSON 存储，不是托管服务。所有任务数据都保留在设备上。开始前先复述你理解的目标、范围和不改动的部分。",
+      "reusable_pattern": "我说的[术语]是[具体含义]，不是[容易混淆的解释]；目标是[预期结果]。",
+      "question": "这里是否更像双方对同一个词的理解不同？",
+      "observed_impact": "澄清后 24 小时内观察到 1 次主题相关提交；时间接近不等同于因果。",
+      "related_commits": [
+        {
+          "date": "2026-07-02",
+          "subject": "新增 JSON 任务存储",
+          "hash": "9acce59f"
+        }
+      ],
+      "source": "pockettasks-session.jsonl",
+      "event_range": [
+        0,
+        2
+      ],
+      "confirmation": null,
+      "lesson": null
+    },
+    {
+      "id": "communication:a59baa9b5679",
+      "topic": "约束在后续才明确",
+      "gap_type": "missing-constraint",
+      "gap_label": "约束在后续才明确",
+      "attribution": "user-expression-insufficient",
+      "attribution_label": "信息后来才补全",
+      "confidence": "medium",
+      "original_request": "确保本地数据流程可以工作。",
+      "ai_response": "我运行了一次命令行，命令可以完成。",
+      "later_clarification": "我说的是为本地存储和 JSON 导出增加自动化测试，不要增加云端依赖。",
+      "analysis": "最初的说法给 AI 留出了多个合理解释，后续补充才把对象、范围或约束变得唯一。",
+      "missing_information": [
+        "必须保留的行为",
+        "明确禁区"
+      ],
+      "suggested_rewrite": "请按这个完整要求执行：为本地存储和 JSON 导出增加自动化测试，不要增加云端依赖。开始前先复述你理解的目标、范围和不改动的部分。",
+      "reusable_pattern": "请完成[目标]，但不要修改[边界]；必须保留[已有行为]。",
+      "question": "这次是信息一开始没有说完整，还是你看到结果后才形成更具体的判断？",
+      "observed_impact": "澄清后 24 小时内观察到 1 次主题相关提交；时间接近不等同于因果。",
+      "related_commits": [
+        {
+          "date": "2026-07-08",
+          "subject": "为任务存储与导出补充测试",
+          "hash": "ea9798bf"
+        }
+      ],
+      "source": "pockettasks-session.jsonl",
+      "event_range": [
+        13,
+        15
+      ],
+      "confirmation": null,
+      "lesson": null
+    },
+    {
+      "id": "communication:ceddef41dbba",
+      "topic": "指代不够明确",
+      "gap_type": "ambiguous-reference",
+      "gap_label": "指代不够明确",
+      "attribution": "user-expression-insufficient",
+      "attribution_label": "信息后来才补全",
+      "confidence": "medium",
+      "original_request": "把它记录下来。",
+      "ai_response": "我又增加了一个使用示例。",
+      "later_clarification": "我说的是记录为什么选择本地优先导出而不是隐藏云同步，不只是说明命令行怎么用。",
+      "analysis": "最初的说法给 AI 留出了多个合理解释，后续补充才把对象、范围或约束变得唯一。",
+      "missing_information": [
+        "具体对象",
+        "修改范围"
+      ],
+      "suggested_rewrite": "请按这个完整要求执行：记录为什么选择本地优先导出而不是隐藏云同步，不只是说明命令行怎么用。开始前先复述你理解的目标、范围和不改动的部分。",
+      "reusable_pattern": "请修改[具体对象]中的[具体部分]，目标是[预期结果]；不要改动[边界]。",
+      "question": "这次是信息一开始没有说完整，还是你看到结果后才形成更具体的判断？",
+      "observed_impact": "澄清后 24 小时内观察到 1 次主题相关提交；时间接近不等同于因果。",
+      "related_commits": [
+        {
+          "date": "2026-07-12",
+          "subject": "记录本地优先架构决策",
+          "hash": "684b02c3"
+        }
+      ],
+      "source": "pockettasks-session.jsonl",
+      "event_range": [
+        17,
+        19
+      ],
+      "confirmation": null,
+      "lesson": null
     }
   ],
   "timeline": [
@@ -736,12 +843,13 @@
     "files": [
       "pockettasks-session.jsonl"
     ],
-    "events": 12,
-    "timestamped_events": 12,
-    "estimated_active_hours": 3.4,
+    "events": 20,
+    "timestamped_events": 20,
+    "estimated_active_hours": 5.1,
     "confidence": "medium",
     "repeated_prompts": [],
-    "error_signals": 0
+    "error_signals": 0,
+    "communication_insights": 3
   },
   "evidence_cards": [
     {
